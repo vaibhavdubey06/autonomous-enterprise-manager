@@ -1,23 +1,18 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
+from app.core.config import settings
 
+# Construct PostgreSQL URI
+SQLALCHEMY_DATABASE_URL = f"postgresql://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
 
-class Settings(BaseSettings):
-    APP_NAME: str = "Autonomous Enterprise Manager"
+engine = create_engine(SQLALCHEMY_DATABASE_URL, pool_pre_ping=True)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-    POSTGRES_HOST: str = "localhost"
-    POSTGRES_PORT: int = 5432
-    POSTGRES_DB: str = "enterprise_manager"
-    POSTGRES_USER: str = "admin"
-    POSTGRES_PASSWORD: str = "admin"
+Base = declarative_base()
 
-    QDRANT_URL: str = "http://localhost:6333"
-
-    OPENAI_API_KEY: str = ""
-
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        extra="ignore"
-    )
-
-
-settings = Settings()
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

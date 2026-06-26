@@ -38,8 +38,16 @@ async def embedding_test():
 
 
 from app.api.v1.github import router as github_router
+from app.api.v1.memory import router as memory_router
+from app.api.v1.agent import router as agent_router
+from app.core.database import Base, engine
+
+# Create tables
+Base.metadata.create_all(bind=engine)
 
 app.include_router(upload_router)
 app.include_router(search_router)
 app.include_router(chat_router)
 app.include_router(github_router)
+app.include_router(memory_router)
+app.include_router(agent_router)

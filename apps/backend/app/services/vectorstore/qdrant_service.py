@@ -67,12 +67,42 @@ def store_chunks(
     )
 
 
-def search(query: str, limit: int = 5):
+def store_memory_chunk(conversation_id: str, message_id: str, role: str, text: str, timestamp: str):
     """
-    Perform a semantic search in the Qdrant collection.
+    Embed and store a single conversation message as semantic memory in the exact same collection.
+    """
+    from app.services.embeddings.embedding_service import embed_text
+    import uuid
+    
+    embedding = embed_text(text)
+    
+    # Store directly in existing COLLECTION_NAME
+    point_id = str(uuid.uuid4())
+    client.upsert(
+        collection_name=COLLECTION_NAME,
+        points=[
+            PointStruct(
+                id=point_id,
+                vector=embedding,
+                payload={
+                    "source": "conversation",
+                    "conversation_id": conversation_id,
+                    "message_id": message_id,
+                    "role": role,
+                    "text": text,
+                    "timestamp": timestamp
+                }
+            )
+        ]
+    )
+
+def search(query: str, limit: int = 5, source_filter: str = None, exclude_source: str = None):
+    """
+    Perform a semantic search in the Qdrant collection with optional filtering.
     """
     from fastapi import HTTPException
     from app.services.embeddings.embedding_service import embed_text
+    from qdrant_client.models import Filter, FieldCondition, MatchValue
 
     if not query or not query.strip():
         raise HTTPException(status_code=400, detail="Search query cannot be empty")
@@ -90,9 +120,32 @@ def search(query: str, limit: int = 5):
 
     try:
         query_vector = embed_text(query)
+        
+        # Build filter if provided
+        query_filter = None
+        if source_filter:
+            query_filter = Filter(
+                must=[
+                    FieldCondition(
+                        key="source",
+                        match=MatchValue(value=source_filter)
+                    )
+                ]
+            )
+        elif exclude_source:
+            query_filter = Filter(
+                must_not=[
+                    FieldCondition(
+                        key="source",
+                        match=MatchValue(value=exclude_source)
+                    )
+                ]
+            )
+
         results = client.query_points(
             collection_name=COLLECTION_NAME,
             query=query_vector,
+            query_filter=query_filter,
             limit=limit,
         )
         
@@ -107,7 +160,11 @@ def search(query: str, limit: int = 5):
                 "repository": hit.payload.get("repository", ""),
                 "branch": hit.payload.get("branch", ""),
                 "path": hit.payload.get("path", ""),
-                "url": hit.payload.get("url", "")
+                "url": hit.payload.get("url", ""),
+                "conversation_id": hit.payload.get("conversation_id", ""),
+                "message_id": hit.payload.get("message_id", ""),
+                "role": hit.payload.get("role", ""),
+                "timestamp": hit.payload.get("timestamp", "")
             }
             for hit in results.points
         ]
