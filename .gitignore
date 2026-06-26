@@ -1,0 +1,16 @@
+# Python
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+
+# Env
+.env
+
+# Node
+node_modules/
+.next/
+
+# OS
+.DS_Store
+Thumbs.db
