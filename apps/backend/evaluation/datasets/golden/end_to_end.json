@@ -1,0 +1,23 @@
+[
+    {
+        "scenario": "Architecture Review",
+        "input": "Review the authentication service architecture for scalability.",
+        "expected_agent": "CTO Agent",
+        "expected_capability": "github_tool",
+        "expected_keywords": [
+            "scalability",
+            "authentication",
+            "token"
+        ]
+    },
+    {
+        "scenario": "General Knowledge",
+        "input": "What are our HR policies?",
+        "expected_agent": "Knowledge Agent",
+        "expected_capability": null,
+        "expected_keywords": [
+            "policy",
+            "HR"
+        ]
+    }
+]

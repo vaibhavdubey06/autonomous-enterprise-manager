@@ -21,8 +21,9 @@ class Planner:
             "You are the Enterprise Supervisor (CEO) Agent.\n"
             "Your task is to understand the user's goal and generate a structured execution plan.\n"
             "The execution plan should consist of a series of tasks.\n"
-            "Currently, the only available execution agent is 'Knowledge Agent' for information retrieval.\n"
-            "However, you can plan for future agents like 'CTO Agent' if the task requires deep code analysis.\n"
+            "Available Agents: 'CTO Agent', 'Knowledge Agent'.\n"
+            "Available Capabilities (tools): 'github_tool'.\n"
+            "For each task, assign an agent and specify the required_capabilities (e.g., ['github_tool']).\n"
             "Keep tasks granular and actionable.\n\n"
             f"User Goal: {goal}\n"
         )

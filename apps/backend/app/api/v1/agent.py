@@ -119,6 +119,12 @@ from app.agents.supervisor.supervisor_agent import SupervisorGraph
 from app.agents.supervisor.planner import Planner
 from app.agents.supervisor.task_decomposer import TaskDecomposer
 from app.agents.supervisor.router import AgentRouter
+from app.agents.base.registry import AgentRegistry
+from app.agents.executives.cto.agent import CTOAgent
+
+from app.capabilities.base.capability_registry import CapabilityRegistry
+from app.capabilities.base.executor import CapabilityExecutor
+from app.capabilities.tools.github.tool import GitHubCapability
 
 def get_supervisor_graph(
     llm_service: LLMService = Depends(get_llm_service),
@@ -126,7 +132,21 @@ def get_supervisor_graph(
 ) -> SupervisorGraph:
     planner = Planner(llm_service)
     task_decomposer = TaskDecomposer()
-    agent_router = AgentRouter(knowledge_agent_graph=knowledge_agent_graph)
+    
+    # Initialize Capability Framework
+    cap_registry = CapabilityRegistry()
+    cap_registry.register(GitHubCapability())
+    cap_executor = CapabilityExecutor(cap_registry)
+    
+    # Initialize and populate AgentRegistry
+    registry = AgentRegistry()
+    registry.register_agent(CTOAgent(
+        llm_service=llm_service, 
+        capability_executor=cap_executor,
+        knowledge_agent_graph=knowledge_agent_graph
+    ))
+    
+    agent_router = AgentRouter(agent_registry=registry, knowledge_agent_graph=knowledge_agent_graph)
     
     return SupervisorGraph(
         planner=planner,

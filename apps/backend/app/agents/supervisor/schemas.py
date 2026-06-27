@@ -19,6 +19,7 @@ class Task(BaseModel):
     priority: int = 1
     status: TaskStatus = TaskStatus.PENDING
     assigned_agent: Optional[str] = None
+    required_capabilities: List[str] = Field(default_factory=list)
     dependencies: List[str] = Field(default_factory=list)
     context: Dict[str, Any] = Field(default_factory=dict)
     artifacts: List[str] = Field(default_factory=list)

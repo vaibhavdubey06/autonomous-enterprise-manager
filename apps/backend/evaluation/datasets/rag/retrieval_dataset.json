@@ -1,0 +1,10 @@
+[
+    {
+        "query": "How is the API secured?",
+        "expected_source_path": "docs/security.md"
+    },
+    {
+        "query": "What is the primary database?",
+        "expected_source_path": "docs/architecture.md"
+    }
+]

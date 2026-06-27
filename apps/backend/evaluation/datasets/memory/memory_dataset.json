@@ -1,0 +1,20 @@
+[
+    {
+        "conversation": [
+            {
+                "role": "user",
+                "content": "I prefer dark mode."
+            },
+            {
+                "role": "assistant",
+                "content": "I have updated your preferences."
+            }
+        ],
+        "expected_memory_objects": [
+            {
+                "content": "User prefers dark mode",
+                "type": "preference"
+            }
+        ]
+    }
+]

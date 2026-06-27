@@ -14,3 +14,37 @@ node_modules/
 # OS
 .DS_Store
 Thumbs.db
+
+# Scaffolding
+scaffolding/
+
+# IDE & Editor
+.vscode/
+.idea/
+.cursor/
+
+# Python Build & Coverage
+*.egg-info/
+build/
+dist/
+.coverage
+htmlcov/
+
+# Databases & Vector Stores
+*.sqlite
+*.sqlite3
+*.db
+qdrant_storage/
+qdrant_data/
+
+# Logs
+*.log
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Generated Evaluation Reports
+apps/backend/evaluation/reports/*.json
+apps/backend/evaluation/reports/*.md
+apps/backend/evaluation/reports/history/*.json
+apps/backend/evaluation/reports/history/*.md

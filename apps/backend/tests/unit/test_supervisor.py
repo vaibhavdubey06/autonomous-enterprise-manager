@@ -22,6 +22,8 @@ def test_task_decomposer():
     assert tasks[1].status == TaskStatus.PENDING
     assert tasks[0].task_id in tasks[1].dependencies
 
+from app.agents.base.registry import AgentRegistry
+
 def test_agent_router_knowledge_fallback():
     mock_knowledge_graph = MagicMock()
     mock_knowledge_graph.run.return_value = {
@@ -30,7 +32,8 @@ def test_agent_router_knowledge_fallback():
         "metrics": {"total_time_ms": 100}
     }
     
-    router = AgentRouter(knowledge_agent_graph=mock_knowledge_graph)
+    registry = AgentRegistry()
+    router = AgentRouter(agent_registry=registry, knowledge_agent_graph=mock_knowledge_graph)
     
     task = Task(goal="test", description="query", assigned_agent="CTO Agent")
     state = {"session_id": "1", "conversation_id": "1"}
