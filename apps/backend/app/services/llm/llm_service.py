@@ -2,6 +2,7 @@ import logging
 import time
 import re
 from typing import List
+from pydantic import BaseModel
 from fastapi import HTTPException
 import google.generativeai as genai
 from google.api_core import exceptions as google_exceptions
@@ -128,3 +129,44 @@ class LLMService:
         except Exception as e:
             logger.error(f"Unexpected error during Gemini generation: {e}")
             raise HTTPException(status_code=500, detail="An unexpected error occurred during LLM generation.")
+
+    def generate_structured(self, prompt: str, schema: type[BaseModel]) -> str:
+        """
+        Generates structured JSON output conforming to a Pydantic schema using Gemini.
+        """
+        if not self.api_key:
+            raise HTTPException(status_code=500, detail="Gemini API key is not configured.")
+
+        genai.configure(api_key=self.api_key)
+        
+        try:
+            model = genai.GenerativeModel(self.model_name)
+            
+            logger.info(f"Generating structured answer. Prompt size: {len(prompt)}")
+            start_time = time.time()
+            
+            response = model.generate_content(
+                prompt,
+                generation_config=genai.types.GenerationConfig(
+                    temperature=0.1,  # Low temp for deterministic structured output
+                    top_p=self.top_p,
+                    max_output_tokens=self.max_output_tokens,
+                    response_mime_type="application/json",
+                    response_schema=schema
+                )
+            )
+            
+            generation_time = time.time() - start_time
+            logger.info(f"Structured answer generated successfully. Time: {generation_time:.4f}s")
+            
+            if not response.text:
+                raise ValueError("Received empty response text from Gemini.")
+                
+            return response.text.strip()
+            
+        except google_exceptions.PermissionDenied as e:
+            logger.error(f"Gemini API permission denied (invalid key?): {e}")
+            raise HTTPException(status_code=401, detail="LLM API permission denied.")
+        except Exception as e:
+            logger.error(f"Unexpected error during structured generation: {e}")
+            raise HTTPException(status_code=500, detail="An unexpected error occurred during LLM structured generation.")

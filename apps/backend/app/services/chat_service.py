@@ -147,6 +147,13 @@ class ChatService:
         
         if background_tasks:
             background_tasks.add_task(self.memory_service.generate_summary, conversation_id)
+            background_tasks.add_task(
+                self.memory_service.extract_and_store_memories,
+                conversation_id=conversation_id,
+                user_id=session_id or "default_user",
+                user_message=question,
+                assistant_response=answer
+            )
 
         # 8. Return Answer + Sources
         return {

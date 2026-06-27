@@ -24,7 +24,8 @@ class Settings(BaseSettings):
     RECENT_MESSAGE_LIMIT: int = 5
     MEMORY_SEARCH_TOP_K: int = 5
     SUMMARY_TRIGGER_CHARACTERS: int = 8000
-    MEMORY_IMPORTANCE_THRESHOLD: float = 0.5
+    MEMORY_IMPORTANCE_THRESHOLD: float = 0.55
+    MEMORY_EXTRACTION_ENABLED: bool = True
 
     model_config = SettingsConfigDict(
         env_file=".env",

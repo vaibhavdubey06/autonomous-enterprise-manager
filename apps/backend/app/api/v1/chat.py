@@ -24,16 +24,56 @@ def get_llm_service() -> LLMService:
 def get_cross_encoder_service() -> CrossEncoderService:
     return CrossEncoderService()
 
+from app.repositories.memory_repository import MemoryRepository
+from app.services.memory.extractor import MemoryExtractor
+from app.services.memory.strategy import GeminiMemoryExtractionStrategy
+from app.services.memory.normalizer import MemoryNormalizer
+from app.services.memory.scorer import ImportanceScorer
+from app.services.memory.deduplicator import MemoryDeduplicator
+from app.services.vectorstore.qdrant_service import store_memory_chunk, search
+from app.core.config import settings
+
 def get_memory_service(
     db: DBSession = Depends(get_db),
     llm_service: LLMService = Depends(get_llm_service)
 ) -> MemoryService:
+    memory_repo = MemoryRepository(db)
+    strategy = GeminiMemoryExtractionStrategy(llm_service)
+    normalizer = MemoryNormalizer()
+    scorer = ImportanceScorer()
+    deduplicator = MemoryDeduplicator(memory_repo)
+    
+    def qdrant_store_callback(text, payload):
+        from app.services.embeddings.embedding_service import embed_text
+        import uuid
+        from qdrant_client.models import PointStruct
+        from app.services.vectorstore.qdrant_service import get_client, COLLECTION_NAME
+        embedding = embed_text(text)
+        point_id = str(uuid.uuid4())
+        get_client().upsert(
+            collection_name=COLLECTION_NAME,
+            points=[PointStruct(id=point_id, vector=embedding, payload=payload)]
+        )
+        
+    extractor = MemoryExtractor(
+        strategy=strategy,
+        normalizer=normalizer,
+        scorer=scorer,
+        deduplicator=deduplicator,
+        repository=memory_repo,
+        qdrant_search_callback=search,
+        qdrant_store_callback=qdrant_store_callback,
+        importance_threshold=settings.MEMORY_IMPORTANCE_THRESHOLD
+    )
+
     return MemoryService(
         session_repo=SessionRepository(db),
         conversation_repo=ConversationRepository(db),
         message_repo=MessageRepository(db),
         summary_repo=SummaryRepository(db),
-        llm_service=llm_service
+        memory_repo=memory_repo,
+        llm_service=llm_service,
+        extractor=extractor
     )
 
 def get_chat_service(

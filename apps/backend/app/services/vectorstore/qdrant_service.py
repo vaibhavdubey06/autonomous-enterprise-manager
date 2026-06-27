@@ -4,10 +4,11 @@ from qdrant_client.models import (
     VectorParams,
     PointStruct,
 )
+from functools import lru_cache
 
-client = QdrantClient(
-    url="http://localhost:6333"
-)
+@lru_cache()
+def get_client():
+    return QdrantClient(url="http://localhost:6333")
 
 COLLECTION_NAME = "documents"
 
@@ -16,12 +17,12 @@ def create_collection():
 
     collections = [
         c.name
-        for c in client.get_collections().collections
+        for c in get_client().get_collections().collections
     ]
 
     if COLLECTION_NAME not in collections:
 
-        client.create_collection(
+        get_client().create_collection(
             collection_name=COLLECTION_NAME,
             vectors_config=VectorParams(
                 size=384,
@@ -61,7 +62,7 @@ def store_chunks(
             )
         )
 
-    client.upsert(
+    get_client().upsert(
         collection_name=COLLECTION_NAME,
         points=points,
     )
@@ -78,7 +79,7 @@ def store_memory_chunk(conversation_id: str, message_id: str, role: str, text: s
     
     # Store directly in existing COLLECTION_NAME
     point_id = str(uuid.uuid4())
-    client.upsert(
+    get_client().upsert(
         collection_name=COLLECTION_NAME,
         points=[
             PointStruct(
@@ -110,7 +111,7 @@ def search(query: str, limit: int = 5, source_filter: str = None, exclude_source
     try:
         collections = [
             c.name
-            for c in client.get_collections().collections
+            for c in get_client().get_collections().collections
         ]
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Qdrant connection failure: {e}")
@@ -142,7 +143,7 @@ def search(query: str, limit: int = 5, source_filter: str = None, exclude_source
                 ]
             )
 
-        results = client.query_points(
+        results = get_client().query_points(
             collection_name=COLLECTION_NAME,
             query=query_vector,
             query_filter=query_filter,

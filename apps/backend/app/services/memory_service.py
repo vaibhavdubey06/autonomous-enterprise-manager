@@ -23,13 +23,17 @@ class MemoryService:
         conversation_repo: ConversationRepository,
         message_repo: MessageRepository,
         summary_repo: SummaryRepository,
-        llm_service: LLMService
+        memory_repo: Any, # Avoid circular import if typed strictly, will import at top
+        llm_service: LLMService,
+        extractor: Any = None
     ):
         self.session_repo = session_repo
         self.conversation_repo = conversation_repo
         self.message_repo = message_repo
         self.summary_repo = summary_repo
+        self.memory_repo = memory_repo
         self.llm_service = llm_service
+        self.extractor = extractor
 
     def get_or_create_session(self, session_id: Optional[str] = None, user_id: str = "default_user") -> str:
         if session_id:
@@ -155,5 +159,27 @@ class MemoryService:
         Currently just logs since importance is defaulted to 0.5 on creation.
         """
         # A full implementation would prompt the LLM to score the message and update the DB row.
-        logger.debug(f"Importance calculation triggered for {message_id}")
-        pass
+    async def extract_and_store_memories(self, conversation_id: str, user_id: str, user_message: str, assistant_response: str):
+        """
+        Asynchronously extracts cognitive memories from the recent conversation and stores them.
+        """
+        if not self.extractor or not settings.MEMORY_EXTRACTION_ENABLED:
+            return
+
+        try:
+            # Build history string to provide context to the extractor
+            history_text = self.build_memory_context(conversation_id)
+            
+            # Use the extractor
+            self.extractor.process(
+                history=history_text,
+                user_message=user_message,
+                assistant_response=assistant_response,
+                context_kwargs={
+                    "conversation_id": conversation_id,
+                    "user_id": user_id,
+                }
+            )
+            logger.info(f"Memory extraction completed for conversation {conversation_id}")
+        except Exception as e:
+            logger.error(f"Memory extraction failed: {e}")
