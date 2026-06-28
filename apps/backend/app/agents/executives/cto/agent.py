@@ -57,88 +57,93 @@ class CTOAgent(BaseExecutiveAgent):
 
     def execute(self, task: ExecutiveTask, state: Dict[str, Any]) -> ExecutiveResult:
         start_time = time.time()
-        logger.info(f"[CTO Agent] Executing task: {task.goal}")
+        logger.info(f"[CTO Agent] Executing task via Workflow Runtime: {task.goal}")
         
-        # 1. Plan Execution Strategy
-        plan = self.planner.plan(task)
+        # We will dispatch this to the Workflow Engine
+        from app.core.database import SessionLocal
+        from app.workflows.services.workflow_service import WorkflowService
+        from app.workflows.builder.workflow_builder import WorkflowBuilder
+        from app.workflows.schemas.workflow import WorkflowCreate
+        from app.workflows.models.task import TaskType
+        import asyncio
         
-        # 2. Retrieve Enterprise Knowledge based on plan
-        gathered_context = []
-        sources = []
-        
-        # Execute capabilities
-        for action in plan.required_github_actions:
-            result = self.invoke_capability(
-                capability_id="github_tool",
-                action=action,
-                repository_name="default"  # Placeholder, should be extracted from context
-            )
-            gathered_context.append(f"GitHub {action} Result: {result.data if result.success else result.errors}")
+        db = SessionLocal()
+        try:
+            workflow_service = WorkflowService(db)
             
-        for query in plan.queries:
-            # Fallback to direct Knowledge Agent invocation if capabilities aren't enough yet
-            if self.knowledge_agent:
-                sub_state = {
-                    "question": query,
-                    "session_id": state.get("session_id"),
-                    "conversation_id": state.get("conversation_id"),
-                    "execution_trace": [],
-                    "metrics": {},
-                    "tool_results": [],
-                    "sources": [],
-                    "reranked_chunks": [],
-                    "semantic_memory": [],
-                    "recent_memory": [],
-                }
-                res = self.knowledge_agent.run(sub_state)
-                gathered_context.append(f"Query: {query}\nResult: {res.get('answer', '')}")
-                for source in res.get("sources", []):
-                    if source not in sources:
-                        sources.append(source)
+            # Determine if we can use a template
+            if "review" in task.goal.lower() and "repository" in task.goal.lower():
+                from app.workflows.templates.repository_review import create_repository_review_workflow
+                builder = create_repository_review_workflow(repo_url="extract_from_state_or_goal")
             else:
-                gathered_context.append(f"Query: {query}\nResult: Retrieval unavailable.")
+                # Custom Workflow
+                builder = WorkflowBuilder(WorkflowCreate(
+                    goal=task.goal,
+                    description=f"CTO Agent executing task: {task.goal}",
+                    owner_agent="CTO"
+                ))
+                
+                # We can use the old planner to generate task dependencies
+                plan = self.planner.plan(task)
+                
+                prev_deps = []
+                for action in plan.required_github_actions:
+                    t_id = builder.add_task(
+                        name=f"GitHub Action: {action}",
+                        task_type=TaskType.CAPABILITY,
+                        required_capability="github_tool",
+                        inputs={"action": action}
+                    )
+                    prev_deps.append(t_id)
                     
-        full_context = "\n\n".join(gathered_context)
-        
-        # 3. Analyze based on capabilities required
-        recommendations = []
-        findings_summary = []
-        
-        if Capability.ARCHITECTURE_ANALYSIS in task.required_capabilities or "architecture" in task.goal.lower():
-            arch_findings = self.architect.review(task.goal, full_context)
-            findings_summary.append(
-                f"Architecture Score - Scalability: {arch_findings.scalability_score}/10, "
-                f"Modularity: {arch_findings.modularity_score}/10."
+                for query in plan.queries:
+                    t_id = builder.add_task(
+                        name=f"Knowledge Query: {query}",
+                        task_type=TaskType.AGENT,
+                        assigned_agent="KnowledgeAgent",
+                        inputs={"query": query},
+                        dependencies=prev_deps.copy()
+                    )
+                    prev_deps.append(t_id)
+                    
+                builder.add_task(
+                    name="CTO Final Analysis",
+                    task_type=TaskType.AGENT,
+                    assigned_agent="CTO",
+                    dependencies=prev_deps.copy()
+                )
+            
+            # Create the workflow
+            workflow_schema = workflow_service.create_workflow_from_builder(builder)
+            workflow_id = workflow_schema.workflow_id
+            logger.info(f"Created Workflow {workflow_id} for task {task.goal}")
+            
+            # Execute workflow
+            # In a real environment, we might await this or dispatch to celery. 
+            # If the current loop is running, we can create a task. If no loop, we run it.
+            try:
+                loop = asyncio.get_running_loop()
+                # Fire and forget if loop is already running (e.g. FastAPI request)
+                asyncio.create_task(workflow_service.execute_workflow(workflow_id))
+            except RuntimeError:
+                # Run synchronously if no loop
+                asyncio.run(workflow_service.execute_workflow(workflow_id))
+            
+            summary = f"CTO Agent formulated Workflow {workflow_id} to achieve: '{task.goal}'"
+            
+            metrics = {
+                "execution_time_ms": (time.time() - start_time) * 1000,
+                "workflow_id": workflow_id,
+                "tasks_planned": len(builder.tasks)
+            }
+            
+            return self._create_result(
+                task=task,
+                summary=summary,
+                reasoning=f"Delegated execution to Workflow Runtime. ID: {workflow_id}",
+                recommendations=[f"Monitor Workflow {workflow_id} in the Workflow Dashboard"],
+                sources=[],
+                metrics=metrics
             )
-            findings_summary.extend(arch_findings.findings)
-            recommendations.extend(arch_findings.recommendations)
-            
-        if Capability.CODE_REVIEW in task.required_capabilities or "code" in task.goal.lower() or "debt" in task.goal.lower():
-            review_findings = self.reviewer.review(task.goal, full_context)
-            findings_summary.append("Technical Review Findings:")
-            findings_summary.extend(review_findings.tech_debt_issues)
-            findings_summary.extend(review_findings.documentation_gaps)
-            recommendations.extend(review_findings.recommendations)
-            
-        # Fallback if no specific capability triggered a sub-agent
-        if not findings_summary:
-            findings_summary.append("General technical review based on gathered context.")
-            # We could use self.reason() here to generate unstructured summary
-            
-        # Compile reasoning
-        reasoning = "CTO Agent Analysis:\n" + "\n".join(findings_summary)
-        summary = f"CTO Agent completed analysis for '{task.goal}' with {len(recommendations)} recommendations."
-        
-        metrics = {
-            "execution_time_ms": (time.time() - start_time) * 1000,
-            "queries_executed": len(plan.queries)
-        }
-        
-        return self._create_result(
-            task=task,
-            summary=summary,
-            reasoning=reasoning,
-            recommendations=recommendations,
-            sources=sources,
-            metrics=metrics
-        )
+        finally:
+            db.close()

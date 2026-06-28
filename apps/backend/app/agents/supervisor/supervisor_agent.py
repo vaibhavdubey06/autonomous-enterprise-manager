@@ -89,7 +89,8 @@ class SupervisorGraph:
         
         if plan and plan.tasks:
             for task in plan.tasks:
-                res = self.agent_router.route_and_execute(task, state)
+                use_collaboration = state.get("use_collaboration", False)
+                res = self.agent_router.route_and_execute(task, state, use_collaboration=use_collaboration)
                 agent = res.get("agent_used")
                 
                 if agent and agent not in selected_agents:

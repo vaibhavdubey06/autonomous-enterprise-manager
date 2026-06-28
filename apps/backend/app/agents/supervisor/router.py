@@ -11,17 +11,49 @@ class AgentRouter:
     Falls back to the Knowledge Agent for direct retrieval tasks if no executive is assigned.
     """
     
-    def __init__(self, agent_registry: AgentRegistry, knowledge_agent_graph=None):
+    def __init__(self, agent_registry: AgentRegistry, knowledge_agent_graph=None, collaboration_manager=None):
         self.agent_registry = agent_registry
         self.knowledge_agent = knowledge_agent_graph
+        self.collaboration_manager = collaboration_manager
         
-    def route_and_execute(self, task: Task, state: dict) -> dict:
+    def route_and_execute(self, task: Task, state: dict, use_collaboration: bool = False) -> dict:
         """
         Selects the appropriate agent, executes the task, and returns the result.
         """
         agent_name = task.assigned_agent or "Knowledge Agent"
         logger.info(f"Routing task {task.task_id} to {agent_name}")
         
+        # Branch for Collaboration Runtime
+        if use_collaboration and self.collaboration_manager:
+            logger.info(f"Executing task {task.task_id} via Collaboration Runtime")
+            session = self.collaboration_manager.create_session(objective=task.description)
+            self.collaboration_manager.form_team(session.session_id)
+            self.collaboration_manager.execute(session.session_id)
+            
+            # Simulate work for POC by just delegating the main task
+            delegated = self.collaboration_manager.delegation.delegate_task(task.description, agent_name)
+            self.collaboration_manager.delegation.complete_task(delegated.task_id)
+            
+            # The async complete_session should be awaited ideally, but we run sync here
+            import asyncio
+            try:
+                loop = asyncio.get_event_loop()
+                if loop.is_running():
+                    import nest_asyncio
+                    nest_asyncio.apply()
+                loop.run_until_complete(self.collaboration_manager.complete_session(session.session_id))
+            except Exception as e:
+                logger.error(f"Failed to complete session: {e}")
+                
+            task.status = TaskStatus.COMPLETED
+            return {
+                "task_id": task.task_id,
+                "agent_used": agent_name,
+                "result": f"Executed via Collaboration Session {session.session_id} - Task: {delegated.description}",
+                "sources": [],
+                "metrics": {}
+            }
+
         # Try to find a registered Executive Agent
         executive = self.agent_registry.get_agent(agent_name)
         

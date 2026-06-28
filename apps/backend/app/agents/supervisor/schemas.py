@@ -52,3 +52,4 @@ class SupervisorState(TypedDict):
     
     # Metrics
     execution_time_ms: float
+    use_collaboration: bool
