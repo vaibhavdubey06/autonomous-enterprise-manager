@@ -1,5 +1,6 @@
 from typing import Dict, List, Optional
-from app.collaboration.teams.agent_roles import AgentCollaborationProfile, AgentRole
+from app.collaboration.teams.agent_roles import AgentCollaborationProfile
+
 
 class TeamRegistry:
     def __init__(self):
@@ -14,8 +15,11 @@ class TeamRegistry:
     def get_all_agents(self) -> List[AgentCollaborationProfile]:
         return list(self._agents.values())
 
-    def find_agents_by_expertise(self, expertise: str) -> List[AgentCollaborationProfile]:
+    def find_agents_by_expertise(
+        self, expertise: str
+    ) -> List[AgentCollaborationProfile]:
         return [
-            a for a in self._agents.values() 
+            a
+            for a in self._agents.values()
             if expertise.lower() in [e.lower() for e in a.expertise] and a.availability
         ]

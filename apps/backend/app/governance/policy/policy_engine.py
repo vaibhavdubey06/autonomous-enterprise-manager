@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from app.governance.context.governance_context import GovernanceContext
 from app.governance.policy.policy_models import PolicyEvaluationResult
 
+
 class BasePolicy(ABC):
     @property
     @abstractmethod
@@ -11,6 +12,7 @@ class BasePolicy(ABC):
     @abstractmethod
     def evaluate(self, context: GovernanceContext) -> PolicyEvaluationResult:
         pass
+
 
 class SecurityPolicy(BasePolicy):
     @property
@@ -23,9 +25,10 @@ class SecurityPolicy(BasePolicy):
                 policy_name=self.name,
                 allowed=False,
                 requires_approval=True,
-                reason="Destructive operations require explicit approval."
+                reason="Destructive operations require explicit approval.",
             )
         return PolicyEvaluationResult(policy_name=self.name, allowed=True)
+
 
 class FinancialPolicy(BasePolicy):
     @property
@@ -38,6 +41,6 @@ class FinancialPolicy(BasePolicy):
                 policy_name=self.name,
                 allowed=False,
                 requires_approval=True,
-                reason="Budget modifications require CFO approval."
+                reason="Budget modifications require CFO approval.",
             )
         return PolicyEvaluationResult(policy_name=self.name, allowed=True)

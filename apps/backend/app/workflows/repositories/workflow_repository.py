@@ -3,6 +3,7 @@ from typing import List, Optional
 from app.workflows.models.workflow import Workflow, WorkflowStatus
 from app.workflows.models.task import Task, TaskStatus
 
+
 class WorkflowRepository:
     def __init__(self, db: Session):
         self.db = db
@@ -15,12 +16,22 @@ class WorkflowRepository:
         return workflow
 
     def get_workflow(self, workflow_id: str) -> Optional[Workflow]:
-        return self.db.query(Workflow).filter(Workflow.workflow_id == workflow_id).first()
+        return (
+            self.db.query(Workflow).filter(Workflow.workflow_id == workflow_id).first()
+        )
 
     def list_workflows(self, skip: int = 0, limit: int = 100) -> List[Workflow]:
-        return self.db.query(Workflow).order_by(Workflow.created_at.desc()).offset(skip).limit(limit).all()
+        return (
+            self.db.query(Workflow)
+            .order_by(Workflow.created_at.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
 
-    def update_workflow_status(self, workflow_id: str, status: WorkflowStatus) -> Optional[Workflow]:
+    def update_workflow_status(
+        self, workflow_id: str, status: WorkflowStatus
+    ) -> Optional[Workflow]:
         workflow = self.get_workflow(workflow_id)
         if workflow:
             workflow.status = status
@@ -34,11 +45,13 @@ class WorkflowRepository:
         self.db.commit()
         self.db.refresh(task)
         return task
-        
+
     def get_task(self, task_id: str) -> Optional[Task]:
         return self.db.query(Task).filter(Task.task_id == task_id).first()
 
-    def update_task_status(self, task_id: str, status: TaskStatus, error: str = None) -> Optional[Task]:
+    def update_task_status(
+        self, task_id: str, status: TaskStatus, error: str = None
+    ) -> Optional[Task]:
         task = self.get_task(task_id)
         if task:
             task.status = status
@@ -47,7 +60,7 @@ class WorkflowRepository:
             self.db.commit()
             self.db.refresh(task)
         return task
-        
+
     def update_task(self, task_id: str, update_data: dict) -> Optional[Task]:
         task = self.get_task(task_id)
         if task:

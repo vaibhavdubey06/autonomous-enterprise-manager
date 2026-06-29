@@ -5,15 +5,21 @@ from components.sidebar import render_sidebar
 render_sidebar()
 
 st.title("GitHub Repositories")
-st.markdown("Index GitHub repositories (Code, Markdown, Issues, PRs) into the Enterprise Vector Store.")
+st.markdown(
+    "Index GitHub repositories (Code, Markdown, Issues, PRs) into the Enterprise Vector Store."
+)
 
-repository = st.text_input("Repository (e.g., owner/repository)", placeholder="e.g., hwchase17/langchain")
+repository = st.text_input(
+    "Repository (e.g., owner/repository)", placeholder="e.g., hwchase17/langchain"
+)
 
 if st.button("Index Repository", type="primary"):
     if not repository:
         st.warning("Please enter a repository name.")
     else:
-        with st.spinner(f"Fetching and indexing {repository}... This may take a while."):
+        with st.spinner(
+            f"Fetching and indexing {repository}... This may take a while."
+        ):
             try:
                 result = api_client.index_github(repository)
                 st.success("Indexing successful!")

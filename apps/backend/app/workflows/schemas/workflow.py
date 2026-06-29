@@ -4,6 +4,7 @@ from datetime import datetime
 from app.workflows.models.workflow import WorkflowStatus
 from app.workflows.models.task import TaskStatus, TaskType
 
+
 class TaskSchema(BaseModel):
     task_id: str
     workflow_id: str
@@ -27,6 +28,7 @@ class TaskSchema(BaseModel):
     class Config:
         from_attributes = True
 
+
 class WorkflowSchema(BaseModel):
     workflow_id: str
     workflow_version: int = 1
@@ -46,11 +48,12 @@ class WorkflowSchema(BaseModel):
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
-    
+
     tasks: List[TaskSchema] = Field(default_factory=list)
 
     class Config:
         from_attributes = True
+
 
 class WorkflowCreate(BaseModel):
     goal: str

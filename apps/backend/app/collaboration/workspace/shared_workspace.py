@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any
 
+
 class DecisionRecord(BaseModel):
     decision_id: str
     topic: str
@@ -11,10 +12,12 @@ class DecisionRecord(BaseModel):
     participants: List[str] = Field(default_factory=list)
     timestamp: str
 
+
 class SharedWorkspace(BaseModel):
     """
     Structured Shared Workspace for Collaboration Sessions.
     """
+
     goals: List[str] = Field(default_factory=list)
     evidence: List[Dict[str, Any]] = Field(default_factory=list)
     intermediate_findings: List[str] = Field(default_factory=list)
@@ -27,9 +30,9 @@ class SharedWorkspace(BaseModel):
 
     def add_goal(self, goal: str):
         self.goals.append(goal)
-        
+
     def add_evidence(self, evidence: Dict[str, Any]):
         self.evidence.append(evidence)
-        
+
     def add_decision(self, decision: DecisionRecord):
         self.decisions.append(decision)

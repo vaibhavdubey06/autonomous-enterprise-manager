@@ -16,14 +16,12 @@ if config.config_file_name is not None:
 
 import os
 import sys
+
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from app.core.database import Base, SQLALCHEMY_DATABASE_URL
+
 # Import models here so Alembic can discover them
-from app.models import memory
-from app.workflows.models import workflow, task
-from app.collaboration.session import collaboration_session
-from app.collaboration.messaging import message_models
 
 # add your model's MetaData object here
 # for 'autogenerate' support
@@ -76,9 +74,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

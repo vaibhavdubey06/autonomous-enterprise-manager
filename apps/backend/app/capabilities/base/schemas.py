@@ -2,6 +2,7 @@ from enum import Enum
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 
+
 class CapabilityType(str, Enum):
     TOOL = "TOOL"
     API = "API"
@@ -10,10 +11,12 @@ class CapabilityType(str, Enum):
     INTERNAL_SERVICE = "INTERNAL_SERVICE"
     HUMAN_APPROVAL = "HUMAN_APPROVAL"
 
+
 class Capability(BaseModel):
     """
     Metadata defining a specific capability.
     """
+
     capability_id: str
     name: str
     description: str
@@ -24,10 +27,12 @@ class Capability(BaseModel):
     input_schema: Dict[str, Any] = Field(default_factory=dict)
     output_schema: Dict[str, Any] = Field(default_factory=dict)
 
+
 class CapabilityResult(BaseModel):
     """
     Standardized response from any Capability execution.
     """
+
     success: bool
     capability_name: str
     action: str

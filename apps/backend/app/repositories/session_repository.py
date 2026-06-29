@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session as DBSession
 
 from app.models.memory import Session
 
+
 class SessionRepository:
     """
     Repository for managing Sessions in PostgreSQL.
@@ -27,4 +28,9 @@ class SessionRepository:
         return self.db.query(Session).filter(Session.id == uid).first()
 
     def list_sessions(self, user_id: str) -> List[Session]:
-        return self.db.query(Session).filter(Session.user_id == user_id).order_by(Session.updated_at.desc()).all()
+        return (
+            self.db.query(Session)
+            .filter(Session.user_id == user_id)
+            .order_by(Session.updated_at.desc())
+            .all()
+        )

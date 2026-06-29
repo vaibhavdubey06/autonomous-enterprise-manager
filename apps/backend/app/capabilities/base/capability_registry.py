@@ -5,10 +5,12 @@ from app.capabilities.base.schemas import Capability
 
 logger = logging.getLogger(__name__)
 
+
 class CapabilityRegistry:
     """
     Registry for tracking all registered Enterprise Capabilities.
     """
+
     def __init__(self):
         self._capabilities: Dict[str, BaseCapability] = {}
 
@@ -16,7 +18,9 @@ class CapabilityRegistry:
         """Registers a new capability."""
         metadata = capability.get_metadata()
         self._capabilities[metadata.capability_id] = capability
-        logger.info(f"Registered Capability: {metadata.name} ({metadata.capability_id})")
+        logger.info(
+            f"Registered Capability: {metadata.name} ({metadata.capability_id})"
+        )
 
     def unregister(self, capability_id: str):
         """Unregisters an existing capability."""

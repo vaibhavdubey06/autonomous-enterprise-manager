@@ -1,13 +1,16 @@
 import streamlit as st
 import requests
-import pandas as pd
 
-API_URL = "http://localhost:8000/api/v1/governance"
+from utils.config import settings
+
+API_URL = f"{settings.BACKEND_URL.rstrip('/')}/api/v1/governance"
 
 st.set_page_config(page_title="Enterprise Governance Dashboard", layout="wide")
 
 st.title("Enterprise Governance Platform (EGP)")
-st.markdown("Monitor policy execution, human approvals, risk assessments, and compliance audits.")
+st.markdown(
+    "Monitor policy execution, human approvals, risk assessments, and compliance audits."
+)
 
 col1, col2 = st.columns([1, 1])
 
@@ -21,15 +24,29 @@ with col1:
                 if not data:
                     st.success("No pending approvals.")
                 for req in data:
-                    st.info(f"Workflow: {req['workflow_id']} | Reason: {req['reason']} | Role: {req['required_role']}")
+                    st.info(
+                        f"Workflow: {req['workflow_id']} | Reason: {req['reason']} | Role: {req['required_role']}"
+                    )
                     c1, c2 = st.columns(2)
                     with c1:
                         if st.button("Approve", key=f"app_{req['request_id']}"):
-                            requests.post(f"{API_URL}/approval/{req['request_id']}/resolve", json={"approved": True, "resolved_by": "StreamlitAdmin"})
+                            requests.post(
+                                f"{API_URL}/approval/{req['request_id']}/resolve",
+                                json={
+                                    "approved": True,
+                                    "resolved_by": "StreamlitAdmin",
+                                },
+                            )
                             st.experimental_rerun()
                     with c2:
                         if st.button("Reject", key=f"rej_{req['request_id']}"):
-                            requests.post(f"{API_URL}/approval/{req['request_id']}/resolve", json={"approved": False, "resolved_by": "StreamlitAdmin"})
+                            requests.post(
+                                f"{API_URL}/approval/{req['request_id']}/resolve",
+                                json={
+                                    "approved": False,
+                                    "resolved_by": "StreamlitAdmin",
+                                },
+                            )
                             st.experimental_rerun()
             else:
                 st.error("Failed to fetch pending approvals.")
@@ -62,7 +79,7 @@ if st.button("Fetch Audit Chain"):
                 st.info("No audit logs found for this workflow.")
             for log in data:
                 st.markdown(f"**{log['timestamp']}** | `{log['event_type']}`")
-                st.json(log['details'])
+                st.json(log["details"])
         else:
             st.error("Failed to fetch audit chain.")
     except Exception as e:

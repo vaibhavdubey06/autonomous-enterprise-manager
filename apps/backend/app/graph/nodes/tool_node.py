@@ -38,16 +38,20 @@ def make_tool_node(tool_registry: ToolRegistry):
 
         duration_ms = (time.perf_counter() - start) * 1000
         end_ts = datetime.now(timezone.utc).isoformat()
-        logger.info(f"ToolNode — finish ({duration_ms:.1f}ms), results={len(tool_results)}")
+        logger.info(
+            f"ToolNode — finish ({duration_ms:.1f}ms), results={len(tool_results)}"
+        )
 
         trace = list(state.get("execution_trace", []))
-        trace.append({
-            "node": "Tool",
-            "start_time": start_ts,
-            "end_time": end_ts,
-            "duration_ms": round(duration_ms, 2),
-            "status": status,
-        })
+        trace.append(
+            {
+                "node": "Tool",
+                "start_time": start_ts,
+                "end_time": end_ts,
+                "duration_ms": round(duration_ms, 2),
+                "status": status,
+            }
+        )
 
         metrics = dict(state.get("metrics", {}))
         metrics["tool_ms"] = round(duration_ms, 2)

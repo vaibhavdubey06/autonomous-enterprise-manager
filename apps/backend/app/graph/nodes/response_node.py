@@ -62,9 +62,18 @@ def make_response_node(services: ServiceContainer):
                     conversation_id, "assistant", answer
                 )
 
-        except Exception as e:
-            logger.error(f"ResponseNode — error: {e}")
-            answer = "I encountered an error while generating a response. Please try again."
+        except Exception:
+            import traceback
+
+            err_str = traceback.format_exc()
+            logger.error(f"ResponseNode — error: {err_str}")
+            with open(
+                "C:/Users/dubey/autonomous-enterprise-manager/scratch_error.txt", "w"
+            ) as f:
+                f.write(err_str)
+            answer = (
+                "I encountered an error while generating a response. Please try again."
+            )
             status = "error"
 
         duration_ms = (time.perf_counter() - start) * 1000
@@ -72,13 +81,15 @@ def make_response_node(services: ServiceContainer):
         logger.info(f"ResponseNode — finish ({duration_ms:.1f}ms)")
 
         trace = list(state.get("execution_trace", []))
-        trace.append({
-            "node": "Response",
-            "start_time": start_ts,
-            "end_time": end_ts,
-            "duration_ms": round(duration_ms, 2),
-            "status": status,
-        })
+        trace.append(
+            {
+                "node": "Response",
+                "start_time": start_ts,
+                "end_time": end_ts,
+                "duration_ms": round(duration_ms, 2),
+                "status": status,
+            }
+        )
 
         metrics = dict(state.get("metrics", {}))
         metrics["llm_ms"] = round(duration_ms, 2)

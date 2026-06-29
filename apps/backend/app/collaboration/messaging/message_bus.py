@@ -1,16 +1,18 @@
 import asyncio
 import logging
-from typing import Callable, Dict, List, Any, Optional
+from typing import Callable, Dict, List
 from sqlalchemy.orm import Session
-from app.collaboration.messaging.message_models import CollaborationMessage, MessageType
+from app.collaboration.messaging.message_models import CollaborationMessage
 
 logger = logging.getLogger(__name__)
+
 
 class MessageBus:
     """
     Asynchronous message bus for Enterprise Collaboration Runtime.
     Handles pub/sub messaging and persistence.
     """
+
     def __init__(self, db: Session):
         self.db = db
         self._subscribers: Dict[str, List[Callable]] = {}
@@ -34,10 +36,7 @@ class MessageBus:
             raise e
 
         # Determine topics (e.g., specific receiver, all in collaboration, or all)
-        topics = [
-            f"collaboration:{message.collaboration_id}",
-            "all"
-        ]
+        topics = [f"collaboration:{message.collaboration_id}", "all"]
         if message.receiver:
             topics.append(f"agent:{message.receiver}")
 
@@ -49,9 +48,16 @@ class MessageBus:
 
         if callbacks:
             # Execute all callbacks concurrently
-            await asyncio.gather(*(cb(message) for cb in callbacks), return_exceptions=True)
-            
-    def get_messages_for_session(self, collaboration_id: str) -> List[CollaborationMessage]:
-        return self.db.query(CollaborationMessage).filter(
-            CollaborationMessage.collaboration_id == collaboration_id
-        ).order_by(CollaborationMessage.timestamp.asc()).all()
+            await asyncio.gather(
+                *(cb(message) for cb in callbacks), return_exceptions=True
+            )
+
+    def get_messages_for_session(
+        self, collaboration_id: str
+    ) -> List[CollaborationMessage]:
+        return (
+            self.db.query(CollaborationMessage)
+            .filter(CollaborationMessage.collaboration_id == collaboration_id)
+            .order_by(CollaborationMessage.timestamp.asc())
+            .all()
+        )

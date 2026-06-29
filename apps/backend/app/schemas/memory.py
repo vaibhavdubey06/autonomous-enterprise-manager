@@ -2,11 +2,13 @@ from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 
+
 class SessionSchema(BaseModel):
     id: str
     user_id: str
     created_at: datetime
     updated_at: datetime
+
 
 class ConversationSchema(BaseModel):
     id: str
@@ -15,6 +17,7 @@ class ConversationSchema(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+
 class MessageSchema(BaseModel):
     id: str
     role: str
@@ -22,11 +25,14 @@ class MessageSchema(BaseModel):
     importance: float
     timestamp: datetime
 
+
 class ConversationDetailSchema(ConversationSchema):
     messages: List[MessageSchema]
 
+
 class KnowledgeItemSchema(BaseModel):
     id: Optional[str] = None
+
 
 class MemoryObjectSchema(KnowledgeItemSchema):
     conversation_id: Optional[str] = None
@@ -37,7 +43,7 @@ class MemoryObjectSchema(KnowledgeItemSchema):
     importance: float = 0.5
     confidence: float = 0.5
     memory_status: str = "NEW"
-    
+
     source: Optional[str] = None
     source_message_id: Optional[str] = None
     source_conversation_id: Optional[str] = None
@@ -48,10 +54,10 @@ class MemoryObjectSchema(KnowledgeItemSchema):
 
     retrieval_count: int = 0
     last_accessed: Optional[datetime] = None
-    
+
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
-    
+
     metadata_: dict = {}
     tags: List[str] = []
     embedding_required: bool = True

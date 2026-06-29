@@ -1,9 +1,11 @@
 from enum import Enum
 
+
 class Capability(str, Enum):
     """
     Capabilities representing specific domain expertise an Executive Agent possesses.
     """
+
     CODE_REVIEW = "CODE_REVIEW"
     ARCHITECTURE_ANALYSIS = "ARCHITECTURE_ANALYSIS"
     DOCUMENT_ANALYSIS = "DOCUMENT_ANALYSIS"

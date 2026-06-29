@@ -1,8 +1,9 @@
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 from pydantic import BaseModel
 import uuid
 import datetime
 import enum
+
 
 class TaskStatus(str, enum.Enum):
     PENDING = "Pending"
@@ -12,6 +13,7 @@ class TaskStatus(str, enum.Enum):
     FAILED = "Failed"
     ESCALATED = "Escalated"
 
+
 class DelegatedTask(BaseModel):
     task_id: str
     description: str
@@ -20,18 +22,21 @@ class DelegatedTask(BaseModel):
     created_at: str
     completed_at: Optional[str] = None
 
+
 class DelegationManager:
     def __init__(self):
         self.tasks: Dict[str, DelegatedTask] = {}
 
-    def delegate_task(self, description: str, assignee: Optional[str] = None) -> DelegatedTask:
+    def delegate_task(
+        self, description: str, assignee: Optional[str] = None
+    ) -> DelegatedTask:
         tid = str(uuid.uuid4())
         task = DelegatedTask(
             task_id=tid,
             description=description,
             assignee=assignee,
             status=TaskStatus.ASSIGNED if assignee else TaskStatus.PENDING,
-            created_at=datetime.datetime.utcnow().isoformat()
+            created_at=datetime.datetime.utcnow().isoformat(),
         )
         self.tasks[tid] = task
         return task

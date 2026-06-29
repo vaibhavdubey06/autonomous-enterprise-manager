@@ -1,11 +1,13 @@
 from app.services.memory.models import ExtractedMemory
-from app.services.memory.types import MemoryType
+from app.services.memory.memory_types import MemoryType
+
 
 class ImportanceScorer:
     """
     Scores memory importance based on type, novelty, and specificity.
     Returns a score between 0.0 and 1.0.
     """
+
     def score(self, memory: ExtractedMemory) -> float:
         # Base score based on memory type
         type_scores = {
@@ -22,9 +24,9 @@ class ImportanceScorer:
             MemoryType.QUESTION: 0.50,
             MemoryType.UNKNOWN: 0.30,
         }
-        
+
         base_score = type_scores.get(memory.memory_type, 0.30)
-        
+
         # Adjust based on content length/specificity (heuristic)
         # e.g., longer descriptions might be slightly more specific up to a point
         length = len(memory.content)
@@ -32,5 +34,5 @@ class ImportanceScorer:
             base_score = min(base_score + 0.05, 1.0)
         elif length < 10:
             base_score = max(base_score - 0.1, 0.0)
-            
+
         return round(base_score, 2)

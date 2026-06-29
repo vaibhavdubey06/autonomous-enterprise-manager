@@ -2,8 +2,10 @@ from pydantic import BaseModel
 from typing import Any, Dict, Optional
 from datetime import datetime
 
+
 class EventType(str):
     pass
+
 
 class WorkflowEvent(BaseModel):
     event_id: str
@@ -17,6 +19,7 @@ class WorkflowEvent(BaseModel):
         super().__init__(**data)
         if not self.timestamp:
             self.timestamp = datetime.utcnow()
+
 
 # Common Event Types
 WORKFLOW_CREATED = "WorkflowCreated"

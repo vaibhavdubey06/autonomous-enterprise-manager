@@ -1,10 +1,12 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
+
 
 class ChatRequest(BaseModel):
     session_id: Optional[str] = None
     conversation_id: Optional[str] = None
     question: str
+
 
 class ChatResponse(BaseModel):
     session_id: str

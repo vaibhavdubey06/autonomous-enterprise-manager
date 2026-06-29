@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import List, Optional
-from app.services.memory.types import MemoryType
+from app.services.memory.memory_types import MemoryType
+
 
 class ExtractedMemory(BaseModel):
     title: str
@@ -11,6 +12,7 @@ class ExtractedMemory(BaseModel):
     tags: List[str] = []
     importance: Optional[float] = None
     confidence: Optional[float] = None
+
 
 class MemoryExtractionResult(BaseModel):
     memories: List[ExtractedMemory]

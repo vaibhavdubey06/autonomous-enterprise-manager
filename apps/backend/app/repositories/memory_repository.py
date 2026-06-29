@@ -5,10 +5,12 @@ from uuid import UUID
 
 from app.models.memory import MemoryObject
 
+
 class MemoryRepository:
     """
     Repository for managing MemoryObjects in PostgreSQL.
     """
+
     def __init__(self, db: DBSession):
         self.db = db
 
@@ -24,7 +26,7 @@ class MemoryRepository:
             uid = UUID(memory_id)
         except ValueError:
             return None
-            
+
         memory = self.db.query(MemoryObject).filter(MemoryObject.id == uid).first()
         if memory:
             for key, value in updates.items():
@@ -41,7 +43,9 @@ class MemoryRepository:
             return None
         return self.db.query(MemoryObject).filter(MemoryObject.id == uid).first()
 
-    def find_similar_memories(self, query: str, user_id: str, limit: int = 5) -> List[MemoryObject]:
+    def find_similar_memories(
+        self, query: str, user_id: str, limit: int = 5
+    ) -> List[MemoryObject]:
         """
         Placeholder for semantic search directly in DB if we used pgvector,
         but since we use Qdrant for semantics, this method might just do exact/like matching
@@ -49,7 +53,7 @@ class MemoryRepository:
         For phase 2.1, the service layer will call Qdrant, get IDs, and then we fetch them here.
         """
         pass
-        
+
     def get_memories_by_ids(self, memory_ids: List[str]) -> List[MemoryObject]:
         uids = []
         for mid in memory_ids:
@@ -62,10 +66,13 @@ class MemoryRepository:
 
 class MemoryEntityRepository:
     """Placeholder for future Knowledge Graph evolution."""
+
     def __init__(self, db: DBSession):
         self.db = db
 
+
 class MemoryRelationshipRepository:
     """Placeholder for future Knowledge Graph evolution."""
+
     def __init__(self, db: DBSession):
         self.db = db

@@ -7,10 +7,14 @@ from app.services.llm.llm_service import LLMService
 
 logger = logging.getLogger(__name__)
 
+
 class MemoryExtractionStrategy(ABC):
     @abstractmethod
-    def extract(self, history: str, user_message: str, assistant_response: str) -> List[ExtractedMemory]:
+    def extract(
+        self, history: str, user_message: str, assistant_response: str
+    ) -> List[ExtractedMemory]:
         pass
+
 
 class GeminiMemoryExtractionStrategy(MemoryExtractionStrategy):
     def __init__(self, llm_service: LLMService):
@@ -18,7 +22,9 @@ class GeminiMemoryExtractionStrategy(MemoryExtractionStrategy):
         self.strategy_name = "GeminiMemoryExtractionStrategy"
         self.version = "1.0"
 
-    def extract(self, history: str, user_message: str, assistant_response: str) -> List[ExtractedMemory]:
+    def extract(
+        self, history: str, user_message: str, assistant_response: str
+    ) -> List[ExtractedMemory]:
         prompt = (
             "You are a Memory Extraction Assistant.\n"
             "Analyze the following conversation and extract any long-term memories that would be useful for the future.\n"
@@ -42,7 +48,7 @@ class GeminiMemoryExtractionStrategy(MemoryExtractionStrategy):
             # In a real implementation with Gemini 1.5 Pro, we could use the new `response_schema` feature,
             # but since `llm_service.py` currently just uses `generate_answer` which returns text, we will parse the JSON.
             result_text = self.llm_service.generate_answer(prompt, [])
-            
+
             # Strip markdown JSON fences if any
             result_text = result_text.strip()
             if result_text.startswith("```json"):
@@ -51,7 +57,7 @@ class GeminiMemoryExtractionStrategy(MemoryExtractionStrategy):
                 result_text = result_text[3:]
             if result_text.endswith("```"):
                 result_text = result_text[:-3]
-                
+
             data = json.loads(result_text)
             parsed = MemoryExtractionResult(**data)
             return parsed.memories

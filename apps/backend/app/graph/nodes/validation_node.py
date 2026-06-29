@@ -59,22 +59,21 @@ def validation_node(state: GraphState) -> GraphState:
     logger.info(f"ValidationNode — finish ({duration_ms:.1f}ms), status={status}")
 
     trace = list(state.get("execution_trace", []))
-    trace.append({
-        "node": "Validation",
-        "start_time": start_ts,
-        "end_time": end_ts,
-        "duration_ms": round(duration_ms, 2),
-        "status": status,
-    })
+    trace.append(
+        {
+            "node": "Validation",
+            "start_time": start_ts,
+            "end_time": end_ts,
+            "duration_ms": round(duration_ms, 2),
+            "status": status,
+        }
+    )
 
     metrics = dict(state.get("metrics", {}))
     metrics["validation_ms"] = round(duration_ms, 2)
 
     # Compute total_ms
-    total_ms = sum(
-        step.get("duration_ms", 0)
-        for step in trace
-    )
+    total_ms = sum(step.get("duration_ms", 0) for step in trace)
     metrics["total_ms"] = round(total_ms, 2)
 
     return {

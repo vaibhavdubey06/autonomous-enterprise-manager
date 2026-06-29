@@ -6,7 +6,6 @@ Analyses the question with simple heuristics and produces a PlanDecision.
 """
 
 import logging
-import re
 import time
 from datetime import datetime, timezone
 from typing import List
@@ -17,18 +16,42 @@ logger = logging.getLogger(__name__)
 
 # ── Keyword banks for deterministic classification ──
 _MEMORY_KEYWORDS = [
-    "yesterday", "last time", "earlier", "before", "previous",
-    "we discussed", "we decided", "remember", "you said", "i said",
-    "our conversation", "last conversation", "previously",
+    "yesterday",
+    "last time",
+    "earlier",
+    "before",
+    "previous",
+    "we discussed",
+    "we decided",
+    "remember",
+    "you said",
+    "i said",
+    "our conversation",
+    "last conversation",
+    "previously",
 ]
 
 _GITHUB_KEYWORDS = [
-    "github", "pull request", "pr", "issue", "commit", "merge",
-    "branch", "repository", "repo", "code review",
+    "github",
+    "pull request",
+    "pr",
+    "issue",
+    "commit",
+    "merge",
+    "branch",
+    "repository",
+    "repo",
+    "code review",
 ]
 
 _RETRIEVAL_SKIP_KEYWORDS = [
-    "hello", "hi", "hey", "thanks", "thank you", "bye", "goodbye",
+    "hello",
+    "hi",
+    "hey",
+    "thanks",
+    "thank you",
+    "bye",
+    "goodbye",
 ]
 
 
@@ -81,13 +104,15 @@ def planner_node(state: GraphState) -> GraphState:
     )
 
     trace = list(state.get("execution_trace", []))
-    trace.append({
-        "node": "Planner",
-        "start_time": start_ts,
-        "end_time": end_ts,
-        "duration_ms": round(duration_ms, 2),
-        "status": "success",
-    })
+    trace.append(
+        {
+            "node": "Planner",
+            "start_time": start_ts,
+            "end_time": end_ts,
+            "duration_ms": round(duration_ms, 2),
+            "status": "success",
+        }
+    )
 
     metrics = dict(state.get("metrics", {}))
     metrics["planner_ms"] = round(duration_ms, 2)

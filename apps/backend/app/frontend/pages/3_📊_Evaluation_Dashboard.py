@@ -6,9 +6,13 @@ import glob
 st.set_page_config(page_title="Evaluation Dashboard", page_icon="📊", layout="wide")
 
 st.title("📊 Enterprise AI Evaluation & Observability")
-st.markdown("Monitor performance, intelligence, cost, and historical regressions across all autonomous subsystems.")
+st.markdown(
+    "Monitor performance, intelligence, cost, and historical regressions across all autonomous subsystems."
+)
 
-history_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "evaluation", "reports"))
+history_dir = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "..", "evaluation", "reports")
+)
 files = glob.glob(os.path.join(history_dir, "*.json"))
 
 if not files:
@@ -39,14 +43,20 @@ st.header("2. Latency Breakdown (Average / P95)")
 latency = data.get("latency_breakdown", {})
 if latency:
     c1, c2, c3 = st.columns(3)
-    
+
     vs = latency.get("vector_search_latency_ms", {})
     ce = latency.get("cross_encoder_latency_ms", {})
     llm = latency.get("llm_generation_latency_ms", {})
-    
-    c1.metric("Vector Search", f"{vs.get('avg_ms', 0):.1f} / {vs.get('p95_ms', 0):.1f} ms")
-    c2.metric("Cross-Encoder", f"{ce.get('avg_ms', 0):.1f} / {ce.get('p95_ms', 0):.1f} ms")
-    c3.metric("LLM Generation", f"{llm.get('avg_ms', 0):.1f} / {llm.get('p95_ms', 0):.1f} ms")
+
+    c1.metric(
+        "Vector Search", f"{vs.get('avg_ms', 0):.1f} / {vs.get('p95_ms', 0):.1f} ms"
+    )
+    c2.metric(
+        "Cross-Encoder", f"{ce.get('avg_ms', 0):.1f} / {ce.get('p95_ms', 0):.1f} ms"
+    )
+    c3.metric(
+        "LLM Generation", f"{llm.get('avg_ms', 0):.1f} / {llm.get('p95_ms', 0):.1f} ms"
+    )
 
 st.header("3. RAG Quality Metrics")
 rag = data.get("rag_quality", {})
@@ -60,7 +70,9 @@ st.header("4. Cognitive Memory Metrics")
 mem = data.get("memory_quality", {})
 if mem:
     c1, c2 = st.columns(2)
-    c1.metric("Deduplication Efficiency", f"{mem.get('deduplication_efficiency', 0)*100:.1f}%")
+    c1.metric(
+        "Deduplication Efficiency", f"{mem.get('deduplication_efficiency', 0)*100:.1f}%"
+    )
     c2.metric("Token Reduction", f"{mem.get('token_reduction_percentage', 0)*100:.1f}%")
 
 st.header("5. End-to-End Scenarios")

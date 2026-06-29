@@ -1,10 +1,12 @@
 from typing import List, Dict, Any
 from pydantic import BaseModel, Field
 
+
 class ExecutiveResult(BaseModel):
     """
     Standardized result structure returned by any Executive Agent.
     """
+
     task_id: str
     agent: str
     summary: str

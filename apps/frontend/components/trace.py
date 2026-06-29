@@ -1,10 +1,11 @@
 import streamlit as st
 import pandas as pd
 
+
 def render_trace(execution_trace: list):
     if not execution_trace:
         return
-        
+
     with st.expander("⏱️ Execution Trace", expanded=False):
         # Convert trace directly to DataFrame
         df = pd.DataFrame(execution_trace)
@@ -12,7 +13,7 @@ def render_trace(execution_trace: list):
             # We can show a simple table
             df = df.rename(columns={"node": "Node", "duration_ms": "Duration (ms)"})
             st.dataframe(df, use_container_width=True, hide_index=True)
-            
+
             # Simple timeline visualization
             st.caption("Timeline Visualization")
             for item in execution_trace:

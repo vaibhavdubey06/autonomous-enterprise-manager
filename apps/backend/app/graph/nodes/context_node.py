@@ -44,13 +44,15 @@ def context_node(state: GraphState) -> GraphState:
     logger.info(f"ContextNode — finish ({duration_ms:.1f}ms)")
 
     trace = list(state.get("execution_trace", []))
-    trace.append({
-        "node": "Context",
-        "start_time": start_ts,
-        "end_time": end_ts,
-        "duration_ms": round(duration_ms, 2),
-        "status": status,
-    })
+    trace.append(
+        {
+            "node": "Context",
+            "start_time": start_ts,
+            "end_time": end_ts,
+            "duration_ms": round(duration_ms, 2),
+            "status": status,
+        }
+    )
 
     metrics = dict(state.get("metrics", {}))
     metrics["context_ms"] = round(duration_ms, 2)

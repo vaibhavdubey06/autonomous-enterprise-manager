@@ -1,16 +1,21 @@
-import pytest
-
 def test_search_endpoint(client, mocker):
 
     # Mock qdrant search
-    mocker.patch("app.api.v1.search.search", return_value=[
-        {"text": "mocked search result", "score": 0.95, "metadata": {"source": "test.pdf", "page": 1}}
-    ])
-    
+    mocker.patch(
+        "app.api.v1.search.search",
+        return_value=[
+            {
+                "text": "mocked search result",
+                "score": 0.95,
+                "metadata": {"source": "test.pdf", "page": 1},
+            }
+        ],
+    )
+
     payload = {"query": "test query"}
-    
+
     response = client.post("/search", json=payload)
-    
+
     assert response.status_code == 200
     data = response.json()
     assert "results" in data

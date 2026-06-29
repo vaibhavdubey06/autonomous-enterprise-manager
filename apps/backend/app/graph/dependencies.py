@@ -20,6 +20,7 @@ class ServiceContainer:
     Passed into node factory functions so nodes never import
     or instantiate services themselves.
     """
+
     memory_service: MemoryService
     llm_service: LLMService
     cross_encoder_service: CrossEncoderService

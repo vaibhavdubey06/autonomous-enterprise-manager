@@ -1,18 +1,26 @@
-import pytest
 from app.services.memory.scorer import ImportanceScorer
 from app.services.memory.models import ExtractedMemory
-from app.services.memory.types import MemoryType
+from app.services.memory.memory_types import MemoryType
+
 
 def test_importance_scorer_types():
     scorer = ImportanceScorer()
-    
+
     # Decisions should score high
-    mem = ExtractedMemory(title="test", content="We decided to use FastAPI", memory_type=MemoryType.DECISION)
+    mem = ExtractedMemory(
+        title="test",
+        content="We decided to use FastAPI",
+        memory_type=MemoryType.DECISION,
+    )
     score = scorer.score(mem)
     assert score >= 0.90
-    
+
     # Facts should score high but slightly lower
-    mem = ExtractedMemory(title="test", content="The team uses Python for backend", memory_type=MemoryType.FACT)
+    mem = ExtractedMemory(
+        title="test",
+        content="The team uses Python for backend",
+        memory_type=MemoryType.FACT,
+    )
     score = scorer.score(mem)
     assert score >= 0.80
 
@@ -21,10 +29,17 @@ def test_importance_scorer_types():
     score = scorer.score(mem)
     assert score <= 0.30
 
+
 def test_importance_scorer_length_adjustment():
     scorer = ImportanceScorer()
-    
-    short_mem = ExtractedMemory(title="test", content="Yes.", memory_type=MemoryType.FACT)
-    long_mem = ExtractedMemory(title="test", content="Yes, this is a very long explanation that goes into detail about the topic.", memory_type=MemoryType.FACT)
-    
+
+    short_mem = ExtractedMemory(
+        title="test", content="Yes.", memory_type=MemoryType.FACT
+    )
+    long_mem = ExtractedMemory(
+        title="test",
+        content="Yes, this is a very long explanation that goes into detail about the topic.",
+        memory_type=MemoryType.FACT,
+    )
+
     assert scorer.score(long_mem) > scorer.score(short_mem)

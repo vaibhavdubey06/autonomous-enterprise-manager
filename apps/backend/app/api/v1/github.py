@@ -10,13 +10,15 @@ from app.services.vectorstore.qdrant_service import create_collection, store_chu
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+
 def get_github_connector() -> GitHubConnector:
     return GitHubConnector()
+
 
 @router.post("/github/index")
 async def index_github_repository(
     request: GitHubIndexRequest,
-    connector: GitHubConnector = Depends(get_github_connector)
+    connector: GitHubConnector = Depends(get_github_connector),
 ):
     """
     Index a GitHub repository into the vector database.
@@ -33,10 +35,10 @@ async def index_github_repository(
         for doc in connector.fetch_documents(repository_name):
             # Wrap text in the format expected by chunk_text
             pages_data = [{"page": 1, "text": doc["text"]}]
-            
+
             # Chunk the document
             doc_chunks = chunk_text(pages_data)
-            
+
             # Inject GitHub metadata into each chunk
             for c in doc_chunks:
                 c["source"] = doc["source"]
@@ -44,32 +46,32 @@ async def index_github_repository(
                 c["branch"] = doc["branch"]
                 c["path"] = doc["path"]
                 c["url"] = doc["url"]
-                
+
             if not doc_chunks:
                 continue
 
             # Generate embeddings
             chunk_texts = [c["text"] for c in doc_chunks]
             embeddings = embed_batch(chunk_texts)
-            
+
             # Store in Qdrant
             # Pass document_name as the path so it displays cleanly in citations
             store_chunks(
-                chunks=doc_chunks,
-                embeddings=embeddings,
-                document_name=doc["path"]
+                chunks=doc_chunks, embeddings=embeddings, document_name=doc["path"]
             )
-            
+
             total_chunks += len(doc_chunks)
             total_docs += 1
 
-        logger.info(f"Successfully indexed {repository_name}: {total_docs} docs, {total_chunks} chunks.")
-        
+        logger.info(
+            f"Successfully indexed {repository_name}: {total_docs} docs, {total_chunks} chunks."
+        )
+
         return {
             "repository": repository_name,
             "documents_indexed": total_docs,
             "chunks_stored": total_chunks,
-            "status": "success"
+            "status": "success",
         }
 
     except ValueError as e:
@@ -77,4 +79,6 @@ async def index_github_repository(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Unexpected error indexing {repository_name}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to index GitHub repository.")
+        raise HTTPException(
+            status_code=500, detail="Failed to index GitHub repository."
+        )

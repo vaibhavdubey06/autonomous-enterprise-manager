@@ -3,6 +3,7 @@ from app.governance.context.governance_context import GovernanceContext
 from app.governance.policy.policy_engine import BasePolicy
 from app.governance.policy.policy_models import PolicyEvaluationResult
 
+
 class PolicyChain:
     def __init__(self):
         self.policies: List[BasePolicy] = []

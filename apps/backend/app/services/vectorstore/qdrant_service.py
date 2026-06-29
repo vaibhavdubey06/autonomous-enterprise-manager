@@ -1,24 +1,22 @@
-from qdrant_client import QdrantClient
-from qdrant_client.models import (
-    Distance,
-    VectorParams,
-    PointStruct,
-)
 from functools import lru_cache
+
+from qdrant_client import QdrantClient
+from qdrant_client.models import Distance, PointStruct, VectorParams
+
+from app.core.config import settings
+
 
 @lru_cache()
 def get_client():
-    return QdrantClient(url="http://localhost:6333")
+    return QdrantClient(url=settings.QDRANT_URL)
+
 
 COLLECTION_NAME = "documents"
 
 
 def create_collection():
 
-    collections = [
-        c.name
-        for c in get_client().get_collections().collections
-    ]
+    collections = [c.name for c in get_client().get_collections().collections]
 
     if COLLECTION_NAME not in collections:
 
@@ -43,7 +41,7 @@ def store_chunks(
     for idx, (chunk_dict, embedding) in enumerate(zip(chunks, embeddings)):
         # Generate a more robust ID if needed, or just use a random UUID
         point_id = str(uuid.uuid4())
-        
+
         points.append(
             PointStruct(
                 id=point_id,
@@ -57,7 +55,7 @@ def store_chunks(
                     "repository": chunk_dict.get("repository", ""),
                     "branch": chunk_dict.get("branch", ""),
                     "path": chunk_dict.get("path", ""),
-                    "url": chunk_dict.get("url", "")
+                    "url": chunk_dict.get("url", ""),
                 },
             )
         )
@@ -68,15 +66,17 @@ def store_chunks(
     )
 
 
-def store_memory_chunk(conversation_id: str, message_id: str, role: str, text: str, timestamp: str):
+def store_memory_chunk(
+    conversation_id: str, message_id: str, role: str, text: str, timestamp: str
+):
     """
     Embed and store a single conversation message as semantic memory in the exact same collection.
     """
     from app.services.embeddings.embedding_service import embed_text
     import uuid
-    
+
     embedding = embed_text(text)
-    
+
     # Store directly in existing COLLECTION_NAME
     point_id = str(uuid.uuid4())
     get_client().upsert(
@@ -91,13 +91,16 @@ def store_memory_chunk(conversation_id: str, message_id: str, role: str, text: s
                     "message_id": message_id,
                     "role": role,
                     "text": text,
-                    "timestamp": timestamp
-                }
+                    "timestamp": timestamp,
+                },
             )
-        ]
+        ],
     )
 
-def search(query: str, limit: int = 5, source_filter: str = None, exclude_source: str = None):
+
+def search(
+    query: str, limit: int = 5, source_filter: str = None, exclude_source: str = None
+):
     """
     Perform a semantic search in the Qdrant collection with optional filtering.
     """
@@ -109,37 +112,30 @@ def search(query: str, limit: int = 5, source_filter: str = None, exclude_source
         raise HTTPException(status_code=400, detail="Search query cannot be empty")
 
     try:
-        collections = [
-            c.name
-            for c in get_client().get_collections().collections
-        ]
+        collections = [c.name for c in get_client().get_collections().collections]
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"Qdrant connection failure: {e}")
 
     if COLLECTION_NAME not in collections:
-        raise HTTPException(status_code=404, detail="Collection not found. Upload documents first.")
+        raise HTTPException(
+            status_code=404, detail="Collection not found. Upload documents first."
+        )
 
     try:
         query_vector = embed_text(query)
-        
+
         # Build filter if provided
         query_filter = None
         if source_filter:
             query_filter = Filter(
                 must=[
-                    FieldCondition(
-                        key="source",
-                        match=MatchValue(value=source_filter)
-                    )
+                    FieldCondition(key="source", match=MatchValue(value=source_filter))
                 ]
             )
         elif exclude_source:
             query_filter = Filter(
                 must_not=[
-                    FieldCondition(
-                        key="source",
-                        match=MatchValue(value=exclude_source)
-                    )
+                    FieldCondition(key="source", match=MatchValue(value=exclude_source))
                 ]
             )
 
@@ -149,7 +145,7 @@ def search(query: str, limit: int = 5, source_filter: str = None, exclude_source
             query_filter=query_filter,
             limit=limit,
         )
-        
+
         return [
             {
                 "score": hit.score,
@@ -165,7 +161,7 @@ def search(query: str, limit: int = 5, source_filter: str = None, exclude_source
                 "conversation_id": hit.payload.get("conversation_id", ""),
                 "message_id": hit.payload.get("message_id", ""),
                 "role": hit.payload.get("role", ""),
-                "timestamp": hit.payload.get("timestamp", "")
+                "timestamp": hit.payload.get("timestamp", ""),
             }
             for hit in results.points
         ]

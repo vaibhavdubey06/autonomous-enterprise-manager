@@ -68,21 +68,27 @@ def make_memory_node(services: ServiceContainer):
         logger.info(f"MemoryNode — finish ({duration_ms:.1f}ms)")
 
         trace = list(state.get("execution_trace", []))
-        trace.append({
-            "node": "Memory",
-            "start_time": start_ts,
-            "end_time": end_ts,
-            "duration_ms": round(duration_ms, 2),
-            "status": status,
-        })
+        trace.append(
+            {
+                "node": "Memory",
+                "start_time": start_ts,
+                "end_time": end_ts,
+                "duration_ms": round(duration_ms, 2),
+                "status": status,
+            }
+        )
 
         metrics = dict(state.get("metrics", {}))
         metrics["memory_ms"] = round(duration_ms, 2)
 
         return {
             **state,
-            "session_id": session_id if status == "success" else state.get("session_id"),
-            "conversation_id": conversation_id if status == "success" else state.get("conversation_id"),
+            "session_id": (
+                session_id if status == "success" else state.get("session_id")
+            ),
+            "conversation_id": (
+                conversation_id if status == "success" else state.get("conversation_id")
+            ),
             "recent_memory": recent_memory,
             "semantic_memory": semantic_memory,
             "memory_context": memory_context,

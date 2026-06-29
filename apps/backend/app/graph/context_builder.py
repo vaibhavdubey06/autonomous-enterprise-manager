@@ -41,25 +41,31 @@ def build_merged_context(
 
         src = source_data["source"]
         if src == "conversation":
-            source_data.update({
-                "conversation_id": chunk.get("conversation_id", ""),
-                "message_id": chunk.get("message_id", ""),
-                "role": chunk.get("role", ""),
-                "timestamp": chunk.get("timestamp", ""),
-            })
+            source_data.update(
+                {
+                    "conversation_id": chunk.get("conversation_id", ""),
+                    "message_id": chunk.get("message_id", ""),
+                    "role": chunk.get("role", ""),
+                    "timestamp": chunk.get("timestamp", ""),
+                }
+            )
         elif src == "github":
-            source_data.update({
-                "repository": chunk.get("repository", ""),
-                "branch": chunk.get("branch", ""),
-                "path": chunk.get("path", ""),
-                "url": chunk.get("url", ""),
-            })
+            source_data.update(
+                {
+                    "repository": chunk.get("repository", ""),
+                    "branch": chunk.get("branch", ""),
+                    "path": chunk.get("path", ""),
+                    "url": chunk.get("url", ""),
+                }
+            )
         else:
-            source_data.update({
-                "document": chunk.get("document", "Unknown"),
-                "page": chunk.get("page", 1),
-                "chunk": chunk.get("chunk", 0),
-            })
+            source_data.update(
+                {
+                    "document": chunk.get("document", "Unknown"),
+                    "page": chunk.get("page", 1),
+                    "chunk": chunk.get("chunk", 0),
+                }
+            )
 
         sources.append(source_data)
 

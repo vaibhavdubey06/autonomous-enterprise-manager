@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class GitHubAction(str, Enum):
     INDEX_REPOSITORY = "index_repository"
     CREATE_ISSUE = "create_issue"

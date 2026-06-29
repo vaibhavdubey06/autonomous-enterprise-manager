@@ -24,7 +24,7 @@ def router_node(state: GraphState) -> GraphState:
     start_ts = datetime.now(timezone.utc).isoformat()
     logger.info("RouterNode — start")
 
-    question = state.get("question", "")
+    state.get("question", "")
 
     # ── Deterministic intent classification ──
     # Future: use a lightweight classifier or keyword heuristics
@@ -34,16 +34,20 @@ def router_node(state: GraphState) -> GraphState:
 
     duration_ms = (time.perf_counter() - start) * 1000
     end_ts = datetime.now(timezone.utc).isoformat()
-    logger.info(f"RouterNode — finish ({duration_ms:.1f}ms) → workflow_type={workflow_type}")
+    logger.info(
+        f"RouterNode — finish ({duration_ms:.1f}ms) → workflow_type={workflow_type}"
+    )
 
     trace = list(state.get("execution_trace", []))
-    trace.append({
-        "node": "Router",
-        "start_time": start_ts,
-        "end_time": end_ts,
-        "duration_ms": round(duration_ms, 2),
-        "status": "success",
-    })
+    trace.append(
+        {
+            "node": "Router",
+            "start_time": start_ts,
+            "end_time": end_ts,
+            "duration_ms": round(duration_ms, 2),
+            "status": "success",
+        }
+    )
 
     metrics = dict(state.get("metrics", {}))
     metrics["router_ms"] = round(duration_ms, 2)

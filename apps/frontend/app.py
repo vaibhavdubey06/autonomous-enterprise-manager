@@ -4,7 +4,7 @@ st.set_page_config(
     page_title="Enterprise AI Operations",
     page_icon="🤖",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
 )
 
 from components.sidebar import render_sidebar
@@ -12,6 +12,7 @@ from components.sidebar import render_sidebar
 # Initialize Session State Variables
 if "session_id" not in st.session_state:
     import uuid
+
     st.session_state.session_id = str(uuid.uuid4())
 
 if "conversation_id" not in st.session_state:

@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class MemoryType(str, Enum):
     FACT = "FACT"
     DECISION = "DECISION"
@@ -13,6 +14,7 @@ class MemoryType(str, Enum):
     SKILL = "SKILL"
     QUESTION = "QUESTION"
     UNKNOWN = "UNKNOWN"
+
 
 class MemoryStatus(str, Enum):
     NEW = "NEW"

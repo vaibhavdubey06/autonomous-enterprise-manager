@@ -1,5 +1,4 @@
 import logging
-import time
 from abc import ABC, abstractmethod
 from typing import Dict, Any, List
 
@@ -14,13 +13,16 @@ logger = logging.getLogger(__name__)
 from app.capabilities.base.executor import CapabilityExecutor
 from app.capabilities.base.schemas import CapabilityResult
 
+
 class BaseExecutiveAgent(ABC):
     """
     Abstract Base Class for all Executive Agents (CTO, CFO, COO, etc.).
     Provides reusable functionality for retrieval, reasoning, and structured output.
     """
-    
-    def __init__(self, llm_service: LLMService, capability_executor: CapabilityExecutor = None):
+
+    def __init__(
+        self, llm_service: LLMService, capability_executor: CapabilityExecutor = None
+    ):
         self.llm_service = llm_service
         self.capability_executor = capability_executor
 
@@ -39,36 +41,47 @@ class BaseExecutiveAgent(ABC):
         """
         pass
 
-    def retrieve_enterprise_knowledge(self, query: str, state: Dict[str, Any]) -> Dict[str, Any]:
+    def retrieve_enterprise_knowledge(
+        self, query: str, state: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """
         Legacy method for direct RAG retrieval. Preserved for backward compatibility.
         """
         # If knowledge agent was not passed in via kwargs (since we removed it from init)
         # we will log a warning and return empty.
-        logger.warning("retrieve_enterprise_knowledge is deprecated. Use capabilities instead.")
+        logger.warning(
+            "retrieve_enterprise_knowledge is deprecated. Use capabilities instead."
+        )
         return {"answer": "Legacy retrieval unavailable.", "sources": []}
 
-    def invoke_capability(self, capability_id: str, action: str, **kwargs) -> CapabilityResult:
+    def invoke_capability(
+        self, capability_id: str, action: str, **kwargs
+    ) -> CapabilityResult:
         """
         Delegates to the Capability Executor to run tools, workflows, or APIs.
         """
         if not self.capability_executor:
-            logger.warning("Capability Executor is not injected. Skipping capability invocation.")
+            logger.warning(
+                "Capability Executor is not injected. Skipping capability invocation."
+            )
             from app.capabilities.base.schemas import CapabilityResult
+
             return CapabilityResult(
                 success=False,
                 capability_name=capability_id,
                 action=action,
                 status="FAILED",
-                errors=["Capability Executor not available."]
+                errors=["Capability Executor not available."],
             )
-            
-        logger.info(f"[{self.get_profile().agent_name}] Invoking capability {capability_id}.{action}")
+
+        logger.info(
+            f"[{self.get_profile().agent_name}] Invoking capability {capability_id}.{action}"
+        )
         return self.capability_executor.execute(
             agent_name=self.get_profile().agent_name,
             capability_id=capability_id,
             action=action,
-            **kwargs
+            **kwargs,
         )
 
     def reason(self, prompt: str) -> str:
@@ -88,14 +101,23 @@ class BaseExecutiveAgent(ABC):
         """
         Uses Gemini to generate structured output conforming to a Pydantic schema.
         """
-        logger.info(f"[{self.get_profile().agent_name}] Generating structured reasoning for schema {schema.__name__}")
+        logger.info(
+            f"[{self.get_profile().agent_name}] Generating structured reasoning for schema {schema.__name__}"
+        )
         json_str = self.llm_service.generate_structured(prompt, schema)
         import json
+
         return schema(**json.loads(json_str))
 
-    def _create_result(self, task: ExecutiveTask, summary: str, reasoning: str, 
-                       recommendations: List[str], sources: List[Dict[str, Any]], 
-                       metrics: Dict[str, Any] = None) -> ExecutiveResult:
+    def _create_result(
+        self,
+        task: ExecutiveTask,
+        summary: str,
+        reasoning: str,
+        recommendations: List[str],
+        sources: List[Dict[str, Any]],
+        metrics: Dict[str, Any] = None,
+    ) -> ExecutiveResult:
         """
         Helper method to construct the standardized ExecutiveResult.
         """
@@ -105,8 +127,8 @@ class BaseExecutiveAgent(ABC):
             summary=summary,
             reasoning=reasoning,
             recommendations=recommendations,
-            confidence=0.9, # Default, can be overridden by specific agents
+            confidence=0.9,  # Default, can be overridden by specific agents
             sources=sources,
             artifacts=[],
-            execution_metrics=metrics or {}
+            execution_metrics=metrics or {},
         )

@@ -5,7 +5,8 @@ from app.services.vectorstore.qdrant_service import search
 
 router = APIRouter()
 
-@router.post("/search")
+
+@router.post("")
 async def perform_search(request: SearchRequest):
     """
     Perform a semantic search against the uploaded documents.

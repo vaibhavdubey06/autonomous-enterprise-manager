@@ -10,6 +10,7 @@ from typing import TypedDict, List, Dict, Any, Optional
 
 class ExecutionStep(TypedDict):
     """A single step in the execution trace."""
+
     node: str
     start_time: str
     end_time: str
@@ -19,6 +20,7 @@ class ExecutionStep(TypedDict):
 
 class PlanDecision(TypedDict):
     """Output of the Planner Node — deterministic, no LLM."""
+
     needs_memory: bool
     needs_retrieval: bool
     needs_tools: List[str]
@@ -27,6 +29,7 @@ class PlanDecision(TypedDict):
 
 class GraphMetrics(TypedDict, total=False):
     """Observability metrics collected across nodes."""
+
     router_ms: float
     planner_ms: float
     memory_ms: float

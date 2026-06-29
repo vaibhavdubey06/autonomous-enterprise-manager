@@ -1,14 +1,19 @@
 import streamlit as st
 import requests
 import pandas as pd
-from datetime import datetime
+import os
 
-st.set_page_config(page_title="Workflow Runtime Dashboard", page_icon="⚙️", layout="wide")
+st.set_page_config(
+    page_title="Workflow Runtime Dashboard", page_icon="⚙️", layout="wide"
+)
 
 st.title("⚙️ Enterprise Workflow Runtime")
 st.markdown("Monitor and control Autonomous Enterprise Workflows.")
 
-API_BASE = "http://localhost:8000/api/v1/workflows"
+API_BASE = (
+    f"{os.getenv('BACKEND_URL', 'http://backend:8000').rstrip('/')}/api/v1/workflows"
+)
+
 
 def fetch_workflows():
     try:
@@ -20,47 +25,50 @@ def fetch_workflows():
         st.error(f"Error connecting to API: {e}")
     return []
 
+
 workflows = fetch_workflows()
 
 if not workflows:
     st.info("No workflows found. Run the CTO Agent to generate a workflow.")
 else:
     df = pd.DataFrame(workflows)
-    df['created_at'] = pd.to_datetime(df['created_at'])
-    df = df.sort_values(by='created_at', ascending=False)
-    
+    df["created_at"] = pd.to_datetime(df["created_at"])
+    df = df.sort_values(by="created_at", ascending=False)
+
     st.subheader("Active Workflows")
-    
+
     # Overview Table
     st.dataframe(
-        df[['workflow_id', 'goal', 'owner_agent', 'status', 'created_at']],
+        df[["workflow_id", "goal", "owner_agent", "status", "created_at"]],
         use_container_width=True,
-        hide_index=True
+        hide_index=True,
     )
-    
+
     st.subheader("Workflow Details")
-    selected_workflow = st.selectbox("Select a workflow to inspect", options=df['workflow_id'].tolist())
-    
+    selected_workflow = st.selectbox(
+        "Select a workflow to inspect", options=df["workflow_id"].tolist()
+    )
+
     if selected_workflow:
         # Fetch detailed workflow with tasks
         detail_res = requests.get(f"{API_BASE}/{selected_workflow}")
         if detail_res.status_code == 200:
             wf = detail_res.json()
-            
+
             col1, col2, col3, col4 = st.columns(4)
-            col1.metric("Status", wf['status'])
-            col2.metric("Owner Agent", wf.get('owner_agent', 'System'))
-            col3.metric("Tasks Count", len(wf.get('tasks', [])))
-            col4.metric("Priority", wf.get('priority', 0))
-            
+            col1.metric("Status", wf["status"])
+            col2.metric("Owner Agent", wf.get("owner_agent", "System"))
+            col3.metric("Tasks Count", len(wf.get("tasks", [])))
+            col4.metric("Priority", wf.get("priority", 0))
+
             st.markdown(f"**Goal:** {wf['goal']}")
-            if wf.get('description'):
+            if wf.get("description"):
                 st.markdown(f"**Description:** {wf['description']}")
-                
+
             st.divider()
-            
+
             st.subheader("Task Execution DAG")
-            tasks = wf.get('tasks', [])
+            tasks = wf.get("tasks", [])
             if tasks:
                 for task in tasks:
                     status_emoji = {
@@ -68,21 +76,25 @@ else:
                         "Running": "🔄",
                         "Completed": "✅",
                         "Failed": "❌",
-                        "Cancelled": "🛑"
-                    }.get(task['status'], "❓")
-                    
-                    with st.expander(f"{status_emoji} Task: {task.get('name', task['task_id'])} ({task['status']})"):
-                        st.json({
-                            "Task ID": task['task_id'],
-                            "Type": task['task_type'],
-                            "Capability": task.get('required_capability'),
-                            "Dependencies": task.get('dependencies', []),
-                            "Inputs": task.get('inputs', {}),
-                            "Outputs": task.get('outputs', {})
-                        })
+                        "Cancelled": "🛑",
+                    }.get(task["status"], "❓")
+
+                    with st.expander(
+                        f"{status_emoji} Task: {task.get('name', task['task_id'])} ({task['status']})"
+                    ):
+                        st.json(
+                            {
+                                "Task ID": task["task_id"],
+                                "Type": task["task_type"],
+                                "Capability": task.get("required_capability"),
+                                "Dependencies": task.get("dependencies", []),
+                                "Inputs": task.get("inputs", {}),
+                                "Outputs": task.get("outputs", {}),
+                            }
+                        )
             else:
                 st.info("No tasks associated with this workflow.")
-                
+
             # Actions
             st.divider()
             st.subheader("Controls")

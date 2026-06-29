@@ -1,5 +1,6 @@
 from pydantic import BaseModel
-from typing import Dict, Any, Optional
+from typing import Dict, Any
+
 
 class PolicyEvaluationResult(BaseModel):
     policy_name: str

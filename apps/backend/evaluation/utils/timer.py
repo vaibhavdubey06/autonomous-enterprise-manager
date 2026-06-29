@@ -3,6 +3,7 @@ import math
 import statistics
 from contextlib import contextmanager
 
+
 def get_percentile(data, percent):
     if not data:
         return 0.0
@@ -15,6 +16,7 @@ def get_percentile(data, percent):
     d0 = sorted_data[int(f)] * (c - k)
     d1 = sorted_data[int(c)] * (k - f)
     return d0 + d1
+
 
 class BenchmarkTimer:
     def __init__(self):
@@ -29,11 +31,12 @@ class BenchmarkTimer:
         if name not in self.timings:
             self.timings[name] = []
         self.timings[name].append(elapsed_ms)
-        
+
     def get_metrics(self):
         res = {}
         for k, v in self.timings.items():
-            if not v: continue
+            if not v:
+                continue
             res[k] = {
                 "avg_ms": statistics.mean(v),
                 "median_ms": statistics.median(v),
@@ -44,6 +47,6 @@ class BenchmarkTimer:
                 "p90_ms": get_percentile(v, 0.90),
                 "p95_ms": get_percentile(v, 0.95),
                 "p99_ms": get_percentile(v, 0.99),
-                "count": len(v)
+                "count": len(v),
             }
         return res

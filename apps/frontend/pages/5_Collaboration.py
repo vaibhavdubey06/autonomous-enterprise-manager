@@ -1,8 +1,9 @@
 import streamlit as st
 import requests
-import pandas as pd
 
-API_URL = "http://localhost:8000/api/v1/collaboration"
+from utils.config import settings
+
+API_URL = f"{settings.BACKEND_URL.rstrip('/')}/api/v1/collaboration"
 
 st.set_page_config(page_title="Enterprise Collaboration Runtime", layout="wide")
 
@@ -20,10 +21,13 @@ with col1:
     workflow_id = st.text_input("Associated Workflow ID (Optional)")
     if st.button("Initialize Session"):
         try:
-            res = requests.post(f"{API_URL}/session", json={
-                "objective": objective,
-                "workflow_id": workflow_id if workflow_id else None
-            })
+            res = requests.post(
+                f"{API_URL}/session",
+                json={
+                    "objective": objective,
+                    "workflow_id": workflow_id if workflow_id else None,
+                },
+            )
             if res.status_code == 200:
                 st.success(f"Session created: {res.json().get('session_id')}")
             else:
@@ -56,11 +60,10 @@ with act1:
     neg_proposer = st.text_input("Proposer Agent")
     neg_content = st.text_area("Proposal Content")
     if st.button("Submit Proposal"):
-        res = requests.post(f"{API_URL}/negotiate?session_id={session_id}", json={
-            "topic": neg_topic,
-            "proposer": neg_proposer,
-            "content": neg_content
-        })
+        res = requests.post(
+            f"{API_URL}/negotiate?session_id={session_id}",
+            json={"topic": neg_topic, "proposer": neg_proposer, "content": neg_content},
+        )
         st.write(res.json() if res.status_code == 200 else res.text)
 
 with act2:
@@ -69,11 +72,10 @@ with act2:
     con_agent = st.text_input("Agent ID")
     con_opt = st.text_input("Option")
     if st.button("Vote"):
-        res = requests.post(f"{API_URL}/consensus?session_id={session_id}", json={
-            "topic": con_topic,
-            "agent_id": con_agent,
-            "option": con_opt
-        })
+        res = requests.post(
+            f"{API_URL}/consensus?session_id={session_id}",
+            json={"topic": con_topic, "agent_id": con_agent, "option": con_opt},
+        )
         st.write(res.json() if res.status_code == 200 else res.text)
 
 with act3:
@@ -82,9 +84,12 @@ with act3:
     cf_parts = st.text_input("Participants (comma separated)")
     cf_sev = st.selectbox("Severity", ["Low", "Medium", "High", "Critical"])
     if st.button("Raise Conflict"):
-        res = requests.post(f"{API_URL}/conflict?session_id={session_id}", json={
-            "topic": cf_topic,
-            "participants": [p.strip() for p in cf_parts.split(",")],
-            "severity": cf_sev
-        })
+        res = requests.post(
+            f"{API_URL}/conflict?session_id={session_id}",
+            json={
+                "topic": cf_topic,
+                "participants": [p.strip() for p in cf_parts.split(",")],
+                "severity": cf_sev,
+            },
+        )
         st.write(res.json() if res.status_code == 200 else res.text)

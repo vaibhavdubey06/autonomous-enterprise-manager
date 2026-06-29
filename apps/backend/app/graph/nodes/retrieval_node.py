@@ -44,7 +44,9 @@ def make_retrieval_node(services: ServiceContainer):
                     limit=settings.QDRANT_TOP_K,
                     exclude_source="conversation",
                 )
-                logger.info(f"RetrievalNode — enterprise chunks: {len(enterprise_context)}")
+                logger.info(
+                    f"RetrievalNode — enterprise chunks: {len(enterprise_context)}"
+                )
 
                 # Merge with semantic memory already in state
                 semantic_memory = state.get("semantic_memory", [])
@@ -60,7 +62,9 @@ def make_retrieval_node(services: ServiceContainer):
                     )
                     rerank_ms = (time.perf_counter() - rerank_start) * 1000
                     metrics_update = {"rerank_ms": round(rerank_ms, 2)}
-                    logger.info(f"RetrievalNode — reranked to {len(reranked_chunks)} chunks in {rerank_ms:.1f}ms")
+                    logger.info(
+                        f"RetrievalNode — reranked to {len(reranked_chunks)} chunks in {rerank_ms:.1f}ms"
+                    )
                 else:
                     metrics_update = {}
                     logger.info("RetrievalNode — no candidates to rerank")
@@ -75,13 +79,15 @@ def make_retrieval_node(services: ServiceContainer):
         logger.info(f"RetrievalNode — finish ({duration_ms:.1f}ms)")
 
         trace = list(state.get("execution_trace", []))
-        trace.append({
-            "node": "Retrieval",
-            "start_time": start_ts,
-            "end_time": end_ts,
-            "duration_ms": round(duration_ms, 2),
-            "status": status,
-        })
+        trace.append(
+            {
+                "node": "Retrieval",
+                "start_time": start_ts,
+                "end_time": end_ts,
+                "duration_ms": round(duration_ms, 2),
+                "status": status,
+            }
+        )
 
         metrics = dict(state.get("metrics", {}))
         metrics["retrieval_ms"] = round(duration_ms, 2)

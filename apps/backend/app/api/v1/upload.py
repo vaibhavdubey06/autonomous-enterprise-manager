@@ -14,23 +14,16 @@ from app.services.vectorstore.qdrant_service import (
 router = APIRouter()
 
 
-@router.post("/upload-document")
-async def upload_document(
-    file: UploadFile = File(...)
-):
+@router.post("")
+async def upload_document(file: UploadFile = File(...)):
     # Validate PDF
     if file.content_type != "application/pdf":
-        return {
-            "error": "Only PDF files are supported"
-        }
+        return {"error": "Only PDF files are supported"}
 
     # Save uploaded file temporarily
     suffix = Path(file.filename).suffix
 
-    with tempfile.NamedTemporaryFile(
-        delete=False,
-        suffix=suffix
-    ) as temp_file:
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
 
         content = await file.read()
 

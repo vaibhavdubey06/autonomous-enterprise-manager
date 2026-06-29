@@ -6,35 +6,47 @@ from sqlalchemy.dialects.postgresql import UUID
 
 from app.core.database import Base
 
+
 class Session(Base):
     __tablename__ = "sessions"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(String, index=True, nullable=True)  # Added for Multi-Tenancy
     user_id = Column(String, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    conversations = relationship("Conversation", back_populates="session", cascade="all, delete-orphan")
+    conversations = relationship(
+        "Conversation", back_populates="session", cascade="all, delete-orphan"
+    )
 
 
 class Conversation(Base):
     __tablename__ = "conversations"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(String, index=True, nullable=True)
     session_id = Column(UUID(as_uuid=True), ForeignKey("sessions.id"))
     title = Column(String, default="New Conversation")
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     session = relationship("Session", back_populates="conversations")
-    messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan")
-    summaries = relationship("ConversationSummary", back_populates="conversation", cascade="all, delete-orphan")
+    messages = relationship(
+        "Message", back_populates="conversation", cascade="all, delete-orphan"
+    )
+    summaries = relationship(
+        "ConversationSummary",
+        back_populates="conversation",
+        cascade="all, delete-orphan",
+    )
 
 
 class KnowledgeItem(Base):
     """
     Generic base abstraction for all enterprise knowledge artifacts.
     """
+
     __abstract__ = True
 
 
@@ -42,7 +54,10 @@ class Message(KnowledgeItem):
     __tablename__ = "messages"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    conversation_id = Column(UUID(as_uuid=True), ForeignKey("conversations.id"), index=True)
+    tenant_id = Column(String, index=True, nullable=True)
+    conversation_id = Column(
+        UUID(as_uuid=True), ForeignKey("conversations.id"), index=True
+    )
     role = Column(String, index=True)  # "user" or "assistant"
     content = Column(Text)
     importance = Column(Float, default=0.5)
@@ -55,7 +70,10 @@ class ConversationSummary(Base):
     __tablename__ = "conversation_summaries"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    conversation_id = Column(UUID(as_uuid=True), ForeignKey("conversations.id"), index=True)
+    tenant_id = Column(String, index=True, nullable=True)
+    conversation_id = Column(
+        UUID(as_uuid=True), ForeignKey("conversations.id"), index=True
+    )
     summary = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -63,14 +81,16 @@ class ConversationSummary(Base):
 
 
 from sqlalchemy import Boolean, Integer
-from sqlalchemy.dialects.postgresql import JSONB
-import json
+
 
 class MemoryObject(KnowledgeItem):
     __tablename__ = "memory_objects"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    conversation_id = Column(UUID(as_uuid=True), ForeignKey("conversations.id"), nullable=True, index=True)
+    tenant_id = Column(String, index=True, nullable=True)
+    conversation_id = Column(
+        UUID(as_uuid=True), ForeignKey("conversations.id"), nullable=True, index=True
+    )
     user_id = Column(String, index=True)
     memory_type = Column(String, index=True)
     title = Column(String)
@@ -78,7 +98,7 @@ class MemoryObject(KnowledgeItem):
     importance = Column(Float, default=0.5)
     confidence = Column(Float, default=0.5)
     memory_status = Column(String, default="NEW")
-    
+
     # Provenance
     source = Column(String)
     source_message_id = Column(UUID(as_uuid=True), nullable=True)
@@ -91,13 +111,14 @@ class MemoryObject(KnowledgeItem):
     # Retrieval Analytics
     retrieval_count = Column(Integer, default=0)
     last_accessed = Column(DateTime, default=datetime.utcnow)
-    
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
-    # In SQLite JSONB is not supported directly but for simplicity we can use String and parse it, 
+
+    # In SQLite JSONB is not supported directly but for simplicity we can use String and parse it,
     # but the project specifies PostgreSQL + Qdrant. Since testing uses SQLite, let's use JSON.
     from sqlalchemy import JSON
+
     metadata_ = Column("metadata", JSON, default=dict)
     tags = Column(JSON, default=list)
     embedding_required = Column(Boolean, default=True)

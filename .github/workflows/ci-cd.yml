@@ -1,0 +1,53 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  quality-gate:
+    name: Engineering Quality Gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ruff black mypy
+          
+      - name: Run Ruff Linter
+        run: ruff check apps/backend/
+        
+      - name: Run Black Formatter
+        run: black --check apps/backend/
+        
+      - name: Run MyPy Type Checker
+        run: mypy apps/backend/app/
+        
+  test:
+    name: Test Suite
+    needs: quality-gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          pip install uv
+          uv pip install -e apps/backend[dev]
+          
+      - name: Run PyTest
+        run: |
+          cd apps/backend
+          uv run pytest tests/ -v

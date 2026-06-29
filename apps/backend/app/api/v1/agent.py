@@ -23,12 +23,12 @@ from app.repositories.summary_repository import SummaryRepository
 from app.graph.dependencies import ServiceContainer
 from app.graph.router import GraphRouter
 from app.graph import builder as graph_builder
-from app.graph.state import GraphState
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 # ── Singletons ──────────────────────────────────────────
+
 
 @lru_cache()
 def get_llm_service() -> LLMService:
@@ -48,8 +48,9 @@ from app.services.memory.strategy import GeminiMemoryExtractionStrategy
 from app.services.memory.normalizer import MemoryNormalizer
 from app.services.memory.scorer import ImportanceScorer
 from app.services.memory.deduplicator import MemoryDeduplicator
-from app.services.vectorstore.qdrant_service import store_memory_chunk, search
+from app.services.vectorstore.qdrant_service import search
 from app.core.config import settings
+
 
 def get_memory_service(
     db: DBSession = Depends(get_db),
@@ -61,20 +62,21 @@ def get_memory_service(
     normalizer = MemoryNormalizer()
     scorer = ImportanceScorer()
     deduplicator = MemoryDeduplicator(memory_repo)
-    
+
     # Store callback to Qdrant (using same storage utility but with 'memory_object' payload in memory_service.py/extractor)
     def qdrant_store_callback(text, payload):
         from app.services.embeddings.embedding_service import embed_text
         import uuid
         from qdrant_client.models import PointStruct
         from app.services.vectorstore.qdrant_service import get_client, COLLECTION_NAME
+
         embedding = embed_text(text)
         point_id = str(uuid.uuid4())
         get_client().upsert(
             collection_name=COLLECTION_NAME,
-            points=[PointStruct(id=point_id, vector=embedding, payload=payload)]
+            points=[PointStruct(id=point_id, vector=embedding, payload=payload)],
         )
-        
+
     extractor = MemoryExtractor(
         strategy=strategy,
         normalizer=normalizer,
@@ -83,7 +85,7 @@ def get_memory_service(
         repository=memory_repo,
         qdrant_search_callback=search,
         qdrant_store_callback=qdrant_store_callback,
-        importance_threshold=settings.MEMORY_IMPORTANCE_THRESHOLD
+        importance_threshold=settings.MEMORY_IMPORTANCE_THRESHOLD,
     )
 
     return MemoryService(
@@ -93,7 +95,7 @@ def get_memory_service(
         summary_repo=SummaryRepository(db),
         memory_repo=memory_repo,
         llm_service=llm_service,
-        extractor=extractor
+        extractor=extractor,
     )
 
 
@@ -126,37 +128,42 @@ from app.capabilities.base.capability_registry import CapabilityRegistry
 from app.capabilities.base.executor import CapabilityExecutor
 from app.capabilities.tools.github.tool import GitHubCapability
 
+
 def get_supervisor_graph(
     llm_service: LLMService = Depends(get_llm_service),
-    knowledge_agent_graph: GraphRouter = Depends(get_graph_router)
+    knowledge_agent_graph: GraphRouter = Depends(get_graph_router),
 ) -> SupervisorGraph:
     planner = Planner(llm_service)
     task_decomposer = TaskDecomposer()
-    
+
     # Initialize Capability Framework
     cap_registry = CapabilityRegistry()
     cap_registry.register(GitHubCapability())
     cap_executor = CapabilityExecutor(cap_registry)
-    
+
     # Initialize and populate AgentRegistry
     registry = AgentRegistry()
-    registry.register_agent(CTOAgent(
-        llm_service=llm_service, 
-        capability_executor=cap_executor,
-        knowledge_agent_graph=knowledge_agent_graph
-    ))
-    
-    agent_router = AgentRouter(agent_registry=registry, knowledge_agent_graph=knowledge_agent_graph)
-    
-    return SupervisorGraph(
-        planner=planner,
-        task_decomposer=task_decomposer,
-        agent_router=agent_router
+    registry.register_agent(
+        CTOAgent(
+            llm_service=llm_service,
+            capability_executor=cap_executor,
+            knowledge_agent_graph=knowledge_agent_graph,
+        )
     )
+
+    agent_router = AgentRouter(
+        agent_registry=registry, knowledge_agent_graph=knowledge_agent_graph
+    )
+
+    return SupervisorGraph(
+        planner=planner, task_decomposer=task_decomposer, agent_router=agent_router
+    )
+
 
 # ── Endpoint ────────────────────────────────────────────
 
-@router.post("/agent/chat", response_model=AgentChatResponse)
+
+@router.post("/chat", response_model=AgentChatResponse)
 async def agent_chat(
     request: AgentChatRequest,
     background_tasks: BackgroundTasks,
@@ -191,7 +198,7 @@ async def agent_chat(
             conversation_id=conversation_id,
             user_id=request.session_id or "default_user",
             user_message=request.question,
-            assistant_response=final_state.get("final_response") or ""
+            assistant_response=final_state.get("final_response") or "",
         )
 
     # Gather metrics
@@ -206,7 +213,7 @@ async def agent_chat(
         session_id=request.session_id or "",
         conversation_id=conversation_id or "",
         answer=final_state.get("final_response") or "",
-        sources=[], # Sources could be extracted from tasks in the future
+        sources=[],  # Sources could be extracted from tasks in the future
         execution_trace=[],
         metrics=metrics,
     )

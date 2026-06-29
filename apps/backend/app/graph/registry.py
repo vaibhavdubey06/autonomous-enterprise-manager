@@ -60,7 +60,7 @@ class GitHubTool(BaseTool):
     def execute(self, state: GraphState) -> Dict[str, Any]:
         """
         Execute a GitHub search based on the current question.
-        
+
         Note: Full GitHub search integration requires the connector
         to support query-based searching. For now, this returns
         a structured result indicating the tool was invoked.
@@ -75,7 +75,7 @@ class GitHubTool(BaseTool):
             "tool": self.name,
             "status": "executed",
             "note": "GitHub search indexed via existing connector. "
-                    "Live query search will be available in a future iteration.",
+            "Live query search will be available in a future iteration.",
             "query": question,
         }
 
@@ -107,7 +107,11 @@ class ToolRegistry:
         tool = self._tools.get(name)
         if tool is None:
             logger.error(f"Tool '{name}' not found in registry.")
-            return {"tool": name, "status": "error", "detail": f"Tool '{name}' is not registered."}
+            return {
+                "tool": name,
+                "status": "error",
+                "detail": f"Tool '{name}' is not registered.",
+            }
         try:
             return tool.execute(state)
         except Exception as e:

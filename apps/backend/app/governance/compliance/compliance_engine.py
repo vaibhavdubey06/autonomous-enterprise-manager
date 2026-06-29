@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Dict, Any, List
 from app.governance.context.governance_context import GovernanceContext
 
+
 class BaseComplianceDetector(ABC):
     @property
     @abstractmethod
@@ -12,6 +13,7 @@ class BaseComplianceDetector(ABC):
     def detect(self, context: GovernanceContext) -> Dict[str, Any]:
         """Returns dict with 'detected': bool, 'details': str"""
         pass
+
 
 class PIIDetector(BaseComplianceDetector):
     @property
@@ -26,6 +28,7 @@ class PIIDetector(BaseComplianceDetector):
                 return {"detected": True, "details": f"Found potential PII: {kw}"}
         return {"detected": False, "details": ""}
 
+
 class ConfidentialDetector(BaseComplianceDetector):
     @property
     def name(self) -> str:
@@ -33,17 +36,23 @@ class ConfidentialDetector(BaseComplianceDetector):
 
     def detect(self, context: GovernanceContext) -> Dict[str, Any]:
         target = f"{context.workflow_goal} {context.task_description or ''}".lower()
-        confidential_keywords = ["internal only", "confidential", "secret", "proprietary"]
+        confidential_keywords = [
+            "internal only",
+            "confidential",
+            "secret",
+            "proprietary",
+        ]
         for kw in confidential_keywords:
             if kw in target:
                 return {"detected": True, "details": f"Found confidential marker: {kw}"}
         return {"detected": False, "details": ""}
 
+
 class ComplianceEngine:
     def __init__(self):
         self.detectors: List[BaseComplianceDetector] = [
             PIIDetector(),
-            ConfidentialDetector()
+            ConfidentialDetector(),
         ]
 
     def register_detector(self, detector: BaseComplianceDetector):
@@ -54,8 +63,7 @@ class ComplianceEngine:
         for detector in self.detectors:
             res = detector.detect(context)
             if res.get("detected"):
-                results.append({
-                    "detector": detector.name,
-                    "details": res.get("details")
-                })
+                results.append(
+                    {"detector": detector.name, "details": res.get("details")}
+                )
         return results

@@ -1,6 +1,7 @@
 from pydantic import BaseModel
-from typing import Dict, Any
+from typing import Dict
 import time
+
 
 class CollaborationMetrics(BaseModel):
     session_id: str
@@ -16,9 +17,9 @@ class CollaborationMetrics(BaseModel):
     team_efficiency: float = 1.0
     start_time: float = 0.0
     end_time: float = 0.0
-    
+
     def start(self):
         self.start_time = time.time()
-        
+
     def end(self):
         self.end_time = time.time()

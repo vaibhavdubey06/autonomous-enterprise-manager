@@ -4,10 +4,12 @@ import uuid
 import datetime
 from app.agents.base.capabilities import Capability
 
+
 class ExecutiveTask(BaseModel):
     """
     Represents a specific unit of work assigned to an Executive Agent.
     """
+
     task_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     goal: str
     description: str
