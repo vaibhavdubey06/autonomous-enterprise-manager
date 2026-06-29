@@ -1,3 +1,5 @@
+from app.capabilities.base.executor import CapabilityExecutor
+from app.capabilities.base.schemas import CapabilityResult
 import logging
 from abc import ABC, abstractmethod
 from typing import Dict, Any, List
@@ -9,9 +11,6 @@ from app.agents.base.output import ExecutiveResult
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
-
-from app.capabilities.base.executor import CapabilityExecutor
-from app.capabilities.base.schemas import CapabilityResult
 
 
 class BaseExecutiveAgent(ABC):

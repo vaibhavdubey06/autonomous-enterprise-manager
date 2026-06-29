@@ -1,3 +1,8 @@
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+from app.core.database import Base, SQLALCHEMY_DATABASE_URL
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
@@ -14,12 +19,6 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-import os
-import sys
-
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-
-from app.core.database import Base, SQLALCHEMY_DATABASE_URL
 
 # Import models here so Alembic can discover them
 

@@ -1,13 +1,6 @@
-from fastapi import APIRouter, Depends
-from app.schemas.chat import ChatRequest, ChatResponse
-from app.services.chat_service import ChatService
-from app.services.llm.llm_service import LLMService
-
-router = APIRouter()
-
+from fastapi import APIRouter, Depends, BackgroundTasks
 from functools import lru_cache
 from sqlalchemy.orm import Session as DBSession
-
 from app.core.database import get_db
 from app.services.reranking.cross_encoder_service import CrossEncoderService
 from app.services.memory_service import MemoryService
@@ -15,6 +8,19 @@ from app.repositories.session_repository import SessionRepository
 from app.repositories.conversation_repository import ConversationRepository
 from app.repositories.message_repository import MessageRepository
 from app.repositories.summary_repository import SummaryRepository
+from app.repositories.memory_repository import MemoryRepository
+from app.services.memory.extractor import MemoryExtractor
+from app.services.memory.strategy import GeminiMemoryExtractionStrategy
+from app.services.memory.normalizer import MemoryNormalizer
+from app.services.memory.scorer import ImportanceScorer
+from app.services.memory.deduplicator import MemoryDeduplicator
+from app.services.vectorstore.qdrant_service import search
+from app.core.config import settings
+from app.schemas.chat import ChatRequest, ChatResponse
+from app.services.chat_service import ChatService
+from app.services.llm.llm_service import LLMService
+
+router = APIRouter()
 
 
 @lru_cache()
@@ -25,16 +31,6 @@ def get_llm_service() -> LLMService:
 @lru_cache()
 def get_cross_encoder_service() -> CrossEncoderService:
     return CrossEncoderService()
-
-
-from app.repositories.memory_repository import MemoryRepository
-from app.services.memory.extractor import MemoryExtractor
-from app.services.memory.strategy import GeminiMemoryExtractionStrategy
-from app.services.memory.normalizer import MemoryNormalizer
-from app.services.memory.scorer import ImportanceScorer
-from app.services.memory.deduplicator import MemoryDeduplicator
-from app.services.vectorstore.qdrant_service import search
-from app.core.config import settings
 
 
 def get_memory_service(
@@ -91,9 +87,6 @@ def get_chat_service(
         reranker_service=reranker_service,
         memory_service=memory_service,
     )
-
-
-from fastapi import BackgroundTasks
 
 
 @router.post("", response_model=ChatResponse)

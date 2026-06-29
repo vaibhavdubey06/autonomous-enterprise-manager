@@ -1,6 +1,16 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey, Float
+from sqlalchemy import (
+    Column,
+    String,
+    Text,
+    DateTime,
+    ForeignKey,
+    Float,
+    Boolean,
+    Integer,
+    JSON,
+)
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID
 
@@ -80,9 +90,6 @@ class ConversationSummary(Base):
     conversation = relationship("Conversation", back_populates="summaries")
 
 
-from sqlalchemy import Boolean, Integer
-
-
 class MemoryObject(KnowledgeItem):
     __tablename__ = "memory_objects"
 
@@ -117,8 +124,6 @@ class MemoryObject(KnowledgeItem):
 
     # In SQLite JSONB is not supported directly but for simplicity we can use String and parse it,
     # but the project specifies PostgreSQL + Qdrant. Since testing uses SQLite, let's use JSON.
-    from sqlalchemy import JSON
-
     metadata_ = Column("metadata", JSON, default=dict)
     tags = Column(JSON, default=list)
     embedding_required = Column(Boolean, default=True)

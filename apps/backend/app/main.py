@@ -3,11 +3,28 @@ from fastapi import FastAPI
 from app.api.v1.upload import router as upload_router
 from app.api.v1.search import router as search_router
 from app.api.v1.chat import router as chat_router
+from app.api.v1.github import router as github_router
+from app.api.v1.memory import router as memory_router
+from app.api.v1.agent import router as agent_router
+from app.api.v1.workflows import router as workflows_router
+from app.api.v1.collaboration import router as collaboration_router
+from app.api.v1.governance import router as governance_router
+from app.api.v1.operations import router as operations_router
+from app.api.v1.security import router as security_router
+from app.api.v1.integrations import router as integrations_router
 from app.services.embeddings.embedding_service import embed_text
+from app.security.middleware.security_middleware import SecurityMiddleware
+from app.core.database import Base, engine
+
+try:
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+except ImportError:
+    FastAPIInstrumentor = None
+    import logging
+
+    logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Autonomous Enterprise Manager", version="0.1.0")
-
-from app.security.middleware.security_middleware import SecurityMiddleware
 
 app.add_middleware(SecurityMiddleware)
 
@@ -43,21 +60,9 @@ async def live():
 
 @app.get("/embedding-test")
 async def embedding_test():
-
     vector = embed_text("Hello Enterprise Manager")
-
     return {"dimensions": len(vector)}
 
-
-from app.api.v1.github import router as github_router
-from app.api.v1.memory import router as memory_router
-from app.api.v1.agent import router as agent_router
-from app.api.v1.workflows import router as workflows_router
-from app.api.v1.collaboration import router as collaboration_router
-from app.api.v1.governance import router as governance_router
-from app.api.v1.operations import router as operations_router
-from app.api.v1.security import router as security_router
-from app.api.v1.integrations import router as integrations_router
 
 app.include_router(github_router, prefix="/api/v1/github", tags=["github"])
 app.include_router(memory_router, prefix="/api/v1/memory", tags=["memory"])
@@ -72,7 +77,6 @@ app.include_router(security_router, prefix="/api/v1/security", tags=["security"]
 app.include_router(
     integrations_router, prefix="/api/v1/integrations", tags=["integrations"]
 )
-from app.core.database import Base, engine
 
 # Create tables
 Base.metadata.create_all(bind=engine)
@@ -82,13 +86,9 @@ app.include_router(search_router, prefix="/api/v1/search", tags=["search"])
 app.include_router(chat_router, prefix="/api/v1/chat", tags=["chat"])
 
 # Instrument FastAPI with OpenTelemetry
-try:
-    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
-
+if FastAPIInstrumentor:
     FastAPIInstrumentor.instrument_app(app)
-except ImportError:
-    import logging
-    logger = logging.getLogger(__name__)
+else:
     logger.warning(
         "opentelemetry-instrumentation-fastapi not installed. Tracing disabled."
     )

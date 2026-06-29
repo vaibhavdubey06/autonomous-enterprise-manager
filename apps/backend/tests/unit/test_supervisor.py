@@ -1,3 +1,4 @@
+from app.agents.base.registry import AgentRegistry
 from unittest.mock import MagicMock
 from app.agents.supervisor.schemas import Task, TaskStatus, ExecutionPlan
 from app.agents.supervisor.task_decomposer import TaskDecomposer
@@ -21,9 +22,6 @@ def test_task_decomposer():
     assert tasks[0].status == TaskStatus.PENDING
     assert tasks[1].status == TaskStatus.PENDING
     assert tasks[0].task_id in tasks[1].dependencies
-
-
-from app.agents.base.registry import AgentRegistry
 
 
 def test_agent_router_knowledge_fallback():

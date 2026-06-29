@@ -1,6 +1,8 @@
 import time
+from app.core.config import settings
 from app.platform.cache.cache_provider import CacheProvider
 from app.platform.cache.memory_cache import MemoryCacheProvider
+from app.platform.cache.redis_cache import RedisCacheProvider
 
 
 class RateLimiter:
@@ -43,12 +45,8 @@ class RateLimiter:
 
 
 # Global simple rate limiter: 100 requests per 60 seconds per IP
-from app.core.config import settings
-
 redis_url = settings.REDIS_URL
 if redis_url:
-    from app.platform.cache.redis_cache import RedisCacheProvider
-
     global_cache = RedisCacheProvider(redis_url)
 else:
     global_cache = MemoryCacheProvider()

@@ -1,3 +1,4 @@
+from components.sidebar import render_sidebar
 import streamlit as st
 
 st.set_page_config(
@@ -7,7 +8,6 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-from components.sidebar import render_sidebar
 
 # Initialize Session State Variables
 if "session_id" not in st.session_state:

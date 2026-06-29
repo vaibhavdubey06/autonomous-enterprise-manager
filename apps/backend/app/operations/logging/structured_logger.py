@@ -48,11 +48,19 @@ class StructuredLogger:
     ) -> List[Dict[str, Any]]:
         results = self._logs
         if component:
-            results = [l for l in results if l["component"] == component]
+            results = [
+                log_entry
+                for log_entry in results
+                if log_entry["component"] == component
+            ]
         if severity:
-            results = [l for l in results if l["severity"] == severity]
+            results = [
+                log_entry for log_entry in results if log_entry["severity"] == severity
+            ]
         if trace_id:
-            results = [l for l in results if l["trace_id"] == trace_id]
+            results = [
+                log_entry for log_entry in results if log_entry["trace_id"] == trace_id
+            ]
         return results
 
 

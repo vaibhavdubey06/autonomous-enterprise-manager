@@ -1,11 +1,3 @@
-from fastapi import APIRouter, Depends, HTTPException
-from typing import List, Dict, Any
-from pydantic import BaseModel
-
-router = APIRouter(tags=["governance"])
-
-# We'll mock the dependency injection for the router for now.
-# In a real app, this would come from a dependency provider.
 from app.governance.pipeline.governance_pipeline import GovernancePipeline
 from app.governance.risk.risk_engine import RiskEngine
 from app.governance.policy.policy_chain import PolicyChain
@@ -15,6 +7,14 @@ from app.governance.trust.trust_engine import TrustEngine
 from app.governance.approvals.approval_runtime import ApprovalRuntime
 from app.governance.audit.audit_manager import AuditManager
 from app.governance.services.governance_service import GovernanceService
+from fastapi import APIRouter, Depends, HTTPException
+from typing import List, Dict, Any
+from pydantic import BaseModel
+
+router = APIRouter(tags=["governance"])
+
+# We'll mock the dependency injection for the router for now.
+# In a real app, this would come from a dependency provider.
 
 # Singleton instance for the router
 _policy_chain = PolicyChain()

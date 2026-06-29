@@ -1,3 +1,4 @@
+from app.integrations.base.connector_registry import connector_registry
 from typing import Dict, Any, List
 from app.integrations.base.base_connector import BaseConnector
 from app.integrations.schemas.connector_models import (
@@ -44,7 +45,5 @@ class GmailConnector(BaseConnector):
     def cleanup(self) -> None:
         pass
 
-
-from app.integrations.base.connector_registry import connector_registry
 
 connector_registry.register(GmailConnector)

@@ -1,4 +1,6 @@
+from __future__ import annotations
 import logging
+from typing import TYPE_CHECKING
 from typing import Dict, List, Optional
 from app.agents.base.profile import AgentProfile
 from app.agents.base.capabilities import Capability
@@ -8,6 +10,10 @@ logger = logging.getLogger(__name__)
 
 # Note: We will use Any for the agent instance type to avoid circular imports
 # since BaseExecutiveAgent will likely import from profile/capabilities.
+if TYPE_CHECKING:
+    from app.agents.base.base_agent import BaseExecutiveAgent
+
+
 class AgentRegistry:
     """
     Registry for discovering and retrieving Executive Agents.
@@ -15,9 +21,9 @@ class AgentRegistry:
     """
 
     def __init__(self):
-        self._agents: Dict[str, "BaseExecutiveAgent"] = {}  # type: ignore
+        self._agents: Dict[str, "BaseExecutiveAgent"] = {}
 
-    def register_agent(self, agent: "BaseExecutiveAgent"):  # type: ignore
+    def register_agent(self, agent: "BaseExecutiveAgent"):
         """
         Registers an instantiated Executive Agent.
         """
@@ -25,7 +31,7 @@ class AgentRegistry:
         self._agents[profile.agent_name] = agent
         logger.info(f"Registered Executive Agent: {profile.agent_name}")
 
-    def get_agent(self, agent_name: str) -> Optional["BaseExecutiveAgent"]:  # type: ignore
+    def get_agent(self, agent_name: str) -> Optional["BaseExecutiveAgent"]:
         """
         Retrieves a registered agent by name.
         """
@@ -37,7 +43,9 @@ class AgentRegistry:
         """
         return [agent.get_profile() for agent in self._agents.values()]
 
-    def find_agents_by_capability(self, capability: Capability) -> List["BaseExecutiveAgent"]:  # type: ignore
+    def find_agents_by_capability(
+        self, capability: Capability
+    ) -> List["BaseExecutiveAgent"]:
         """
         Finds all agents that possess a specific capability.
         """

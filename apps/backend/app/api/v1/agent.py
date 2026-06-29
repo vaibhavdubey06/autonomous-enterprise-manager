@@ -1,16 +1,10 @@
-"""
-Agent API — POST /agent/chat
-
-Thin route that initialises GraphState and invokes the LangGraph pipeline.
-All business logic stays in services; orchestration stays in graph nodes.
-"""
-
 import logging
+from app.capabilities.base.capability_registry import CapabilityRegistry
+from app.capabilities.base.executor import CapabilityExecutor
+from app.capabilities.tools.github.tool import GitHubCapability
 from functools import lru_cache
-
 from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.orm import Session as DBSession
-
 from app.core.database import get_db
 from app.schemas.agent import AgentChatRequest, AgentChatResponse
 from app.services.llm.llm_service import LLMService
@@ -23,6 +17,28 @@ from app.repositories.summary_repository import SummaryRepository
 from app.graph.dependencies import ServiceContainer
 from app.graph.router import GraphRouter
 from app.graph import builder as graph_builder
+from app.repositories.memory_repository import MemoryRepository
+from app.services.memory.extractor import MemoryExtractor
+from app.services.memory.strategy import GeminiMemoryExtractionStrategy
+from app.services.memory.normalizer import MemoryNormalizer
+from app.services.memory.scorer import ImportanceScorer
+from app.services.memory.deduplicator import MemoryDeduplicator
+from app.services.vectorstore.qdrant_service import search
+from app.core.config import settings
+from app.agents.supervisor.supervisor_agent import SupervisorGraph
+from app.agents.supervisor.planner import Planner
+from app.agents.supervisor.task_decomposer import TaskDecomposer
+from app.agents.supervisor.router import AgentRouter
+from app.agents.base.registry import AgentRegistry
+from app.agents.executives.cto.agent import CTOAgent
+
+"""
+Agent API — POST /agent/chat
+
+Thin route that initialises GraphState and invokes the LangGraph pipeline.
+All business logic stays in services; orchestration stays in graph nodes.
+"""
+
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -41,15 +57,6 @@ def get_cross_encoder_service() -> CrossEncoderService:
 
 
 # ── Per-request factories ───────────────────────────────
-
-from app.repositories.memory_repository import MemoryRepository
-from app.services.memory.extractor import MemoryExtractor
-from app.services.memory.strategy import GeminiMemoryExtractionStrategy
-from app.services.memory.normalizer import MemoryNormalizer
-from app.services.memory.scorer import ImportanceScorer
-from app.services.memory.deduplicator import MemoryDeduplicator
-from app.services.vectorstore.qdrant_service import search
-from app.core.config import settings
 
 
 def get_memory_service(
@@ -115,18 +122,6 @@ def get_graph_router(
     container: ServiceContainer = Depends(get_service_container),
 ) -> GraphRouter:
     return graph_builder.build(container)
-
-
-from app.agents.supervisor.supervisor_agent import SupervisorGraph
-from app.agents.supervisor.planner import Planner
-from app.agents.supervisor.task_decomposer import TaskDecomposer
-from app.agents.supervisor.router import AgentRouter
-from app.agents.base.registry import AgentRegistry
-from app.agents.executives.cto.agent import CTOAgent
-
-from app.capabilities.base.capability_registry import CapabilityRegistry
-from app.capabilities.base.executor import CapabilityExecutor
-from app.capabilities.tools.github.tool import GitHubCapability
 
 
 def get_supervisor_graph(

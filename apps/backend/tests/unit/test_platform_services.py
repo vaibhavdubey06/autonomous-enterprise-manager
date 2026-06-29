@@ -11,6 +11,51 @@ from app.events.schemas.domain_events import (
     SecurityIncidentEvent,
 )
 
+# --- Scheduler Tests ---
+from app.scheduler.scheduler_service import (
+    ScheduledJob,
+    SchedulerService,
+    JobStatus,
+)
+
+# --- LLM Platform Tests ---
+from app.llm.providers.base import (
+    InferenceRequest,
+    InferenceResponse,
+    LLMProvider,
+    ModelCapability,
+)
+from app.llm.routing.routing_engine import (
+    ModelEntry,
+    ModelRegistry,
+    ProviderRegistry,
+    RoutingEngine,
+)
+
+# --- Plugin SDK Tests ---
+from app.plugins.plugin_sdk import (
+    PluginContext,
+    PluginHook,
+    PluginManifest,
+    PluginRegistry,
+    PluginType,
+)
+
+# --- Configuration & Metadata Tests ---
+from app.configuration.config_metadata_platform import (
+    ConfigurationRegistry,
+    MetadataEntry,
+    MetadataRegistry,
+)
+
+# --- Decision Intelligence Tests ---
+from app.decisions.decision_platform import (
+    DecisionCategory,
+    DecisionRecord,
+    DecisionRegistry,
+    DecisionStatus,
+)
+
 
 def test_domain_event_creation():
     event = DomainEvent(
@@ -96,11 +141,6 @@ def test_domain_events_security_incident():
 
 
 # --- Scheduler Tests ---
-from app.scheduler.scheduler_service import (
-    ScheduledJob,
-    SchedulerService,
-    JobStatus,
-)
 
 
 def test_scheduler_register_and_execute():
@@ -149,18 +189,6 @@ def test_scheduler_list_jobs():
 
 
 # --- LLM Platform Tests ---
-from app.llm.providers.base import (
-    InferenceRequest,
-    InferenceResponse,
-    LLMProvider,
-    ModelCapability,
-)
-from app.llm.routing.routing_engine import (
-    ModelEntry,
-    ModelRegistry,
-    ProviderRegistry,
-    RoutingEngine,
-)
 
 
 class MockProvider(LLMProvider):
@@ -259,13 +287,6 @@ def test_routing_engine_no_provider_raises():
 
 
 # --- Plugin SDK Tests ---
-from app.plugins.plugin_sdk import (
-    PluginContext,
-    PluginHook,
-    PluginManifest,
-    PluginRegistry,
-    PluginType,
-)
 
 
 def test_plugin_register_and_list():
@@ -329,11 +350,6 @@ def test_plugin_filter_by_type():
 
 
 # --- Configuration & Metadata Tests ---
-from app.configuration.config_metadata_platform import (
-    ConfigurationRegistry,
-    MetadataEntry,
-    MetadataRegistry,
-)
 
 
 def test_configuration_registry():
@@ -407,12 +423,6 @@ def test_metadata_search():
 
 
 # --- Decision Intelligence Tests ---
-from app.decisions.decision_platform import (
-    DecisionCategory,
-    DecisionRecord,
-    DecisionRegistry,
-    DecisionStatus,
-)
 
 
 def test_decision_create_and_get():

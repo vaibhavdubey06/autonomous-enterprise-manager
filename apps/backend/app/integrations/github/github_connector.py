@@ -1,3 +1,4 @@
+from app.integrations.base.connector_registry import connector_registry
 from typing import Dict, Any, List, Optional
 import github
 from github import Github, GithubException
@@ -116,6 +117,6 @@ class GitHubConnector(BaseConnector):
 
 
 # Auto register
-from app.integrations.base.connector_registry import connector_registry
+
 
 connector_registry.register(GitHubConnector)

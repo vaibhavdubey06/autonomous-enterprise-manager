@@ -6,6 +6,7 @@ from typing import Dict, Any
 
 logger = logging.getLogger(__name__)
 
+
 class SecurityEventPublisher:
     def publish(self, event_type: str, payload: Dict[str, Any]):
         # Example: event_bus.publish(event_type, payload)
