@@ -20,9 +20,36 @@
 
 ## 📖 Overview
 
-The **Autonomous Enterprise Manager (AEM)** is a state-of-the-art intelligent system built to handle complex, multi-step enterprise operations. Powered by state-of-the-art LLMs (Gemini/OpenAI) and orchestrated using LangGraph, AEM functions as a digital workforce capable of breaking down high-level objectives, spawning specialized agents, and collaborating dynamically to resolve complex tasks.
+The **Autonomous Enterprise Manager (AEM)** is a state-of-the-art intelligent system built to handle complex, multi-step enterprise operations. Powered by cutting-edge LLMs (Gemini/OpenAI) and orchestrated using LangGraph, AEM functions as a digital workforce capable of breaking down high-level objectives, spawning specialized agents, and collaborating dynamically to resolve complex tasks.
 
 Designed for production environments, AEM ships with enterprise-grade security, comprehensive observability, and highly resilient fault-tolerant infrastructure out of the box.
+
+<div align="center">
+  <img src="docs/architecture.png" alt="AEM Architecture Diagram" width="100%" />
+</div>
+
+---
+
+## 🎯 What is AEM? (The Product)
+
+AEM acts as an intelligent, autonomous operating system for your engineering and product teams. Instead of manually clicking through dashboards or writing repetitive glue code, users converse with AEM to automate entire workflows. 
+
+**Core Product Use-Cases:**
+1. **Automated Code Review & Triage**: Connect AEM to your GitHub repository. It will proactively read Pull Requests, understand the context of your codebase using its semantic vector memory, and leave intelligent, actionable code reviews or flag security vulnerabilities.
+2. **Intelligent Internal Documentation (RAG)**: Upload company wikis, API documentation, or architecture PDFs. AEM ingests these into its vector database, allowing any team member to ask complex architectural questions and get instant, cited answers based purely on your proprietary data.
+3. **Autonomous SRE & DevOps Troubleshooting**: Ask AEM to "Check why the backend is failing". It can autonomously query logs, check system health metrics, and propose resolutions, acting as a Level-1 Site Reliability Engineer.
+4. **Dynamic AI Collaboration**: Give AEM a high-level goal like "Draft a system architecture for a new microservice." The supervisor agent will automatically spawn a "Research Agent" and an "Architecture Agent" to collaborate, debate, and produce the final markdown artifact without human hand-holding.
+
+---
+
+## ⚙️ Under the Hood (The Technicalities)
+
+AEM is not a simple wrapper around an LLM; it is a complex, stateful multi-agent system.
+
+- **LangGraph State Machine**: AEM's core engine uses a directed graph (LangGraph) to manage agent states. The "Supervisor" node decides which specialized worker node (e.g., GitHub Agent, Memory Agent, Search Agent) should act next. It maintains a continuous cyclic loop until the user's objective is met.
+- **Semantic Memory Architecture**: We use **Qdrant** as our high-performance vector database. When documents are uploaded, AEM chunks the text, generates high-dimensional embeddings using `SentenceTransformers`, and stores them. When a user asks a question, AEM performs a cosine-similarity vector search to inject relevant context into the LLM's prompt.
+- **Asynchronous & Fault-Tolerant API**: The entire backend is built on **FastAPI** using `asyncio` to handle hundreds of concurrent agent executions. **Redis** is utilized for rapid state caching and distributed rate-limiting.
+- **Strict Role-Based Security**: All endpoints are secured by a custom JWT-based authentication middleware. Users are assigned strict Roles and Permissions, ensuring that Agents cannot execute destructive actions (like merging code) without explicit authorization.
 
 ## ✨ Key Features
 
