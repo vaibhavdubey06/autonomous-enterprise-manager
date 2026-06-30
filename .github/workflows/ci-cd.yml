@@ -55,6 +55,9 @@ jobs:
       - name: Run PyTest
         env:
           TESTING: "true"
+          GITHUB_TOKEN: "mock_github_token"
+          GEMINI_API_KEY: "mock_gemini_key"
+          OPENAI_API_KEY: "mock_openai_key"
         run: |
           cd apps/backend
           uv run pytest tests/ -v
