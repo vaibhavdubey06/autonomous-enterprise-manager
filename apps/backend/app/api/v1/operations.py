@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends
+from typing import Optional
 from app.operations.services.operations_service import OperationsService
 
 router = APIRouter(tags=["operations"])
@@ -23,9 +24,9 @@ def get_traces(service: OperationsService = Depends(get_operations_service)):
 
 @router.get("/logs")
 def get_logs(
-    component: str = None,
-    severity: str = None,
-    trace_id: str = None,
+    component: Optional[str] = None,
+    severity: Optional[str] = None,
+    trace_id: Optional[str] = None,
     service: OperationsService = Depends(get_operations_service),
 ):
     return service.get_logs(component=component, severity=severity, trace_id=trace_id)

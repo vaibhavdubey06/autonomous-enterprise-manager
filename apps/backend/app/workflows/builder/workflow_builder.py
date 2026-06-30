@@ -1,4 +1,4 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import uuid
 from app.workflows.schemas.workflow import WorkflowCreate, WorkflowSchema, TaskSchema
 from app.workflows.engine.dependency_resolver import DependencyResolver
@@ -21,13 +21,13 @@ class WorkflowBuilder:
         self,
         name: str,
         task_type: TaskType = TaskType.CAPABILITY,
-        description: str = None,
-        assigned_agent: str = None,
-        required_capability: str = None,
-        dependencies: List[str] = None,
-        inputs: Dict[str, Any] = None,
-        retry_policy: Dict[str, Any] = None,
-        timeout: int = None,
+        description: Optional[str] = None,
+        assigned_agent: Optional[str] = None,
+        required_capability: Optional[str] = None,
+        dependencies: Optional[List[str]] = None,
+        inputs: Optional[Dict[str, Any]] = None,
+        retry_policy: Optional[Dict[str, Any]] = None,
+        timeout: Optional[int] = None,
     ) -> str:
 
         task_id = str(uuid.uuid4())
@@ -63,7 +63,7 @@ class WorkflowBuilder:
                 self.dependencies = deps
 
         dummies = [DummyTask(t.task_id, t.dependencies) for t in self.tasks]
-        DependencyResolver.validate_dag(dummies)
+        DependencyResolver.validate_dag(dummies)  # type: ignore
 
         workflow = WorkflowSchema(
             workflow_id=self.workflow_id,

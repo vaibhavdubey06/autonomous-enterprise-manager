@@ -11,7 +11,7 @@ def test_chat_endpoint(client, mocker):
 
     payload = {"question": "What is AI?", "session_id": "test_session"}
 
-    response = client.post("/chat", json=payload)
+    response = client.post("/api/v1/chat", json=payload)
     assert response.status_code == 200
     data = response.json()
     assert "answer" in data

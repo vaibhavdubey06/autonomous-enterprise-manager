@@ -89,10 +89,10 @@ def make_retrieval_node(services: ServiceContainer):
             }
         )
 
-        metrics = dict(state.get("metrics", {}))
+        metrics = state.get("metrics", {})
         metrics["retrieval_ms"] = round(duration_ms, 2)
-        if status == "success":
-            metrics.update(metrics_update)
+        if status == "success" and "rerank_ms" in metrics_update:
+            metrics["rerank_ms"] = metrics_update["rerank_ms"]
 
         return {
             **state,

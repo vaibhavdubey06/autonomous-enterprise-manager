@@ -29,7 +29,7 @@ def test_github_indexing(client, mock_github, mocker):
 
     payload = {"repository": "test/repo"}
 
-    response = client.post("/github/index", json=payload)
+    response = client.post("/api/v1/github/index", json=payload)
 
     assert response.status_code == 200
     data = response.json()

@@ -46,8 +46,24 @@ class WorkflowEngine:
         if workflow and workflow.status == WorkflowStatus.COMPLETED:
             try:
                 from app.services.memory_service import MemoryService
+                from app.repositories.session_repository import SessionRepository
+                from app.repositories.conversation_repository import (
+                    ConversationRepository,
+                )
+                from app.repositories.message_repository import MessageRepository
+                from app.repositories.summary_repository import SummaryRepository
+                from app.repositories.memory_repository import MemoryRepository
+                from app.services.llm.llm_service import LLMService
 
-                memory_service = MemoryService(self.repository.db)
+                db = self.repository.db
+                memory_service = MemoryService(
+                    SessionRepository(db),
+                    ConversationRepository(db),
+                    MessageRepository(db),
+                    SummaryRepository(db),
+                    MemoryRepository(db),
+                    LLMService(),
+                )
 
                 # We format the goal and the result context to let the LLM extract structured memory
                 goal = workflow.goal

@@ -8,7 +8,9 @@ class RedisCacheProvider(CacheProvider):
         try:
             import redis
 
-            self.client = redis.Redis.from_url(redis_url, decode_responses=True)
+            self.client: Optional[Any] = redis.Redis.from_url(
+                redis_url, decode_responses=True
+            )
         except ImportError:
             # Fallback mock for testing environments where redis package isn't installed
             self.client = None

@@ -70,6 +70,10 @@ class GitHubConnector(BaseConnector):
                 )
 
             try:
+                if not self.gh:
+                    return ExecutionResponse(
+                        success=False, data=None, error_message="Not authenticated"
+                    )
                 repo = self.gh.get_repo(repo_name)
                 # Instead of indexing to Qdrant directly here, we return the docs
                 # so the caller (or integration service) can pipeline it.
@@ -84,8 +88,10 @@ class GitHubConnector(BaseConnector):
                 for file in tree.tree:
                     if count > 5:  # limit for speed during mock tests
                         break
-                    if file.type == "blob" and file.path.endswith(".md"):
+                    if file.type == "blob" and file.path and file.path.endswith(".md"):
                         content_file = repo.get_contents(file.path, ref=default_branch)
+                        if isinstance(content_file, list):
+                            continue
                         text = content_file.decoded_content.decode("utf-8")
                         docs.append(
                             {

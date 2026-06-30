@@ -11,7 +11,7 @@ from sqlalchemy import (
     Integer,
     JSON,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.core.database import Base
@@ -26,7 +26,7 @@ class Session(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    conversations = relationship(
+    conversations: Mapped[list["Conversation"]] = relationship(
         "Conversation", back_populates="session", cascade="all, delete-orphan"
     )
 
@@ -41,11 +41,11 @@ class Conversation(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    session = relationship("Session", back_populates="conversations")
-    messages = relationship(
+    session: Mapped["Session"] = relationship("Session", back_populates="conversations")
+    messages: Mapped[list["Message"]] = relationship(
         "Message", back_populates="conversation", cascade="all, delete-orphan"
     )
-    summaries = relationship(
+    summaries: Mapped[list["ConversationSummary"]] = relationship(
         "ConversationSummary",
         back_populates="conversation",
         cascade="all, delete-orphan",
@@ -73,7 +73,9 @@ class Message(KnowledgeItem):
     importance = Column(Float, default=0.5)
     timestamp = Column(DateTime, default=datetime.utcnow)
 
-    conversation = relationship("Conversation", back_populates="messages")
+    conversation: Mapped["Conversation"] = relationship(
+        "Conversation", back_populates="messages"
+    )
 
 
 class ConversationSummary(Base):
@@ -87,7 +89,9 @@ class ConversationSummary(Base):
     summary = Column(Text)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    conversation = relationship("Conversation", back_populates="summaries")
+    conversation: Mapped["Conversation"] = relationship(
+        "Conversation", back_populates="summaries"
+    )
 
 
 class MemoryObject(KnowledgeItem):

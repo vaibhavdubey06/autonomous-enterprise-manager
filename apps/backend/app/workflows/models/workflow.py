@@ -1,5 +1,9 @@
 from sqlalchemy import Column, String, Integer, Boolean, DateTime, JSON, Enum
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.workflows.models.task import Task
 import enum
 import datetime
 from app.core.database import Base
@@ -54,6 +58,6 @@ class Workflow(Base):
     )
     completed_at = Column(DateTime, nullable=True)
 
-    tasks = relationship(
+    tasks: Mapped[list["Task"]] = relationship(
         "Task", back_populates="workflow", cascade="all, delete-orphan"
     )

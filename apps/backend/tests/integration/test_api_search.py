@@ -14,7 +14,7 @@ def test_search_endpoint(client, mocker):
 
     payload = {"query": "test query"}
 
-    response = client.post("/search", json=payload)
+    response = client.post("/api/v1/search", json=payload)
 
     assert response.status_code == 200
     data = response.json()

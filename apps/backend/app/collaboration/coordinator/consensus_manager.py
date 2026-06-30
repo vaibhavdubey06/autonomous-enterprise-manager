@@ -11,7 +11,7 @@ class ConsensusStrategy:
 
 class MajorityVote(ConsensusStrategy):
     def evaluate(self, topic: str, votes: Dict[str, str], options: List[str]) -> str:
-        counts = {}
+        counts: Dict[str, int] = {}
         for vote in votes.values():
             counts[vote] = counts.get(vote, 0) + 1
 

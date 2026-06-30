@@ -52,7 +52,7 @@ class MemoryRepository:
         if needed, or we rely on Qdrant in the service layer.
         For phase 2.1, the service layer will call Qdrant, get IDs, and then we fetch them here.
         """
-        pass
+        return []
 
     def get_memories_by_ids(self, memory_ids: List[str]) -> List[MemoryObject]:
         uids = []

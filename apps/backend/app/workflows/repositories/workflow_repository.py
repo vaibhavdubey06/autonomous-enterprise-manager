@@ -50,7 +50,7 @@ class WorkflowRepository:
         return self.db.query(Task).filter(Task.task_id == task_id).first()
 
     def update_task_status(
-        self, task_id: str, status: TaskStatus, error: str = None
+        self, task_id: str, status: TaskStatus, error: Optional[str] = None
     ) -> Optional[Task]:
         task = self.get_task(task_id)
         if task:

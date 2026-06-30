@@ -1,3 +1,4 @@
+from typing import Optional
 from pydantic import BaseModel
 import datetime
 import uuid
@@ -25,7 +26,7 @@ class Alert(BaseModel):
     threshold: float
     severity: str
     message: str
-    timestamp: datetime.datetime = None
+    timestamp: Optional[datetime.datetime] = None
 
     def __init__(self, **data):
         super().__init__(**data)

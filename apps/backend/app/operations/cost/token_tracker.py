@@ -53,7 +53,7 @@ class TokenTracker:
         return sum(r.total_tokens for r in self.records)
 
     def get_by_agent(self) -> Dict[str, int]:
-        by_agent = defaultdict(int)
+        by_agent: Dict[str, int] = defaultdict(int)
         for r in self.records:
             if r.agent:
                 by_agent[r.agent] += r.total_tokens

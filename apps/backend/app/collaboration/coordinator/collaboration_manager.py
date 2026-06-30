@@ -53,7 +53,7 @@ class CollaborationManager:
 
         self.session_repo.update_phase(session_id, SessionPhase.TEAM_FORMATION)
 
-        team = self.team_builder.build_team(session.objective)
+        team = self.team_builder.build_team(session.objective or "")
         participants = [a.agent_id for a in team]
         leader = next(
             (a.agent_id for a in team if getattr(a, "assigned_role", None) == "Leader"),

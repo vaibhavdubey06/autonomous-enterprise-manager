@@ -48,9 +48,15 @@ class MessageBus:
 
         if callbacks:
             # Execute all callbacks concurrently
-            await asyncio.gather(
-                *(cb(message) for cb in callbacks), return_exceptions=True
-            )
+            import inspect
+
+            tasks = []
+            for cb in callbacks:
+                res = cb(message)
+                if inspect.isawaitable(res):
+                    tasks.append(res)
+            if tasks:
+                await asyncio.gather(*tasks, return_exceptions=True)
 
     def get_messages_for_session(
         self, collaboration_id: str

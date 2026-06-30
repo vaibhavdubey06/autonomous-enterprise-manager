@@ -76,19 +76,20 @@ class MemoryService:
         )
 
         # 2. Save to Semantic Memory
-        timestamp_str = msg.timestamp.isoformat()
-        try:
-            store_memory_chunk(
-                conversation_id=str(msg.conversation_id),
-                message_id=str(msg.id),
-                role=msg.role,
-                text=msg.content,
-                timestamp=timestamp_str,
-            )
-        except Exception as e:
-            logger.error(
-                f"Failed to store semantic memory chunk for message {msg.id}: {e}"
-            )
+        if msg and msg.timestamp:
+            timestamp_str = msg.timestamp.isoformat()
+            try:
+                store_memory_chunk(
+                    conversation_id=str(msg.conversation_id),
+                    message_id=str(msg.id),
+                    role=msg.role or "",
+                    text=msg.content or "",
+                    timestamp=timestamp_str,
+                )
+            except Exception as e:
+                logger.error(
+                    f"Failed to store semantic memory chunk for message {msg.id}: {e}"
+                )
 
     def get_recent_messages(self, conversation_id: str) -> List[Dict[str, Any]]:
         messages = self.message_repo.get_recent_messages(
@@ -98,7 +99,7 @@ class MemoryService:
             {
                 "role": m.role,
                 "content": m.content,
-                "timestamp": m.timestamp.isoformat(),
+                "timestamp": m.timestamp.isoformat() if m.timestamp else "",
                 "importance": m.importance,
             }
             for m in messages
@@ -122,7 +123,7 @@ class MemoryService:
 
     def get_latest_summary(self, conversation_id: str) -> str:
         summary = self.summary_repo.get_latest_summary(conversation_id)
-        return summary.summary if summary else ""
+        return summary.summary if summary and summary.summary else ""
 
     def build_memory_context(self, conversation_id: str) -> str:
         """
@@ -152,7 +153,7 @@ class MemoryService:
             if not messages:
                 return
 
-            total_chars = sum(len(m.content) for m in messages)
+            total_chars = sum([len(m.content) for m in messages if m.content])
 
             if total_chars > settings.SUMMARY_TRIGGER_CHARACTERS:
                 logger.info(

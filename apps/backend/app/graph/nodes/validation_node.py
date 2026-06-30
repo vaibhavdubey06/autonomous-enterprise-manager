@@ -69,7 +69,7 @@ def validation_node(state: GraphState) -> GraphState:
         }
     )
 
-    metrics = dict(state.get("metrics", {}))
+    metrics = state.get("metrics", {})
     metrics["validation_ms"] = round(duration_ms, 2)
 
     # Compute total_ms

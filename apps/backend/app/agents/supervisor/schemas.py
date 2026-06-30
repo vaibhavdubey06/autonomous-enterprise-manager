@@ -38,7 +38,7 @@ class ExecutionPlan(BaseModel):
     tasks: List[Task]
 
 
-class SupervisorState(TypedDict):
+class SupervisorState(TypedDict, total=False):
     """LangGraph state for the Supervisor Agent"""
 
     # Core inputs

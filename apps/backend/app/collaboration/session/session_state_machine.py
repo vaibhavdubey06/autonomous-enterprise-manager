@@ -12,30 +12,48 @@ class SessionStateMachine:
 
     # Define valid transitions
     TRANSITIONS: Dict[SessionPhase, List[SessionPhase]] = {
-        SessionPhase.CREATED: [SessionPhase.PLANNING, SessionPhase.CANCELLED],
-        SessionPhase.PLANNING: [SessionPhase.TEAM_FORMATION, SessionPhase.CANCELLED],
-        SessionPhase.TEAM_FORMATION: [SessionPhase.DELEGATION, SessionPhase.CANCELLED],
+        SessionPhase.CREATED: [
+            SessionPhase.PLANNING,
+            SessionPhase.TEAM_FORMATION,
+            SessionPhase.CANCELLED,
+        ],
+        SessionPhase.PLANNING: [
+            SessionPhase.TEAM_FORMATION,
+            SessionPhase.DELEGATION,
+            SessionPhase.EXECUTION,
+            SessionPhase.CANCELLED,
+        ],
+        SessionPhase.TEAM_FORMATION: [
+            SessionPhase.PLANNING,
+            SessionPhase.DELEGATION,
+            SessionPhase.EXECUTION,
+            SessionPhase.CANCELLED,
+        ],
         SessionPhase.DELEGATION: [SessionPhase.EXECUTION, SessionPhase.CANCELLED],
         SessionPhase.EXECUTION: [
             SessionPhase.NEGOTIATION,
             SessionPhase.CONSENSUS,
             SessionPhase.VERIFICATION,
             SessionPhase.FAILED,
+            SessionPhase.COMPLETED,
         ],
         SessionPhase.NEGOTIATION: [
             SessionPhase.CONSENSUS,
             SessionPhase.EXECUTION,
             SessionPhase.FAILED,
+            SessionPhase.COMPLETED,
         ],
         SessionPhase.CONSENSUS: [
             SessionPhase.VERIFICATION,
             SessionPhase.NEGOTIATION,
             SessionPhase.FAILED,
+            SessionPhase.COMPLETED,
         ],
         SessionPhase.VERIFICATION: [
             SessionPhase.COMPLETED,
             SessionPhase.EXECUTION,
             SessionPhase.FAILED,
+            SessionPhase.COMPLETED,
         ],
         SessionPhase.COMPLETED: [],
         SessionPhase.CANCELLED: [],

@@ -12,7 +12,7 @@ class WorkflowEvent(BaseModel):
     event_type: str
     workflow_id: str
     task_id: Optional[str] = None
-    timestamp: datetime = None
+    timestamp: Optional[datetime] = None
     payload: Dict[str, Any] = {}
 
     def __init__(self, **data):

@@ -1,7 +1,7 @@
 def test_execution_trace(client, db_session):
     payload = {"question": "Hello trace", "session_id": "test_session_trace"}
 
-    response = client.post("/agent/chat", json=payload)
+    response = client.post("/api/v1/agent/chat", json=payload)
     assert response.status_code == 200
     data = response.json()
 

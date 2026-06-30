@@ -91,7 +91,7 @@ def make_response_node(services: ServiceContainer):
             }
         )
 
-        metrics = dict(state.get("metrics", {}))
+        metrics = state.get("metrics", {})
         metrics["llm_ms"] = round(duration_ms, 2)
 
         return {

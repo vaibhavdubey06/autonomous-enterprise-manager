@@ -18,7 +18,7 @@ class MetricsCollector:
         self.registry.set_gauge("system.ram_percent", mem.percent)
         self.registry.set_gauge("system.ram_used_mb", mem.used / (1024 * 1024))
         self.registry.set_gauge("system.disk_percent", disk.percent)
-        self.registry.set_gauge("system.threads", psutil.cpu_count())
+        self.registry.set_gauge("system.threads", float(psutil.cpu_count() or 0))
 
         return {
             "cpu_percent": cpu,

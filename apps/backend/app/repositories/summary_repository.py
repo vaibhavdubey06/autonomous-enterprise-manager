@@ -17,7 +17,8 @@ class SummaryRepository:
         self, conversation_id: str, summary_text: str
     ) -> ConversationSummary:
         summary = ConversationSummary(
-            conversation_id=uuid.UUID(conversation_id), summary=summary_text
+            conversation_id=uuid.UUID(conversation_id),  # type: ignore
+            summary=summary_text,
         )
         self.db.add(summary)
         self.db.commit()

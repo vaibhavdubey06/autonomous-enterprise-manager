@@ -2,7 +2,7 @@ from app.capabilities.base.executor import CapabilityExecutor
 from app.capabilities.base.schemas import CapabilityResult
 import logging
 from abc import ABC, abstractmethod
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 from app.services.llm.llm_service import LLMService
 from app.agents.base.profile import AgentProfile
@@ -20,7 +20,9 @@ class BaseExecutiveAgent(ABC):
     """
 
     def __init__(
-        self, llm_service: LLMService, capability_executor: CapabilityExecutor = None
+        self,
+        llm_service: LLMService,
+        capability_executor: Optional[CapabilityExecutor] = None,
     ):
         self.llm_service = llm_service
         self.capability_executor = capability_executor
@@ -115,7 +117,7 @@ class BaseExecutiveAgent(ABC):
         reasoning: str,
         recommendations: List[str],
         sources: List[Dict[str, Any]],
-        metrics: Dict[str, Any] = None,
+        metrics: Optional[Dict[str, Any]] = None,
     ) -> ExecutiveResult:
         """
         Helper method to construct the standardized ExecutiveResult.

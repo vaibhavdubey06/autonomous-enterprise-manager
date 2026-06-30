@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 from app.agents.supervisor.schemas import Task, TaskStatus
 from app.agents.base.registry import AgentRegistry
 from app.agents.base.task import ExecutiveTask
@@ -117,7 +118,7 @@ class AgentRouter:
         # Execute using Knowledge Agent (existing RAG LangGraph)
         if self.knowledge_agent:
             logger.info("Executing task via Knowledge Agent graph.")
-            sub_state = {
+            sub_state: dict[str, Any] = {
                 "question": task.description,
                 "session_id": state.get("session_id"),
                 "conversation_id": state.get("conversation_id"),

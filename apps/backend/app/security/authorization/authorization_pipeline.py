@@ -16,9 +16,9 @@ class AuthorizationDecision(BaseModel):
 class AuthorizationPipeline:
     def authorize(
         self,
-        required_permissions: List[str] = None,
-        resource_attributes: Dict[str, Any] = None,
-        required_attributes: Dict[str, Any] = None,
+        required_permissions: Optional[List[str]] = None,
+        resource_attributes: Optional[Dict[str, Any]] = None,
+        required_attributes: Optional[Dict[str, Any]] = None,
         capability_name: Optional[str] = None,
     ) -> AuthorizationDecision:
 

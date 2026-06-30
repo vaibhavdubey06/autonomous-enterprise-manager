@@ -1,5 +1,9 @@
 from sqlalchemy import Column, String, Integer, DateTime, Float, JSON, ForeignKey, Enum
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from app.workflows.models.workflow import Workflow
 import enum
 from app.core.database import Base
 
@@ -57,4 +61,4 @@ class Task(Base):
     completed_at = Column(DateTime, nullable=True)
     execution_time = Column(Float, nullable=True)  # Execution time in milliseconds
 
-    workflow = relationship("Workflow", back_populates="tasks")
+    workflow: Mapped["Workflow"] = relationship("Workflow", back_populates="tasks")

@@ -103,7 +103,7 @@ class SupervisorGraph:
             for task in plan.tasks:
                 use_collaboration = state.get("use_collaboration", False)
                 res = self.agent_router.route_and_execute(
-                    task, state, use_collaboration=use_collaboration
+                    task, dict(state), use_collaboration=use_collaboration
                 )
                 agent = res.get("agent_used")
 

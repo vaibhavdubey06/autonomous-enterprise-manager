@@ -54,7 +54,7 @@ class WorkflowScheduler:
         context = WorkflowContext(workflow_id)
         metrics = MetricsCollector()
 
-        completed_task_ids = set()
+        completed_task_ids: set[str] = set()
         failed = False
 
         # Reload tasks explicitly to ensure session state is clean
@@ -90,7 +90,7 @@ class WorkflowScheduler:
                     if isinstance(result, Exception):
                         logger.error(f"Task {task.task_id} completely failed: {result}")
                         self.repository.update_task_status(
-                            task.task_id, TaskStatus.FAILED, str(result)
+                            str(task.task_id), TaskStatus.FAILED, str(result)
                         )
                         failed = True
                     elif (
@@ -100,13 +100,15 @@ class WorkflowScheduler:
                         logger.warning(
                             f"Task {task.task_id} blocked by governance. Next state: {result.get('next_state')}"
                         )
-                        self.repository.update_workflow_status(
-                            workflow_id, result.get("next_state")
-                        )
+                        next_state = result.get("next_state")
+                        if next_state:
+                            self.repository.update_workflow_status(
+                                workflow_id, WorkflowStatus(next_state)
+                            )
                         failed = True  # Halt loop for now, we will await human approval
                         break
                     else:
-                        completed_task_ids.add(task.task_id)
+                        completed_task_ids.add(str(task.task_id))
 
             # Prevent tight loops if nothing executed (should not happen due to deadlock check)
             if not execution_coros:
@@ -114,7 +116,8 @@ class WorkflowScheduler:
 
         # Finalize Workflow
         if failed:
-            current_status = self.repository.get_workflow(workflow_id).status
+            wf = self.repository.get_workflow(workflow_id)
+            current_status = wf.status if wf else WorkflowStatus.FAILED
             if current_status not in [
                 WorkflowStatus.WAITING_FOR_APPROVAL,
                 WorkflowStatus.WAITING_FOR_GOVERNANCE,
@@ -136,8 +139,9 @@ class WorkflowScheduler:
             workflow = self.repository.update_workflow_status(
                 workflow_id, WorkflowStatus.COMPLETED
             )
-            workflow.execution_metrics = metrics.complete_workflow()
-            workflow.workflow_metadata = context.get_all_state()
+            if workflow:
+                workflow.execution_metrics = metrics.complete_workflow()
+                workflow.workflow_metadata = context.get_all_state()
             self.repository.db.commit()
 
             self.event_bus.publish(
@@ -151,15 +155,15 @@ class WorkflowScheduler:
     async def _run_task(
         self, task: Task, context: WorkflowContext, metrics: MetricsCollector
     ) -> Any:
-        self.repository.update_task_status(task.task_id, TaskStatus.RUNNING)
-        metrics.record_task_start(task.task_id)
+        self.repository.update_task_status(str(task.task_id), TaskStatus.RUNNING)
+        metrics.record_task_start(str(task.task_id))
 
         self.event_bus.publish(
             WorkflowEvent(
                 event_id=f"evt_{task.task_id}_start",
                 event_type=TASK_STARTED,
-                workflow_id=task.workflow_id,
-                task_id=task.task_id,
+                workflow_id=str(task.workflow_id),
+                task_id=str(task.task_id),
             )
         )
 
@@ -171,31 +175,31 @@ class WorkflowScheduler:
             outputs = await RetryManager.execute_with_retry(task, _exec_wrapper)
 
             # Save outputs to context and repository
-            context.set_task_output(task.task_id, outputs)
+            context.set_task_output(str(task.task_id), outputs)
             self.repository.update_task(
-                task.task_id, {"outputs": outputs, "status": TaskStatus.COMPLETED}
+                str(task.task_id), {"outputs": outputs, "status": TaskStatus.COMPLETED}
             )
-            metrics.record_task_end(task.task_id, "Completed")
+            metrics.record_task_end(str(task.task_id), "Completed")
 
             self.event_bus.publish(
                 WorkflowEvent(
                     event_id=f"evt_{task.task_id}_completed",
                     event_type=TASK_COMPLETED,
-                    workflow_id=task.workflow_id,
-                    task_id=task.task_id,
+                    workflow_id=str(task.workflow_id),
+                    task_id=str(task.task_id),
                     payload=outputs,
                 )
             )
             return outputs
 
         except Exception as e:
-            metrics.record_task_end(task.task_id, "Failed")
+            metrics.record_task_end(str(task.task_id), "Failed")
             self.event_bus.publish(
                 WorkflowEvent(
                     event_id=f"evt_{task.task_id}_failed",
                     event_type=TASK_FAILED,
-                    workflow_id=task.workflow_id,
-                    task_id=task.task_id,
+                    workflow_id=str(task.workflow_id),
+                    task_id=str(task.task_id),
                     payload={"error": str(e)},
                 )
             )

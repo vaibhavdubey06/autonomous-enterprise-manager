@@ -19,7 +19,7 @@ def create_session(req: CollaborationSessionCreate, db: Session = Depends(get_db
     service = CollaborationService(db)
     session = service.create_session(req)
     # Automatically form team for simplicity of API testing
-    session = service.form_team(session.session_id)
+    session = service.form_team(session.session_id or "")
     return session
 
 

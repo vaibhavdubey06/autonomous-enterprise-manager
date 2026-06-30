@@ -15,7 +15,7 @@ class WorkspaceRepository:
         )
         if not session_obj:
             raise ValueError(f"CollaborationSession {session_id} not found")
-        return SharedWorkspace(**session_obj.shared_workspace)
+        return SharedWorkspace(**(session_obj.shared_workspace or {}))
 
     def save_workspace(self, session_id: str, workspace: SharedWorkspace) -> None:
         session_obj = (

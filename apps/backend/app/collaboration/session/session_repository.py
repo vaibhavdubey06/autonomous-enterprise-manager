@@ -40,7 +40,9 @@ class SessionRepository:
         if not session:
             raise ValueError(f"Session {session_id} not found")
 
-        SessionStateMachine.validate_transition(session.current_phase, target_phase)
+        SessionStateMachine.validate_transition(
+            session.current_phase or SessionPhase.CREATED, target_phase
+        )
         session.current_phase = target_phase
 
         if target_phase in (

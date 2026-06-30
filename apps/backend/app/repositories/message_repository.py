@@ -18,10 +18,10 @@ class MessageRepository:
         self, conversation_id: str, role: str, content: str, importance: float = 0.5
     ) -> Message:
         msg = Message(
-            conversation_id=uuid.UUID(conversation_id),
+            conversation_id=uuid.UUID(conversation_id),  # type: ignore
             role=role,
             content=content,
-            importance=importance,
+            importance=importance,  # type: ignore
         )
         self.db.add(msg)
         self.db.commit()
@@ -29,7 +29,7 @@ class MessageRepository:
         return msg
 
     def get_recent_messages(
-        self, conversation_id: str, limit: int = None
+        self, conversation_id: str, limit: int | None = None
     ) -> List[Message]:
         if limit is None:
             limit = settings.RECENT_MESSAGE_LIMIT

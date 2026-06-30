@@ -2,6 +2,12 @@ from sqlalchemy.orm import Session
 from app.services.memory_service import MemoryService
 from app.collaboration.session.collaboration_session import CollaborationSession
 from app.collaboration.workspace.workspace_repository import WorkspaceRepository
+from app.repositories.session_repository import SessionRepository
+from app.repositories.conversation_repository import ConversationRepository
+from app.repositories.message_repository import MessageRepository
+from app.repositories.summary_repository import SummaryRepository
+from app.repositories.memory_repository import MemoryRepository
+from app.services.llm.llm_service import LLMService
 
 
 class CollaborationMemory:
@@ -11,7 +17,20 @@ class CollaborationMemory:
 
     def __init__(self, db: Session):
         self.db = db
-        self.memory_service = MemoryService(db)
+        session_repo = SessionRepository(db)
+        conversation_repo = ConversationRepository(db)
+        message_repo = MessageRepository(db)
+        summary_repo = SummaryRepository(db)
+        memory_repo = MemoryRepository(db)
+        llm_service = LLMService()
+        self.memory_service = MemoryService(
+            session_repo,
+            conversation_repo,
+            message_repo,
+            summary_repo,
+            memory_repo,
+            llm_service,
+        )
         self.workspace_repo = WorkspaceRepository(db)
 
     async def extract_session_memory(self, session_id: str) -> None:

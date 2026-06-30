@@ -78,7 +78,7 @@ def make_memory_node(services: ServiceContainer):
             }
         )
 
-        metrics = dict(state.get("metrics", {}))
+        metrics = state.get("metrics", {})
         metrics["memory_ms"] = round(duration_ms, 2)
 
         return {

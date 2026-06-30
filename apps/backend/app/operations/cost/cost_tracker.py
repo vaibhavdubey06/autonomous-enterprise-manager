@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from collections import defaultdict
 from app.operations.cost.token_tracker import TokenTracker
 
@@ -14,7 +14,9 @@ DEFAULT_PRICING = {
 class CostTracker:
     """Estimates cost from token counts using configurable per-model pricing."""
 
-    def __init__(self, token_tracker: TokenTracker, pricing: Dict = None):
+    def __init__(
+        self, token_tracker: TokenTracker, pricing: Optional[Dict[str, Any]] = None
+    ):
         self.token_tracker = token_tracker
         self.pricing = pricing or DEFAULT_PRICING
 
@@ -30,7 +32,7 @@ class CostTracker:
         return round(total, 6)
 
     def cost_by_agent(self) -> Dict[str, float]:
-        by_agent = defaultdict(float)
+        by_agent: Dict[str, float] = defaultdict(float)
         for rec in self.token_tracker.records:
             pricing = self._get_pricing(rec.model)
             cost = (rec.input_tokens * pricing["input"] / 1_000_000) + (
@@ -40,7 +42,7 @@ class CostTracker:
         return {k: round(v, 6) for k, v in by_agent.items()}
 
     def cost_by_workflow(self) -> Dict[str, float]:
-        by_wf = defaultdict(float)
+        by_wf: Dict[str, float] = defaultdict(float)
         for rec in self.token_tracker.records:
             pricing = self._get_pricing(rec.model)
             cost = (rec.input_tokens * pricing["input"] / 1_000_000) + (

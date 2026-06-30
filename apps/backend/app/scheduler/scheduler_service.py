@@ -113,7 +113,7 @@ class SchedulerService:
         return False
 
     def list_jobs(self, status: Optional[JobStatus] = None) -> List[Dict[str, Any]]:
-        jobs = self._jobs.values()
+        jobs = list(self._jobs.values())
         if status:
             jobs = [j for j in jobs if j.status == status]
         return [j.to_dict() for j in jobs]

@@ -1,7 +1,7 @@
 import time
 import random
 import logging
-from typing import Callable, Any
+from typing import Callable, Any, Optional
 from enum import Enum
 
 logger = logging.getLogger(__name__)
@@ -17,7 +17,7 @@ class RetryStrategy:
         self,
         func: Callable,
         *args,
-        classify_error: Callable[[Exception], ErrorClassification] = None,
+        classify_error: Optional[Callable[[Exception], ErrorClassification]] = None,
         **kwargs,
     ) -> Any:
         raise NotImplementedError
@@ -31,7 +31,7 @@ class ImmediateRetry(RetryStrategy):
         self,
         func: Callable,
         *args,
-        classify_error: Callable[[Exception], ErrorClassification] = None,
+        classify_error: Optional[Callable[[Exception], ErrorClassification]] = None,
         **kwargs,
     ) -> Any:
         attempts = 0
@@ -68,7 +68,7 @@ class ExponentialBackoffRetry(RetryStrategy):
         self,
         func: Callable,
         *args,
-        classify_error: Callable[[Exception], ErrorClassification] = None,
+        classify_error: Optional[Callable[[Exception], ErrorClassification]] = None,
         **kwargs,
     ) -> Any:
         attempts = 0

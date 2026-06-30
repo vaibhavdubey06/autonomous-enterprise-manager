@@ -8,7 +8,7 @@ class TelemetryEvent(BaseModel):
     event_id: str = ""
     source: str = ""
     event_type: str = ""
-    timestamp: datetime.datetime = None
+    timestamp: Optional[datetime.datetime] = None
     duration_ms: float = 0.0
     metadata: Dict[str, Any] = {}
     trace_id: Optional[str] = None

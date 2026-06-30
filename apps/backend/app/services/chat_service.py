@@ -1,6 +1,6 @@
 import logging
 import time
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from fastapi import HTTPException, BackgroundTasks
 
 from app.core.config import settings
@@ -28,7 +28,7 @@ class ChatService:
         question: str,
         session_id: str | None = None,
         conversation_id: str | None = None,
-        background_tasks: BackgroundTasks = None,
+        background_tasks: Optional[BackgroundTasks] = None,
     ) -> Dict[str, Any]:
         """
         Orchestrates full RAG pipeline with Semantic Memory and Enterprise Retrieval.

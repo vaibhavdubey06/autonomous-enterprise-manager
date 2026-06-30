@@ -5,6 +5,22 @@ from app.integrations.services.integration_service import integration_service
 import unittest.mock as mock
 
 
+def setup_module(module):
+    from app.integrations.github.github_connector import GitHubConnector
+    from app.integrations.jira.jira_connector import JiraConnector
+    from app.integrations.google_drive.drive_connector import DriveConnector
+    from app.integrations.slack.slack_connector import SlackConnector
+    from app.integrations.notion.notion_connector import NotionConnector
+    from app.integrations.gmail.gmail_connector import GmailConnector
+
+    connector_registry.register(GitHubConnector)
+    connector_registry.register(JiraConnector)
+    connector_registry.register(DriveConnector)
+    connector_registry.register(SlackConnector)
+    connector_registry.register(NotionConnector)
+    connector_registry.register(GmailConnector)
+
+
 def test_connector_registry():
     connectors = connector_registry.list_connectors()
     names = [c.name for c in connectors]

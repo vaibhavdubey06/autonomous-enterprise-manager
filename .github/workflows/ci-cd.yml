@@ -32,7 +32,6 @@ jobs:
         
       - name: Run MyPy Type Checker
         working-directory: apps/backend
-        continue-on-error: true
         run: uv run mypy app
         
   test:
@@ -48,10 +47,14 @@ jobs:
           
       - name: Install dependencies
         run: |
+          python -m pip install --upgrade pip
           pip install uv
-          uv pip install -e apps/backend[dev]
+          cd apps/backend
+          uv sync
           
       - name: Run PyTest
+        env:
+          TESTING: "true"
         run: |
           cd apps/backend
           uv run pytest tests/ -v

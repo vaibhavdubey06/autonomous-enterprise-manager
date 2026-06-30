@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Table, JSON
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped
 from datetime import datetime, timezone
 import uuid
 from app.core.database import Base
@@ -52,8 +52,10 @@ class Tenant(Base):
         DateTime(timezone=True), default=get_utc_now, onupdate=get_utc_now
     )
 
-    users = relationship("User", back_populates="tenant", cascade="all, delete-orphan")
-    api_keys = relationship(
+    users: Mapped[list["User"]] = relationship(
+        "User", back_populates="tenant", cascade="all, delete-orphan"
+    )
+    api_keys: Mapped[list["APIKey"]] = relationship(
         "APIKey", back_populates="tenant", cascade="all, delete-orphan"
     )
 
@@ -75,12 +77,14 @@ class User(Base):
         DateTime(timezone=True), default=get_utc_now, onupdate=get_utc_now
     )
 
-    tenant = relationship("Tenant", back_populates="users")
-    roles = relationship("Role", secondary=user_roles, back_populates="users")
-    sessions = relationship(
+    tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="users")
+    roles: Mapped[list["Role"]] = relationship(
+        "Role", secondary=user_roles, back_populates="users"
+    )
+    sessions: Mapped[list["AuthSession"]] = relationship(
         "AuthSession", back_populates="user", cascade="all, delete-orphan"
     )
-    api_keys = relationship(
+    api_keys: Mapped[list["APIKey"]] = relationship(
         "APIKey", back_populates="user", cascade="all, delete-orphan"
     )
 
@@ -92,8 +96,10 @@ class Role(Base):
     name = Column(String, nullable=False, unique=True)
     description = Column(String, nullable=True)
 
-    users = relationship("User", secondary=user_roles, back_populates="roles")
-    permissions = relationship(
+    users: Mapped[list["User"]] = relationship(
+        "User", secondary=user_roles, back_populates="roles"
+    )
+    permissions: Mapped[list["Permission"]] = relationship(
         "Permission", secondary=role_permissions, back_populates="roles"
     )
 
@@ -107,7 +113,7 @@ class Permission(Base):
     )  # e.g., "github.read", "workflow.execute"
     description = Column(String, nullable=True)
 
-    roles = relationship(
+    roles: Mapped[list["Role"]] = relationship(
         "Role", secondary=role_permissions, back_populates="permissions"
     )
 
@@ -122,7 +128,7 @@ class AuthSession(Base):
     expires_at = Column(DateTime(timezone=True), nullable=False)
     created_at = Column(DateTime(timezone=True), default=get_utc_now)
 
-    user = relationship("User", back_populates="sessions")
+    user: Mapped["User"] = relationship("User", back_populates="sessions")
 
 
 class APIKey(Base):
@@ -142,8 +148,8 @@ class APIKey(Base):
     expires_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=get_utc_now)
 
-    tenant = relationship("Tenant", back_populates="api_keys")
-    user = relationship("User", back_populates="api_keys")
+    tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="api_keys")
+    user: Mapped["User"] = relationship("User", back_populates="api_keys")
 
 
 class SecurityAuditLog(Base):

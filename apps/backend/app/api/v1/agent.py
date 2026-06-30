@@ -26,6 +26,7 @@ from app.services.memory.deduplicator import MemoryDeduplicator
 from app.services.vectorstore.qdrant_service import search
 from app.core.config import settings
 from app.agents.supervisor.supervisor_agent import SupervisorGraph
+from app.agents.supervisor.schemas import SupervisorState
 from app.agents.supervisor.planner import Planner
 from app.agents.supervisor.task_decomposer import TaskDecomposer
 from app.agents.supervisor.router import AgentRouter
@@ -169,12 +170,17 @@ async def agent_chat(
     Execute the full LangGraph pipeline via the Supervisor orchestrator.
     """
     logger.info(f"Agent chat request: {request.question[:80]}")
+    session_id = memory_service.get_or_create_session(request.session_id)
+    conversation_id = memory_service.get_or_create_conversation(
+        session_id, request.conversation_id
+    )
+    memory_service.save_message(conversation_id, "user", request.question)
 
     # Initialise Supervisor state
-    initial_state = {
+    initial_state: SupervisorState = {
         "user_input": request.question,
-        "session_id": request.session_id,
-        "conversation_id": request.conversation_id,
+        "session_id": session_id,
+        "conversation_id": conversation_id,
         "execution_time_ms": 0.0,
         "selected_agents": [],
         "completed_tasks": [],
@@ -185,12 +191,16 @@ async def agent_chat(
     final_state = supervisor_graph.run(initial_state)
 
     # Optionally trigger async summary and memory extraction
-    conversation_id = final_state.get("conversation_id") or request.conversation_id
-    if conversation_id:
-        background_tasks.add_task(memory_service.generate_summary, conversation_id)
+    final_conversation_id = str(
+        final_state.get("conversation_id") or request.conversation_id or conversation_id
+    )
+    if final_conversation_id:
+        background_tasks.add_task(
+            memory_service.generate_summary, final_conversation_id
+        )
         background_tasks.add_task(
             memory_service.extract_and_store_memories,
-            conversation_id=conversation_id,
+            conversation_id=final_conversation_id,
             user_id=request.session_id or "default_user",
             user_message=request.question,
             assistant_response=final_state.get("final_response") or "",

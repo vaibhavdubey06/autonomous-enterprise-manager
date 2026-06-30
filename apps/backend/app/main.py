@@ -19,7 +19,7 @@ from app.core.database import Base, engine
 try:
     from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 except ImportError:
-    FastAPIInstrumentor = None
+    FastAPIInstrumentor = None  # type: ignore
     import logging
 
     logger = logging.getLogger(__name__)
@@ -86,7 +86,7 @@ app.include_router(search_router, prefix="/api/v1/search", tags=["search"])
 app.include_router(chat_router, prefix="/api/v1/chat", tags=["chat"])
 
 # Instrument FastAPI with OpenTelemetry
-if FastAPIInstrumentor:
+if FastAPIInstrumentor is not None:
     FastAPIInstrumentor.instrument_app(app)
 else:
     logger.warning(

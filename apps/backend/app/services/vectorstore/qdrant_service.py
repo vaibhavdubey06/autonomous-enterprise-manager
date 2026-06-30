@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Optional
 
 from qdrant_client import QdrantClient
 from qdrant_client.models import Distance, PointStruct, VectorParams
@@ -99,7 +100,10 @@ def store_memory_chunk(
 
 
 def search(
-    query: str, limit: int = 5, source_filter: str = None, exclude_source: str = None
+    query: str,
+    limit: int = 5,
+    source_filter: Optional[str] = None,
+    exclude_source: Optional[str] = None,
 ):
     """
     Perform a semantic search in the Qdrant collection with optional filtering.

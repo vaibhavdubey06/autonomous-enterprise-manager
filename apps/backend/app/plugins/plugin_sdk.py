@@ -133,7 +133,7 @@ class PluginRegistry:
     def list_plugins(
         self, plugin_type: Optional[PluginType] = None
     ) -> List[Dict[str, Any]]:
-        plugins = self._plugins.values()
+        plugins = list(self._plugins.values())
         if plugin_type:
             plugins = [p for p in plugins if p.plugin_type == plugin_type]
         result = []

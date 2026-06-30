@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from typing import Optional
 from app.collaboration.coordinator.collaboration_manager import CollaborationManager
 from app.collaboration.teams.team_registry import TeamRegistry
 from app.collaboration.teams.agent_roles import AgentCollaborationProfile
@@ -10,6 +11,7 @@ from app.collaboration.schemas.collaboration import (
     ConflictRequest,
 )
 from app.collaboration.session.collaboration_session import CollaborationSession
+from app.collaboration.coordinator.conflict_manager import ConflictSeverity
 
 
 class CollaborationService:
@@ -52,7 +54,7 @@ class CollaborationService:
     def create_session(self, req: CollaborationSessionCreate) -> CollaborationSession:
         return self.manager.create_session(req.objective, req.workflow_id)
 
-    def get_session(self, session_id: str) -> CollaborationSession:
+    def get_session(self, session_id: str) -> Optional[CollaborationSession]:
         return self.manager.session_repo.get_session(session_id)
 
     def form_team(self, session_id: str) -> CollaborationSession:
@@ -76,5 +78,5 @@ class CollaborationService:
 
         cid = str(uuid.uuid4())
         return self.manager.conflict.raise_conflict(
-            cid, req.topic, req.participants, req.severity
+            cid, req.topic, req.participants, ConflictSeverity(req.severity)
         )

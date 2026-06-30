@@ -13,8 +13,9 @@ class DependencyResolver:
         task_ids = {t.task_id for t in tasks}
 
         for task in tasks:
-            in_degree[task.task_id] = len(task.dependencies)
-            for dep in task.dependencies:
+            deps = task.dependencies or []
+            in_degree[task.task_id] = len(deps)
+            for dep in deps:
                 if dep not in task_ids:
                     raise ValueError(
                         f"Task {task.task_id} depends on non-existent task {dep}"
@@ -50,7 +51,7 @@ class DependencyResolver:
                 continue
 
             can_execute = True
-            for dep in task.dependencies:
+            for dep in task.dependencies or []:
                 if dep not in completed_task_ids:
                     can_execute = False
                     break

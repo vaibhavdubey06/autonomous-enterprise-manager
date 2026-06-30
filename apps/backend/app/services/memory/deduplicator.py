@@ -40,8 +40,8 @@ class MemoryDeduplicator:
                 incoming_importance = getattr(incoming_memory, "importance", 0.5)
                 incoming_confidence = getattr(incoming_memory, "confidence", 0.5)
 
-                existing_importance = existing_obj.importance or 0.5
-                existing_confidence = existing_obj.confidence or 0.5
+                existing_importance = float(existing_obj.importance or 0.5)
+                existing_confidence = float(existing_obj.confidence or 0.5)
 
                 # A simple heuristic: if incoming is strictly better in importance/confidence
                 if (

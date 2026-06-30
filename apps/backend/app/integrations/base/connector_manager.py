@@ -96,6 +96,13 @@ class ConnectorManager:
                 self._get_cache_key(tenant_id, connector_id)
             )
 
+        if not connector:
+            return ExecutionResponse(
+                success=False,
+                data=None,
+                error_message="Connector not initialized",
+            )
+
         # Governance Check
         if not connector_policy_manager.evaluate_policy(
             tenant_id, connector_id, request.capability

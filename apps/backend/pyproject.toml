@@ -45,6 +45,7 @@ dev = [
     "types-cryptography>=3.3.23",
     "types-requests>=2.31.0",
     "types-psutil>=5.9.5",
+    "bandit>=1.9.4",
 ]
 
 [tool.mypy]

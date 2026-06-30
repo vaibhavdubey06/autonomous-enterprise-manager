@@ -16,7 +16,7 @@ class ConversationRepository:
     def create_conversation(
         self, session_id: str, title: str = "New Conversation"
     ) -> Conversation:
-        db_conversation = Conversation(session_id=uuid.UUID(session_id), title=title)
+        db_conversation = Conversation(session_id=uuid.UUID(session_id), title=title)  # type: ignore
         self.db.add(db_conversation)
         self.db.commit()
         self.db.refresh(db_conversation)

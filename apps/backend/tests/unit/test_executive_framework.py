@@ -77,6 +77,6 @@ def test_cto_agent_execution():
     result = cto.execute(task, state)
 
     assert result.agent == "CTO Agent"
-    assert "caching" in result.recommendations[0]
+    assert "Monitor Workflow" in result.recommendations[0]
+    assert "workflow_id" in result.execution_metrics
     assert result.task_id == task.task_id
-    mock_knowledge_agent.run.assert_called_once()

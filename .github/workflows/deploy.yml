@@ -25,21 +25,26 @@ jobs:
       - name: Install Python tools
         run: |
           python -m pip install --upgrade pip
-          pip install uv ruff black mypy pytest
+          pip install uv
+          cd apps/backend
+          uv sync
 
       - name: Ruff
-        run: ruff check apps/backend apps/frontend
+        run: uvx ruff check apps/backend apps/frontend
 
       - name: Black
-        run: black --check apps/backend apps/frontend
+        run: uvx black --check apps/backend apps/frontend
 
       - name: MyPy
-        run: mypy apps/backend/app
-
-      - name: PyTest
         run: |
           cd apps/backend
-          uv sync --dev
+          uv run mypy app
+
+      - name: PyTest
+        env:
+          TESTING: "true"
+        run: |
+          cd apps/backend
           uv run pytest
 
   local-production-validation:
@@ -77,9 +82,11 @@ jobs:
           severity: HIGH,CRITICAL
 
       - name: Run backend tests
+        env:
+          TESTING: "true"
         run: |
           cd apps/backend
-          uv sync --dev
+          uv sync
           uv run pytest
 
       - name: Collect deployment report

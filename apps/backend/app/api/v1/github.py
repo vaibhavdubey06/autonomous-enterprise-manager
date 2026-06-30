@@ -15,7 +15,7 @@ def get_github_connector() -> GitHubConnector:
     return GitHubConnector()
 
 
-@router.post("/github/index")
+@router.post("/index")
 async def index_github_repository(
     request: GitHubIndexRequest,
     connector: GitHubConnector = Depends(get_github_connector),

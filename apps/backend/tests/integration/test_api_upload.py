@@ -14,7 +14,7 @@ def test_upload_document(client, mocker):
 
     files = {"file": ("test_doc.pdf", pdf_content, "application/pdf")}
 
-    response = client.post("/upload-document", files=files)
+    response = client.post("/api/v1/upload", files=files)
 
     assert response.status_code == 200
     data = response.json()

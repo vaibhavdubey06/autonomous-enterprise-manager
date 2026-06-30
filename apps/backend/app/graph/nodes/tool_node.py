@@ -53,7 +53,7 @@ def make_tool_node(tool_registry: ToolRegistry):
             }
         )
 
-        metrics = dict(state.get("metrics", {}))
+        metrics = state.get("metrics", {})
         metrics["tool_ms"] = round(duration_ms, 2)
 
         return {

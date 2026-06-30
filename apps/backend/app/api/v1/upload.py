@@ -21,7 +21,8 @@ async def upload_document(file: UploadFile = File(...)):
         return {"error": "Only PDF files are supported"}
 
     # Save uploaded file temporarily
-    suffix = Path(file.filename).suffix
+    filename = file.filename or "unknown"
+    suffix = Path(filename).suffix
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
 
@@ -51,14 +52,14 @@ async def upload_document(file: UploadFile = File(...)):
     store_chunks(
         chunks=chunks,
         embeddings=embeddings,
-        document_name=file.filename,
+        document_name=filename,
     )
 
     # Calculate total characters from pages_data
     total_characters = sum(len(p["text"]) for p in pages_data)
 
     return {
-        "filename": file.filename,
+        "filename": filename,
         "pages": total_pages,
         "characters": total_characters,
         "chunks": len(chunks),

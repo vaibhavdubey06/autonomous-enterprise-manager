@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 from app.operations.telemetry.telemetry_pipeline import TelemetryPipeline
 from app.operations.telemetry.telemetry_models import TelemetryEvent
 
@@ -8,12 +9,12 @@ logger = logging.getLogger(__name__)
 class TelemetryManager:
     """Central telemetry sink. All subsystems emit events here."""
 
-    def __init__(self, pipeline: TelemetryPipeline = None):
+    def __init__(self, pipeline: Optional[TelemetryPipeline] = None):
         self.pipeline = pipeline or TelemetryPipeline()
 
     def emit(
         self, source: str, event_type: str, duration_ms: float = 0.0, **metadata
-    ) -> TelemetryEvent:
+    ) -> Optional[TelemetryEvent]:
         event = TelemetryEvent(
             source=source,
             event_type=event_type,

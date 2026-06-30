@@ -1,4 +1,4 @@
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from app.operations.metrics.metrics_registry import MetricsRegistry
 from app.operations.cost.cost_tracker import CostTracker
 
@@ -6,7 +6,9 @@ from app.operations.cost.cost_tracker import CostTracker
 class AnalyticsEngine:
     """Generates operational analytics from collected metrics and cost data."""
 
-    def __init__(self, registry: MetricsRegistry, cost_tracker: CostTracker = None):
+    def __init__(
+        self, registry: MetricsRegistry, cost_tracker: Optional[CostTracker] = None
+    ):
         self.registry = registry
         self.cost_tracker = cost_tracker
 

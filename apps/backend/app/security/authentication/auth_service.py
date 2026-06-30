@@ -13,7 +13,7 @@ class AuthService:
             raise HTTPException(status_code=401, detail="Invalid credentials")
         if not user.is_active:
             raise HTTPException(status_code=400, detail="User is inactive")
-        if not password_service.verify_password(password, user.password_hash):
+        if not password_service.verify_password(password, user.password_hash or ""):
             raise HTTPException(status_code=401, detail="Invalid credentials")
         return user
 

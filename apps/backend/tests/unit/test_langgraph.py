@@ -8,7 +8,7 @@ async def test_graph_execution(client, db_session, mocker):
         "session_id": "test_session_lg",
     }
 
-    response = client.post("/agent/chat", json=payload)
+    response = client.post("/api/v1/agent/chat", json=payload)
     assert response.status_code == 200
     data = response.json()
 
