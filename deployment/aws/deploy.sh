@@ -11,6 +11,11 @@ if [[ ! -d "${RELEASE_DIR}" ]]; then
   exit 1
 fi
 
+# Symlink shared .env
+if [[ -f "${APP_ROOT}/shared/.env" ]]; then
+  ln -sfn "${APP_ROOT}/shared/.env" "${RELEASE_DIR}/.env"
+fi
+
 ln -sfn "${RELEASE_DIR}" "${CURRENT_LINK}"
 
 cd "${CURRENT_LINK}"
