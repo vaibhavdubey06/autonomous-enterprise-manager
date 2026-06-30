@@ -79,6 +79,10 @@ class SecurityMiddleware(BaseHTTPMiddleware):
             "/openapi.json",
             "/docs",
             "/redoc",
+            "/api/v1/health",
+            "/api/v1/docs",
+            "/api/v1/openapi.json",
+            "/api/v1/redoc",
         }
 
         # Exact match or prefix match for docs/auth routes if needed, but exact is fine for now
