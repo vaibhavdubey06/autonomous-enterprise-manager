@@ -84,6 +84,16 @@ jobs:
           scan-ref: .
           severity: HIGH,CRITICAL
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Python tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install uv
+
       - name: Run backend tests
         env:
           TESTING: "true"
