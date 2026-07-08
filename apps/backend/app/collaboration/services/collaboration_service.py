@@ -50,6 +50,9 @@ class CollaborationService:
             )
         )
         self.manager = CollaborationManager(db, self.registry)
+        
+        from app.collaboration.coordinator.executive_council import ExecutiveCouncil
+        self.executive_council = ExecutiveCouncil(self.manager)
 
     def create_session(self, req: CollaborationSessionCreate) -> CollaborationSession:
         return self.manager.create_session(req.objective, req.workflow_id)

@@ -38,6 +38,14 @@ class ConnectorMetadata(BaseModel):
     capabilities: List[str]
 
 
+class ConnectorProfile(BaseModel):
+    metadata: ConnectorMetadata
+    health_status: ConnectorHealthStatus = ConnectorHealthStatus.HEALTHY
+    rate_limit_remaining: int = 1000
+    cost_per_execution: float = 0.0
+    latency_ms: float = 0.0
+
+
 class ConnectorConfig(BaseModel):
     connector_id: str
     tenant_id: str
@@ -48,8 +56,17 @@ class ConnectorConfig(BaseModel):
     health: ConnectorHealthStatus = ConnectorHealthStatus.DISCONNECTED
 
 
+class ConnectorOperation(str, Enum):
+    READ = "read"
+    WRITE = "write"
+    SEARCH = "search"
+    EXECUTE = "execute"
+    SYNC = "sync"
+
+
 class ExecutionRequest(BaseModel):
     capability: str
+    operation: Optional[ConnectorOperation] = None
     parameters: Dict[str, Any] = Field(default_factory=dict)
 
 

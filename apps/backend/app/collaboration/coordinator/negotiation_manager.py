@@ -16,6 +16,7 @@ class Proposal(BaseModel):
     proposal_id: str
     topic: str
     proposer: str
+    proposer_org: Optional[str] = None
     content: str
     created_at: str
 

@@ -2,6 +2,7 @@ import logging
 from typing import Any
 from app.agents.supervisor.schemas import Task, TaskStatus
 from app.agents.base.registry import AgentRegistry
+from app.agents.base.capabilities import Capability
 from app.agents.base.task import ExecutiveTask
 
 logger = logging.getLogger(__name__)
@@ -23,15 +24,75 @@ class AgentRouter:
         self.knowledge_agent = knowledge_agent_graph
         self.collaboration_manager = collaboration_manager
 
+    def _capability_name(self, capability: Any) -> str:
+        if isinstance(capability, Capability):
+            return capability.value
+        return str(capability)
+
+    def _resolve_agent_name(self, task: Task) -> str:
+        required_capabilities = {
+            self._capability_name(capability)
+            for capability in task.required_capabilities
+            if capability
+        }
+
+        if required_capabilities:
+            best_agent_name = None
+            best_score = 0
+
+            for profile in self.agent_registry.list_agents():
+                profile_capabilities = {
+                    self._capability_name(capability)
+                    for capability in profile.capabilities
+                }
+                score = len(required_capabilities & profile_capabilities)
+                if score > best_score:
+                    best_score = score
+                    best_agent_name = profile.agent_name
+
+            if best_agent_name and best_score > 0:
+                return best_agent_name
+
+        return task.assigned_agent or "Knowledge Agent"
+
     def route_and_execute(
         self, task: Task, state: dict, use_collaboration: bool = False
     ) -> dict:
         """
         Selects the appropriate agent, executes the task, and returns the result.
         """
-        agent_name = task.assigned_agent or "Knowledge Agent"
+        from app.operations.tracing.trace_manager import TraceManager
+        from app.operations.telemetry.telemetry_context import TelemetryContext
+        
+        agent_name = self._resolve_agent_name(task)
         logger.info(f"Routing task {task.task_id} to {agent_name}")
+        
+        telemetry_snap = TelemetryContext.get_snapshot()
+        trace_id = telemetry_snap.get("trace_id")
+        trace_manager = TraceManager()
+        
+        if not trace_id:
+            span = trace_manager.start_trace("agent_routing")
+        else:
+            span = trace_manager.start_span(
+                trace_id=trace_id,
+                operation="agent_routing",
+                parent_span_id=telemetry_snap.get("span_id"),
+                expected_capability=",".join(str(c) for c in task.required_capabilities) if task.required_capabilities else "general",
+                detected_capability=",".join(str(c) for c in task.required_capabilities) if task.required_capabilities else "general",
+                selected_agent=agent_name
+            )
 
+        try:
+            result = self._execute_routed_task(task, state, agent_name, use_collaboration)
+            trace_manager.end_span(span, "OK")
+            return result
+        except Exception as e:
+            span.attributes["error"] = str(e)
+            trace_manager.end_span(span, "ERROR")
+            raise
+
+    def _execute_routed_task(self, task: Task, state: dict, agent_name: str, use_collaboration: bool) -> dict:
         # Branch for Collaboration Runtime
         if use_collaboration and self.collaboration_manager:
             logger.info(f"Executing task {task.task_id} via Collaboration Runtime")
@@ -83,6 +144,7 @@ class AgentRouter:
                 priority=task.priority,
                 dependencies=task.dependencies,
                 assigned_agent=agent_name,
+                required_capabilities=task.required_capabilities,
                 context=task.context,
                 artifacts=task.artifacts,
             )

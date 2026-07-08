@@ -1,0 +1,66 @@
+{
+  "goal": "Incident Response Workflow",
+  "autonomy_level": 3,
+  "metadata": {
+    "version": "1.0",
+    "author": "Enterprise Manager",
+    "tags": ["sre", "incident", "production"],
+    "lifecycle_state": "active"
+  },
+  "milestones": [
+    "Triage",
+    "Root Cause Analysis",
+    "Mitigation",
+    "Post-Mortem"
+  ],
+  "tasks": [
+    {
+      "goal": "Triage Incident",
+      "description": "Analyze incoming alerts and assess impact",
+      "priority": 5,
+      "assigned_agent": "Knowledge Agent",
+      "required_capabilities": ["log_analysis"],
+      "execution_group": 0
+    },
+    {
+      "goal": "Root Cause Analysis",
+      "description": "Investigate telemetry and identify root cause",
+      "priority": 5,
+      "assigned_agent": "CTO Agent",
+      "dependencies": ["Triage Incident"],
+      "execution_group": 1
+    },
+    {
+      "goal": "Deploy Hotfix",
+      "description": "Implement automated recovery plan",
+      "priority": 4,
+      "assigned_agent": "CTO Agent",
+      "dependencies": ["Root Cause Analysis"],
+      "execution_group": 2
+    }
+  ],
+  "approval_gates": [
+    {
+      "description": "Approve major infrastructure changes",
+      "condition": "Before execution"
+    }
+  ],
+  "recovery_policies": [
+    "Automatically revert failing deploys",
+    "Escalate to human on-call if mitigation fails after 2 attempts"
+  ],
+  "success_criteria": [
+    "Service availability restored",
+    "Error rate returns to baseline",
+    "Post-mortem generated"
+  ],
+  "evaluation_metrics": [
+    "Mean Time To Resolve (MTTR)",
+    "Mean Time To Acknowledge (MTTA)",
+    "Automated Mitigation Success Rate"
+  ],
+  "required_capabilities": [
+    "log_analysis",
+    "github_push"
+  ]
+}

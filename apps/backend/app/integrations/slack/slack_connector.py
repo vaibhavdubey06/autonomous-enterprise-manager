@@ -54,5 +54,28 @@ class SlackConnector(BaseConnector):
     def cleanup(self) -> None:
         pass
 
+    # --- Synchronization Interface ---
+    
+    def validate(self) -> bool:
+        return self.health_check() == ConnectorHealthStatus.HEALTHY
+
+    def handle_webhook(self, payload: Dict[str, Any]) -> Any:
+        pass
+
+    def poll_changes(self, last_checkpoint: Any) -> List[Any]:
+        return []
+
+    def fetch_document(self, document_id: str) -> Any:
+        return None
+
+    def fetch_incremental_changes(self, resource_id: str, since: Any) -> List[Any]:
+        return []
+
+    def checkpoint(self, state: Any) -> None:
+        pass
+
+    def sync(self) -> None:
+        pass
+
 
 connector_registry.register(SlackConnector)

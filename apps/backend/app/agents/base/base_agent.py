@@ -4,7 +4,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Dict, Any, List, Optional
 
-from app.services.llm.llm_service import LLMService
+from app.services.llm.gateway import LLMGateway
 from app.agents.base.profile import AgentProfile
 from app.agents.base.task import ExecutiveTask
 from app.agents.base.output import ExecutiveResult
@@ -21,7 +21,7 @@ class BaseExecutiveAgent(ABC):
 
     def __init__(
         self,
-        llm_service: LLMService,
+        llm_service: LLMGateway,
         capability_executor: Optional[CapabilityExecutor] = None,
     ):
         self.llm_service = llm_service
@@ -91,9 +91,9 @@ class BaseExecutiveAgent(ABC):
         """
         logger.info(f"[{self.get_profile().agent_name}] Reasoning...")
         # A simple unstructured query to the LLM (bypassing strict RAG context if needed for reasoning)
-        # However, our LLMService currently enforces strict RAG in `generate_answer`.
+        # However, our LLMGateway currently enforces strict RAG in `generate_answer`.
         # For general reasoning, we should use the base model.
-        # But wait, LLMService has generate_structured now. We can also add a generate_unstructured.
+        # But wait, LLMGateway has generate_structured now. We can also add a generate_unstructured.
         # For now, we will use generate_structured if we want structured, or we can add a simple generate_text.
         # Let's rely on generate_structured primarily as requested by the framework.
         raise NotImplementedError("Use reason_structured for typed outputs.")

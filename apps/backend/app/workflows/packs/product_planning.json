@@ -1,0 +1,56 @@
+{
+  "goal": "Product Planning Workflow",
+  "autonomy_level": 1,
+  "metadata": {
+    "version": "1.0",
+    "author": "Enterprise Manager",
+    "tags": ["product", "planning", "roadmap"],
+    "lifecycle_state": "active"
+  },
+  "milestones": [
+    "Market Research",
+    "Competitor Analysis",
+    "Feature Prioritization",
+    "Roadmap Generation"
+  ],
+  "tasks": [
+    {
+      "goal": "Market Research",
+      "description": "Gather market trends and user feedback",
+      "priority": 2,
+      "assigned_agent": "CPO Agent",
+      "required_capabilities": ["web_search"],
+      "execution_group": 0
+    },
+    {
+      "goal": "Feature Prioritization",
+      "description": "Score features based on RICE framework",
+      "priority": 2,
+      "assigned_agent": "CPO Agent",
+      "dependencies": ["Market Research"],
+      "execution_group": 1
+    }
+  ],
+  "approval_gates": [
+    {
+      "description": "Approve feature roadmap for next quarter",
+      "condition": "Before execution"
+    }
+  ],
+  "recovery_policies": [
+    "Request human input if data sources are insufficient"
+  ],
+  "success_criteria": [
+    "Prioritized backlog created",
+    "Roadmap aligns with company OKRs"
+  ],
+  "evaluation_metrics": [
+    "Planning Cycle Time",
+    "Features Evaluated",
+    "Alignment Score"
+  ],
+  "required_capabilities": [
+    "web_search",
+    "document_write"
+  ]
+}

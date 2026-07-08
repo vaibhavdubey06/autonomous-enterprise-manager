@@ -7,7 +7,7 @@ from app.agents.base.profile import AgentProfile
 from app.agents.base.capabilities import Capability
 from app.agents.base.task import ExecutiveTask
 from app.agents.base.output import ExecutiveResult
-from app.services.llm.llm_service import LLMService
+from app.services.llm.gateway import LLMGateway
 
 from app.agents.executives.cto.planner import CTOPlanner
 from app.agents.executives.cto.architect import ArchitectureReviewer
@@ -24,7 +24,7 @@ class CTOAgent(BaseExecutiveAgent):
 
     def __init__(
         self,
-        llm_service: LLMService,
+        llm_service: LLMGateway,
         capability_executor=None,
         knowledge_agent_graph=None,
     ):
@@ -56,6 +56,14 @@ class CTOAgent(BaseExecutiveAgent):
             ],
             required_tools=[],
             supported_sources=["GitHub", "Architecture Docs", "Technical Memory"],
+            responsibilities=["Technical direction", "Architecture validation", "Engineering practices"],
+            decision_authority=["Engineering standards", "Architecture patterns", "Technology stack"],
+            inputs=["Technical proposals", "Codebase context", "System diagrams"],
+            outputs=["Architecture review", "Technical plan", "Refactoring guide"],
+            memory_requirements=["Technical memory", "Architecture decisions"],
+            approval_requirements=["Requires CFO approval for major infrastructure spend"],
+            escalation_rules=["Escalate to CEO for major platform shifts"],
+            decision_boundaries=["Does not approve budgets"],
         )
 
     def get_profile(self) -> AgentProfile:

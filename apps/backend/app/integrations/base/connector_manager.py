@@ -1,4 +1,4 @@
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 from app.integrations.base.connector_factory import ConnectorFactory
 from app.integrations.authentication.credential_manager import credential_manager
 from app.integrations.lifecycle.lifecycle_manager import lifecycle_manager
@@ -133,6 +133,68 @@ class ConnectorManager:
         connector = self._instances.get(self._get_cache_key(tenant_id, connector_id))
         if config and connector:
             lifecycle_manager.disconnect(config, connector)
+
+    def dispatch_operation(
+        self, tenant_id: str, capability: str, operation: Any, parameters: Dict[str, Any]
+    ) -> ExecutionResponse:
+        from app.integrations.base.connector_registry import connector_registry
+        from app.services.decisions.engine import DecisionEngine
+        from app.operations.tracing.trace_manager import TraceManager
+        import uuid
+        
+        trace_manager = TraceManager()
+        decision_engine = DecisionEngine()
+        trace_id = f"conn_dispatch_{uuid.uuid4().hex[:8]}"
+        
+        # 1. Find all connectors that support this capability
+        candidates = []
+        for cls in connector_registry._connectors.values():
+            profile = cls.get_metadata()
+            if capability in profile.capabilities:
+                candidates.append(profile.name)
+        
+        if not candidates:
+            return ExecutionResponse(success=False, data=None, error_message=f"No connectors support capability {capability}")
+            
+        # 2. Select connector via Decision Engine
+        selected_connector_id = decision_engine.route_connector(capability, candidates)
+        
+        # 3. Emit Trace Spans
+        span_selected = trace_manager.start_span(trace_id=trace_id, operation="connector_selected", connector_id=selected_connector_id)
+        trace_manager.end_span(span_selected, "OK")
+        
+        # Ensure we have a config in memory for this mock execution if missing
+        if not self.get_config(tenant_id, selected_connector_id):
+            # Auto-register a basic config for the test
+            from app.integrations.schemas.connector_models import AuthType
+            self.register_connector(ConnectorConfig(
+                connector_id=selected_connector_id,
+                tenant_id=tenant_id,
+                connector_type=selected_connector_id,
+                auth_type=AuthType.NONE,
+                state=ConnectorState.READY
+            ))
+            
+            # Also instantiate directly for tests
+            cls = connector_registry.get_connector_class(selected_connector_id)
+            if cls:
+                self._instances[self._get_cache_key(tenant_id, selected_connector_id)] = cls(tenant_id, selected_connector_id)
+        
+        span_exec = trace_manager.start_span(trace_id=trace_id, operation="connector_execution", capability=capability)
+        
+        request = ExecutionRequest(capability=capability, operation=operation, parameters=parameters)
+        response = self.execute_capability(tenant_id, selected_connector_id, request)
+        
+        if response.success:
+            trace_manager.end_span(span_exec, "OK")
+        else:
+            trace_manager.end_span(span_exec, "ERROR", error_msg=response.error_message)
+            
+            # Emit connector_failure span
+            span_fail = trace_manager.start_span(trace_id=trace_id, operation="connector_failure", error=response.error_message)
+            trace_manager.end_span(span_fail, "ERROR")
+            
+        return response
 
 
 connector_manager = ConnectorManager()

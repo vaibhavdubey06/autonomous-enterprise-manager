@@ -53,7 +53,7 @@ class WorkflowEngine:
                 from app.repositories.message_repository import MessageRepository
                 from app.repositories.summary_repository import SummaryRepository
                 from app.repositories.memory_repository import MemoryRepository
-                from app.services.llm.llm_service import LLMService
+                from app.services.llm.gateway import LLMGateway
 
                 db = self.repository.db
                 memory_service = MemoryService(
@@ -62,7 +62,7 @@ class WorkflowEngine:
                     MessageRepository(db),
                     SummaryRepository(db),
                     MemoryRepository(db),
-                    LLMService(),
+                    LLMGateway(),
                 )
 
                 # We format the goal and the result context to let the LLM extract structured memory

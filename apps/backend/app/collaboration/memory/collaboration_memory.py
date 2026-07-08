@@ -7,7 +7,7 @@ from app.repositories.conversation_repository import ConversationRepository
 from app.repositories.message_repository import MessageRepository
 from app.repositories.summary_repository import SummaryRepository
 from app.repositories.memory_repository import MemoryRepository
-from app.services.llm.llm_service import LLMService
+from app.services.llm.gateway import LLMGateway
 
 
 class CollaborationMemory:
@@ -22,7 +22,7 @@ class CollaborationMemory:
         message_repo = MessageRepository(db)
         summary_repo = SummaryRepository(db)
         memory_repo = MemoryRepository(db)
-        llm_service = LLMService()
+        llm_service = LLMGateway()
         self.memory_service = MemoryService(
             session_repo,
             conversation_repo,

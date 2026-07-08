@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.orm import Session as DBSession
 from app.core.database import get_db
 from app.schemas.agent import AgentChatRequest, AgentChatResponse
-from app.services.llm.llm_service import LLMService
+from app.services.llm.gateway import LLMGateway
 from app.services.reranking.cross_encoder_service import CrossEncoderService
 from app.services.memory_service import MemoryService
 from app.repositories.session_repository import SessionRepository
@@ -30,8 +30,10 @@ from app.agents.supervisor.schemas import SupervisorState
 from app.agents.supervisor.planner import Planner
 from app.agents.supervisor.task_decomposer import TaskDecomposer
 from app.agents.supervisor.router import AgentRouter
-from app.agents.base.registry import AgentRegistry
-from app.agents.executives.cto.agent import CTOAgent
+from app.agents.executives.factory import build_default_executive_registry
+from app.collaboration.services.collaboration_service import CollaborationService
+from app.services.capability.service import CapabilityInferenceService
+from app.runtime.manager import runtime_manager
 
 """
 Agent API — POST /agent/chat
@@ -48,8 +50,8 @@ router = APIRouter()
 
 
 @lru_cache()
-def get_llm_service() -> LLMService:
-    return LLMService()
+def get_llm_service() -> LLMGateway:
+    return LLMGateway()
 
 
 @lru_cache()
@@ -62,7 +64,7 @@ def get_cross_encoder_service() -> CrossEncoderService:
 
 def get_memory_service(
     db: DBSession = Depends(get_db),
-    llm_service: LLMService = Depends(get_llm_service),
+    llm_service: LLMGateway = Depends(get_llm_service),
 ) -> MemoryService:
     # Set up MemoryExtractor dependencies
     memory_repo = MemoryRepository(db)
@@ -109,7 +111,7 @@ def get_memory_service(
 
 def get_service_container(
     memory_service: MemoryService = Depends(get_memory_service),
-    llm_service: LLMService = Depends(get_llm_service),
+    llm_service: LLMGateway = Depends(get_llm_service),
     cross_encoder_service: CrossEncoderService = Depends(get_cross_encoder_service),
 ) -> ServiceContainer:
     return ServiceContainer(
@@ -125,11 +127,17 @@ def get_graph_router(
     return graph_builder.build(container)
 
 
+def get_capability_inference_service() -> CapabilityInferenceService:
+    return CapabilityInferenceService()
+
 def get_supervisor_graph(
-    llm_service: LLMService = Depends(get_llm_service),
+    db: DBSession = Depends(get_db),
+    memory_service: MemoryService = Depends(get_memory_service),
+    llm_service: LLMGateway = Depends(get_llm_service),
+    capability_service: CapabilityInferenceService = Depends(get_capability_inference_service),
     knowledge_agent_graph: GraphRouter = Depends(get_graph_router),
 ) -> SupervisorGraph:
-    planner = Planner(llm_service)
+    planner = Planner(llm_service, capability_service)
     task_decomposer = TaskDecomposer()
 
     # Initialize Capability Framework
@@ -137,22 +145,26 @@ def get_supervisor_graph(
     cap_registry.register(GitHubCapability())
     cap_executor = CapabilityExecutor(cap_registry)
 
-    # Initialize and populate AgentRegistry
-    registry = AgentRegistry()
-    registry.register_agent(
-        CTOAgent(
-            llm_service=llm_service,
-            capability_executor=cap_executor,
-            knowledge_agent_graph=knowledge_agent_graph,
-        )
+    registry = build_default_executive_registry(
+        llm_service=llm_service,
+        capability_executor=cap_executor,
+        knowledge_agent_graph=knowledge_agent_graph,
     )
 
+    collaboration_manager = CollaborationService(db).manager
+
     agent_router = AgentRouter(
-        agent_registry=registry, knowledge_agent_graph=knowledge_agent_graph
+        agent_registry=registry,
+        knowledge_agent_graph=knowledge_agent_graph,
+        collaboration_manager=collaboration_manager,
     )
 
     return SupervisorGraph(
-        planner=planner, task_decomposer=task_decomposer, agent_router=agent_router
+        planner=planner,
+        task_decomposer=task_decomposer,
+        agent_router=agent_router,
+        memory_service=memory_service,
+        collaboration_manager=collaboration_manager,
     )
 
 
@@ -176,19 +188,18 @@ async def agent_chat(
     )
     memory_service.save_message(conversation_id, "user", request.question)
 
-    # Initialise Supervisor state
-    initial_state: SupervisorState = {
-        "user_input": request.question,
-        "session_id": session_id,
-        "conversation_id": conversation_id,
-        "execution_time_ms": 0.0,
-        "selected_agents": [],
-        "completed_tasks": [],
-        "failed_tasks": [],
-    }
-
-    # Run the Supervisor graph
-    final_state = supervisor_graph.run(initial_state)
+    # Use EnterpriseRuntime instead of SupervisorGraph directly
+    runtime = runtime_manager.create_session(
+        user_session_id=session_id,
+        conversation_id=conversation_id,
+        supervisor_graph=supervisor_graph
+    )
+    
+    # Run via Runtime
+    final_state = await runtime.start(request.question)
+    
+    # Cleanup session
+    runtime_manager.cleanup_session(runtime.session.session_id)
 
     # Optionally trigger async summary and memory extraction
     final_conversation_id = str(

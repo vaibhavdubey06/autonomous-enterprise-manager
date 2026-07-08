@@ -11,6 +11,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin} -d enterprise_manager"]
       interval: 10s
@@ -28,6 +29,7 @@ services:
       - "6333:6333"
     volumes:
       - qdrant_data:/qdrant/storage
+    restart: unless-stopped
     deploy:
       resources:
         limits:
@@ -41,6 +43,7 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -66,6 +69,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    restart: unless-stopped
     deploy:
       replicas: 3
       resources:
@@ -83,6 +87,7 @@ services:
     depends_on:
       backend:
         condition: service_started
+    restart: unless-stopped
     deploy:
       replicas: 2
       resources:

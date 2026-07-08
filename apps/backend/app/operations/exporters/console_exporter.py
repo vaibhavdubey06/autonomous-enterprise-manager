@@ -3,10 +3,13 @@ from app.operations.exporters.base_exporter import BaseExporter
 from app.operations.telemetry.telemetry_models import TelemetryEvent
 
 
+import logging
+logger = logging.getLogger(__name__)
+
 class ConsoleExporter(BaseExporter):
     def export(self, events: List[TelemetryEvent]) -> None:
         for event in events:
-            print(
+            logger.info(
                 f"[TELEMETRY] {event.source}:{event.event_type} | {event.duration_ms:.1f}ms | {event.correlation_id}"
             )
 

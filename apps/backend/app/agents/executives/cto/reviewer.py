@@ -1,7 +1,7 @@
 import logging
 from typing import List
 from pydantic import BaseModel
-from app.services.llm.llm_service import LLMService
+from app.services.llm.gateway import LLMGateway
 from app.agents.executives.cto.prompts import CTO_REVIEWER_PROMPT
 
 logger = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ class TechnicalReviewer:
     documentation gaps, and best practices.
     """
 
-    def __init__(self, llm_service: LLMService):
+    def __init__(self, llm_service: LLMGateway):
         self.llm_service = llm_service
 
     def review(self, objective: str, context: str) -> ReviewFindings:

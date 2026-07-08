@@ -7,7 +7,7 @@ from app.repositories.conversation_repository import ConversationRepository
 from app.repositories.message_repository import MessageRepository
 from app.repositories.summary_repository import SummaryRepository
 from app.services.vectorstore.qdrant_service import store_memory_chunk, search
-from app.services.llm.llm_service import LLMService
+from app.services.llm.gateway import LLMGateway
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class MemoryService:
         message_repo: MessageRepository,
         summary_repo: SummaryRepository,
         memory_repo: Any,  # Avoid circular import if typed strictly, will import at top
-        llm_service: LLMService,
+        llm_service: LLMGateway,
         extractor: Any = None,
     ):
         self.session_repo = session_repo

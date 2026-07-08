@@ -24,7 +24,7 @@ class PlanDecision(TypedDict):
     needs_memory: bool
     needs_retrieval: bool
     needs_tools: List[str]
-    workflow_type: str  # "chat" | "research" | "workflow" | "planning"
+    workflow_type: str  # "chat" | "research" | "workflow" | "planning" | "analytics" | "executive_decision" | "incident_response"
 
 
 class GraphMetrics(TypedDict, total=False):
@@ -56,7 +56,7 @@ class GraphState(TypedDict, total=False):
 
     # ── Router ─────────────────────────────────────────────
     user_intent: str
-    workflow_type: str  # "chat" | "research" | "workflow" | "planning"
+    workflow_type: str  # "chat" | "research" | "workflow" | "planning" | "analytics" | "executive_decision" | "incident_response"
 
     # ── Planner ────────────────────────────────────────────
     plan: PlanDecision

@@ -1,0 +1,112 @@
+[
+    {
+        "scenario_id": "pdf_001",
+        "difficulty": "hard",
+        "expected_capability": "pdf",
+        "expected_agent": "pdf_agent",
+        "expected_provider": "gemini",
+        "expected_tools": [],
+        "expected_guardrails": [],
+        "query": "Sample query for pdf number 1?",
+        "ground_truth": "Expected valid output for pdf."
+    },
+    {
+        "scenario_id": "pdf_002",
+        "difficulty": "hard",
+        "expected_capability": "pdf",
+        "expected_agent": "pdf_agent",
+        "expected_provider": "gemini",
+        "expected_tools": [],
+        "expected_guardrails": [],
+        "query": "Sample query for pdf number 2?",
+        "ground_truth": "Expected valid output for pdf."
+    },
+    {
+        "scenario_id": "pdf_003",
+        "difficulty": "hard",
+        "expected_capability": "pdf",
+        "expected_agent": "pdf_agent",
+        "expected_provider": "gemini",
+        "expected_tools": [],
+        "expected_guardrails": [],
+        "query": "Sample query for pdf number 3?",
+        "ground_truth": "Expected valid output for pdf."
+    },
+    {
+        "scenario_id": "pdf_004",
+        "difficulty": "hard",
+        "expected_capability": "pdf",
+        "expected_agent": "pdf_agent",
+        "expected_provider": "gemini",
+        "expected_tools": [],
+        "expected_guardrails": [],
+        "query": "Sample query for pdf number 4?",
+        "ground_truth": "Expected valid output for pdf."
+    },
+    {
+        "scenario_id": "pdf_005",
+        "difficulty": "hard",
+        "expected_capability": "pdf",
+        "expected_agent": "pdf_agent",
+        "expected_provider": "gemini",
+        "expected_tools": [],
+        "expected_guardrails": [],
+        "query": "Sample query for pdf number 5?",
+        "ground_truth": "Expected valid output for pdf."
+    },
+    {
+        "scenario_id": "pdf_006",
+        "difficulty": "hard",
+        "expected_capability": "pdf",
+        "expected_agent": "pdf_agent",
+        "expected_provider": "gemini",
+        "expected_tools": [],
+        "expected_guardrails": [],
+        "query": "Sample query for pdf number 6?",
+        "ground_truth": "Expected valid output for pdf."
+    },
+    {
+        "scenario_id": "pdf_007",
+        "difficulty": "hard",
+        "expected_capability": "pdf",
+        "expected_agent": "pdf_agent",
+        "expected_provider": "gemini",
+        "expected_tools": [],
+        "expected_guardrails": [],
+        "query": "Sample query for pdf number 7?",
+        "ground_truth": "Expected valid output for pdf."
+    },
+    {
+        "scenario_id": "pdf_008",
+        "difficulty": "hard",
+        "expected_capability": "pdf",
+        "expected_agent": "pdf_agent",
+        "expected_provider": "gemini",
+        "expected_tools": [],
+        "expected_guardrails": [],
+        "query": "Sample query for pdf number 8?",
+        "ground_truth": "Expected valid output for pdf."
+    },
+    {
+        "scenario_id": "pdf_009",
+        "difficulty": "hard",
+        "expected_capability": "pdf",
+        "expected_agent": "pdf_agent",
+        "expected_provider": "gemini",
+        "expected_tools": [],
+        "expected_guardrails": [],
+        "query": "Sample query for pdf number 9?",
+        "ground_truth": "Expected valid output for pdf."
+    },
+    {
+        "scenario_id": "pdf_010",
+        "difficulty": "hard",
+        "expected_capability": "pdf",
+        "expected_agent": "pdf_agent",
+        "expected_provider": "gemini",
+        "expected_tools": [],
+        "expected_guardrails": [],
+        "query": "Sample query for pdf number 10?",
+        "ground_truth": "Expected valid output for pdf."
+    }
+]

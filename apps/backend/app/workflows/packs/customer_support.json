@@ -1,0 +1,56 @@
+{
+  "goal": "Customer Support Workflow",
+  "autonomy_level": 3,
+  "metadata": {
+    "version": "1.0",
+    "author": "Enterprise Manager",
+    "tags": ["support", "customer", "operations"],
+    "lifecycle_state": "active"
+  },
+  "milestones": [
+    "Ticket Intake",
+    "Classification",
+    "Knowledge Retrieval",
+    "Resolution Generation",
+    "Customer Communication"
+  ],
+  "tasks": [
+    {
+      "goal": "Classify Ticket",
+      "description": "Determine severity and category of the ticket",
+      "priority": 4,
+      "assigned_agent": "COO Agent",
+      "execution_group": 0
+    },
+    {
+      "goal": "Generate Resolution",
+      "description": "Search knowledge base and propose solution",
+      "priority": 4,
+      "assigned_agent": "Knowledge Agent",
+      "dependencies": ["Classify Ticket"],
+      "execution_group": 1
+    }
+  ],
+  "approval_gates": [
+    {
+      "description": "Approve responses for high-severity tickets",
+      "condition": "Before external side effects"
+    }
+  ],
+  "recovery_policies": [
+    "Fallback to generic troubleshooting template if specific resolution fails",
+    "Escalate to human tier-2 support if confidence is low"
+  ],
+  "success_criteria": [
+    "Ticket resolved",
+    "Customer satisfaction positive"
+  ],
+  "evaluation_metrics": [
+    "First Response Time",
+    "Resolution Time",
+    "CSAT Score"
+  ],
+  "required_capabilities": [
+    "knowledge_search"
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "goal": "Sales and Lead Generation Workflow",
+  "autonomy_level": 2,
+  "metadata": {
+    "version": "1.0",
+    "author": "Enterprise Manager",
+    "tags": ["sales", "leads", "revenue"],
+    "lifecycle_state": "active"
+  },
+  "milestones": [
+    "Lead Identification",
+    "Enrichment",
+    "Outreach Generation",
+    "Follow-up Scheduling"
+  ],
+  "tasks": [
+    {
+      "goal": "Enrich Lead",
+      "description": "Gather company data for a given lead",
+      "priority": 3,
+      "assigned_agent": "CMO Agent",
+      "execution_group": 0
+    },
+    {
+      "goal": "Generate Outreach",
+      "description": "Draft personalized email sequence",
+      "priority": 3,
+      "assigned_agent": "CMO Agent",
+      "dependencies": ["Enrich Lead"],
+      "execution_group": 1
+    }
+  ],
+  "approval_gates": [
+    {
+      "description": "Approve final outreach copy",
+      "condition": "Before execution"
+    }
+  ],
+  "recovery_policies": [
+    "Retry enrichment if data provider times out"
+  ],
+  "success_criteria": [
+    "Lead enriched",
+    "Outreach drafted successfully"
+  ],
+  "evaluation_metrics": [
+    "Enrichment Success Rate",
+    "Email Open Rate (Projected)"
+  ],
+  "required_capabilities": [
+    "web_search"
+  ]
+}

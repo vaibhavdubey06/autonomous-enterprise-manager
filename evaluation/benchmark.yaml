@@ -1,0 +1,10 @@
+benchmark:
+  dataset: "evaluation/datasets/scenarios"
+  mode: "local"  # LOCAL, CI, PRODUCTION, STRESS
+  iterations: 3
+  concurrency: 1
+  provider: "LIVE"
+  reports:
+    format: ["markdown", "json", "html", "csv"]
+    charts_enabled: true
+    regression_enabled: true

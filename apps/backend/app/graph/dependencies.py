@@ -7,7 +7,7 @@ which bundles every service the graph might need.
 
 from dataclasses import dataclass
 
-from app.services.llm.llm_service import LLMService
+from app.services.llm.gateway import LLMGateway
 from app.services.reranking.cross_encoder_service import CrossEncoderService
 from app.services.memory_service import MemoryService
 
@@ -22,5 +22,5 @@ class ServiceContainer:
     """
 
     memory_service: MemoryService
-    llm_service: LLMService
+    llm_service: LLMGateway
     cross_encoder_service: CrossEncoderService

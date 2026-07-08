@@ -1,0 +1,48 @@
+{
+  "goal": "Strategic Research Workflow",
+  "autonomy_level": 3,
+  "metadata": {
+    "version": "1.0",
+    "author": "Enterprise Manager",
+    "tags": ["research", "strategy", "analysis"],
+    "lifecycle_state": "active"
+  },
+  "milestones": [
+    "Data Gathering",
+    "Data Synthesis",
+    "Report Generation",
+    "Executive Summary"
+  ],
+  "tasks": [
+    {
+      "goal": "Gather Data",
+      "description": "Perform comprehensive web and internal knowledge search",
+      "priority": 2,
+      "assigned_agent": "Research Agent",
+      "execution_group": 0
+    },
+    {
+      "goal": "Synthesize Findings",
+      "description": "Compile raw data into structured insights",
+      "priority": 2,
+      "assigned_agent": "Knowledge Agent",
+      "dependencies": ["Gather Data"],
+      "execution_group": 1
+    }
+  ],
+  "approval_gates": [],
+  "recovery_policies": [
+    "Expand search parameters if initial results are sparse"
+  ],
+  "success_criteria": [
+    "Comprehensive report generated"
+  ],
+  "evaluation_metrics": [
+    "Source Diversity",
+    "Report Comprehensiveness"
+  ],
+  "required_capabilities": [
+    "web_search",
+    "knowledge_search"
+  ]
+}

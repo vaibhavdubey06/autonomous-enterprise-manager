@@ -1,0 +1,74 @@
+{
+  "goal": "Software Delivery Workflow",
+  "autonomy_level": 2,
+  "metadata": {
+    "version": "1.0",
+    "author": "Enterprise Manager",
+    "tags": ["engineering", "delivery", "cicd"],
+    "lifecycle_state": "active"
+  },
+  "milestones": [
+    "Requirements Analysis",
+    "Architecture Design",
+    "Implementation",
+    "Code Review",
+    "Testing",
+    "Deployment"
+  ],
+  "tasks": [
+    {
+      "goal": "Analyze Requirements",
+      "description": "Extract software requirements from user prompt",
+      "priority": 1,
+      "assigned_agent": "Knowledge Agent",
+      "required_capabilities": ["documentation_read"],
+      "execution_group": 0
+    },
+    {
+      "goal": "Architecture Design",
+      "description": "Design high level architecture",
+      "priority": 1,
+      "assigned_agent": "CTO Agent",
+      "required_capabilities": ["design_tool"],
+      "dependencies": ["Analyze Requirements"],
+      "execution_group": 1
+    },
+    {
+      "goal": "Code Generation",
+      "description": "Implement the core logic",
+      "priority": 1,
+      "assigned_agent": "CTO Agent",
+      "required_capabilities": ["github_push"],
+      "dependencies": ["Architecture Design"],
+      "execution_group": 2
+    }
+  ],
+  "approval_gates": [
+    {
+      "description": "Approve final architecture before implementation",
+      "condition": "Before execution"
+    },
+    {
+      "description": "Approve pull request before deployment",
+      "condition": "Before external side effects"
+    }
+  ],
+  "recovery_policies": [
+    "Retry up to 3 times on deployment failure",
+    "Fallback to previous stable version if tests fail"
+  ],
+  "success_criteria": [
+    "All unit tests pass",
+    "Code is merged into main branch",
+    "Deployment succeeds without errors"
+  ],
+  "evaluation_metrics": [
+    "Delivery Latency",
+    "Code Quality Score",
+    "Review Turnaround Time"
+  ],
+  "required_capabilities": [
+    "github_push",
+    "documentation_read"
+  ]
+}

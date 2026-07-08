@@ -1,8 +1,8 @@
 """
-Retrieval Node — Orchestrates Qdrant search + Cross-Encoder reranking.
+Retrieval Node — Orchestrates enterprise retrieval using RetrievalEngine.
 
-Calls qdrant_service.search() and CrossEncoderService only.
-Never generates embeddings or queries the DB directly.
+Calls RetrievalEngine.retrieve() directly.
+The orchestration belongs inside RetrievalEngine not inside LangGraph.
 """
 
 import logging
@@ -10,15 +10,27 @@ import time
 from datetime import datetime, timezone
 
 from app.core.config import settings
-from app.services.vectorstore.qdrant_service import search
 from app.graph.state import GraphState
 from app.graph.dependencies import ServiceContainer
+from app.services.retrieval import RetrievalEngine
+from app.services.retrieval.components import QueryAnalyzer, QueryRewriter, ContextOptimizer, CitationBuilder
 
 logger = logging.getLogger(__name__)
 
+# We instantiate the engine here or it could be injected via ServiceContainer.
+# For simplicity, we can build it here since components are stateless.
+engine = RetrievalEngine(
+    analyzer=QueryAnalyzer(),
+    rewriter=QueryRewriter(),
+    compressor=ContextOptimizer(),
+    citation_builder=CitationBuilder(),
+    reranker_service=None # Will be injected below
+)
 
 def make_retrieval_node(services: ServiceContainer):
     """Factory that closes over the ServiceContainer."""
+    # Inject cross_encoder_service into engine
+    engine.reranker_service = services.cross_encoder_service
 
     def retrieval_node(state: GraphState) -> GraphState:
         start = time.perf_counter()
@@ -27,7 +39,6 @@ def make_retrieval_node(services: ServiceContainer):
 
         status = "success"
         enterprise_context = []
-        reranked_chunks = []
 
         plan = state.get("plan", {})
 
@@ -37,42 +48,35 @@ def make_retrieval_node(services: ServiceContainer):
         else:
             try:
                 question = state.get("question", "")
-
-                # Enterprise knowledge (exclude conversation memory)
-                enterprise_context = search(
-                    query=question,
-                    limit=settings.QDRANT_TOP_K,
-                    exclude_source="conversation",
-                )
+                
+                # Use RetrievalEngine to fetch optimized and cited chunks
+                filters = {"exclude_source": "conversation"}
+                retrieval_result = engine.retrieve(query=question, filters=filters)
+                
+                # Convert back to standard dict list for backwards compatibility
+                enterprise_context = [
+                    {
+                        "score": c.score,
+                        "document": c.metadata.get("document", ""),
+                        "page": c.metadata.get("page", 1),
+                        "chunk": c.metadata.get("chunk", 0),
+                        "text": c.text,
+                        "source": c.source,
+                        "repository": c.repository,
+                        "path": c.metadata.get("path", ""),
+                        "url": c.metadata.get("url", ""),
+                        "citation": c.citation
+                    }
+                    for c in retrieval_result.chunks
+                ]
+                
                 logger.info(
-                    f"RetrievalNode — enterprise chunks: {len(enterprise_context)}"
+                    f"RetrievalNode — engine retrieved {len(enterprise_context)} chunks using {retrieval_result.strategy_used}"
                 )
-
-                # Merge with semantic memory already in state
-                semantic_memory = state.get("semantic_memory", [])
-                candidate_pool = semantic_memory + enterprise_context
-
-                # Rerank the merged pool
-                if candidate_pool:
-                    rerank_start = time.perf_counter()
-                    reranked_chunks = services.cross_encoder_service.rerank_chunks(
-                        query=question,
-                        chunks=candidate_pool,
-                        top_k=settings.RERANK_TOP_K,
-                    )
-                    rerank_ms = (time.perf_counter() - rerank_start) * 1000
-                    metrics_update = {"rerank_ms": round(rerank_ms, 2)}
-                    logger.info(
-                        f"RetrievalNode — reranked to {len(reranked_chunks)} chunks in {rerank_ms:.1f}ms"
-                    )
-                else:
-                    metrics_update = {}
-                    logger.info("RetrievalNode — no candidates to rerank")
 
             except Exception as e:
                 logger.error(f"RetrievalNode — error: {e}")
                 status = "error"
-                metrics_update = {}
 
         duration_ms = (time.perf_counter() - start) * 1000
         end_ts = datetime.now(timezone.utc).isoformat()
@@ -91,16 +95,15 @@ def make_retrieval_node(services: ServiceContainer):
 
         metrics = state.get("metrics", {})
         metrics["retrieval_ms"] = round(duration_ms, 2)
-        if status == "success" and "rerank_ms" in metrics_update:
-            metrics["rerank_ms"] = metrics_update["rerank_ms"]
 
         return {
             **state,
             "enterprise_context": enterprise_context,
             "retrieved_chunks": enterprise_context,
-            "reranked_chunks": reranked_chunks,
+            "reranked_chunks": enterprise_context, # Now identical since Engine handles reranking
             "execution_trace": trace,
             "metrics": metrics,
         }
 
     return retrieval_node
+

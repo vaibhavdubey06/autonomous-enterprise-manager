@@ -23,13 +23,8 @@ class TaskDecomposer:
         if not tasks:
             return []
 
-        # Basic validation and sequential dependency mapping
-        for i, task in enumerate(tasks):
+        # Basic validation
+        for task in tasks:
             task.status = TaskStatus.PENDING
-
-            # If no dependencies are explicitly defined, assume sequential execution
-            if i > 0 and not task.dependencies:
-                # Depend on the previous task's ID
-                task.dependencies.append(tasks[i - 1].task_id)
 
         return tasks

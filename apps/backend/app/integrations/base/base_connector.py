@@ -3,6 +3,7 @@ from typing import Dict, Any, List
 from app.integrations.schemas.connector_models import (
     ConnectorHealthStatus,
     ConnectorMetadata,
+    ConnectorProfile,
     ExecutionRequest,
     ExecutionResponse,
 )
@@ -58,3 +59,58 @@ class BaseConnector(ABC):
     def cleanup(self) -> None:
         """Clean up any temporary resources."""
         pass
+
+    # --- Synchronization Interface ---
+    
+    @abstractmethod
+    def validate(self) -> bool:
+        """Validate connection and permissions for synchronization."""
+        pass
+
+    @abstractmethod
+    def handle_webhook(self, payload: Dict[str, Any]) -> Any:
+        """Process incoming webhook payloads into sync events."""
+        pass
+
+    @abstractmethod
+    def poll_changes(self, last_checkpoint: Any) -> List[Any]:
+        """Poll external system for changes since the last checkpoint."""
+        pass
+
+    @abstractmethod
+    def fetch_document(self, document_id: str) -> Any:
+        """Fetch a specific document's content and metadata."""
+        pass
+
+    @abstractmethod
+    def fetch_incremental_changes(self, resource_id: str, since: Any) -> List[Any]:
+        """Fetch only the changes that occurred after a given timestamp or cursor."""
+        pass
+
+    @abstractmethod
+    def checkpoint(self, state: Any) -> None:
+        """Save the current synchronization checkpoint."""
+        pass
+
+    @abstractmethod
+    def sync(self) -> None:
+        """Trigger a full or incremental synchronization."""
+        pass
+
+    # --- Standardized Aliases (Thin Adapter Interface) ---
+
+    def metadata(self) -> ConnectorProfile:
+        """Returns the full ConnectorProfile."""
+        return ConnectorProfile(
+            metadata=self.get_metadata(),
+            health_status=self.health_check()
+        )
+
+    def webhook(self, payload: Dict[str, Any]) -> Any:
+        """Formal alias for handle_webhook."""
+        return self.handle_webhook(payload)
+
+    def poll(self, last_checkpoint: Any = None) -> List[Any]:
+        """Formal alias for poll_changes."""
+        return self.poll_changes(last_checkpoint)
+

@@ -1,7 +1,7 @@
 """
-Response Node — Generates the final answer via LLMService.
+Response Node — Generates the final answer via LLMGateway.
 
-Calls LLMService only.  Uses merged_context from state.
+Calls LLMGateway only.  Uses merged_context from state.
 Saves the assistant response via MemoryService.
 """
 
@@ -42,7 +42,7 @@ def make_response_node(services: ServiceContainer):
                 f"Question: {question}"
             )
 
-            # Call LLMService
+            # Call LLMGateway
             answer = services.llm_service.generate_answer(
                 question=prompt,
                 context=context_texts,

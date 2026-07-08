@@ -5,7 +5,7 @@ from fastapi import HTTPException, BackgroundTasks
 
 from app.core.config import settings
 from app.services.vectorstore.qdrant_service import search
-from app.services.llm.llm_service import LLMService
+from app.services.llm.gateway import LLMGateway
 from app.services.reranking.cross_encoder_service import CrossEncoderService
 from app.services.memory_service import MemoryService
 
@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 class ChatService:
     def __init__(
         self,
-        llm_service: LLMService,
+        llm_service: LLMGateway,
         reranker_service: CrossEncoderService,
         memory_service: MemoryService,
     ):

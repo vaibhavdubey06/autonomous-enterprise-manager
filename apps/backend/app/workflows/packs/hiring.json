@@ -1,0 +1,55 @@
+{
+  "goal": "Hiring Pipeline Workflow",
+  "autonomy_level": 1,
+  "metadata": {
+    "version": "1.0",
+    "author": "Enterprise Manager",
+    "tags": ["hr", "hiring", "recruitment"],
+    "lifecycle_state": "active"
+  },
+  "milestones": [
+    "Job Description Creation",
+    "Candidate Sourcing",
+    "Screening",
+    "Interview Scheduling",
+    "Offer Generation"
+  ],
+  "tasks": [
+    {
+      "goal": "Write Job Description",
+      "description": "Generate JD based on role requirements",
+      "priority": 2,
+      "assigned_agent": "CHRO Agent",
+      "execution_group": 0
+    },
+    {
+      "goal": "Candidate Screening",
+      "description": "Review resumes against JD requirements",
+      "priority": 3,
+      "assigned_agent": "CHRO Agent",
+      "dependencies": ["Write Job Description"],
+      "execution_group": 1
+    }
+  ],
+  "approval_gates": [
+    {
+      "description": "Approve final offer letter",
+      "condition": "Before external side effects"
+    }
+  ],
+  "recovery_policies": [
+    "Escalate to human recruiter if candidate pipeline is empty"
+  ],
+  "success_criteria": [
+    "Offer accepted",
+    "Candidate onboarded"
+  ],
+  "evaluation_metrics": [
+    "Time to Hire",
+    "Quality of Hire",
+    "Offer Acceptance Rate"
+  ],
+  "required_capabilities": [
+    "document_write"
+  ]
+}

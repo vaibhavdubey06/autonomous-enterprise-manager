@@ -1,51 +1,74 @@
 # Python
-.venv/
 __pycache__/
+*.py[cod]
+*$py.class
 .pytest_cache/
 .mypy_cache/
+.coverage
 .ruff_cache/
+htmlcov/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Env
-.env
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
 
-# Node
-node_modules/
-.next/
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
 # OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
 
-# Scaffolding
-scaffolding/
-
-# IDE & Editor
-.vscode/
-.idea/
-.cursor/
-
-# Python Build & Coverage
-*.egg-info/
-build/
-dist/
-.coverage
-htmlcov/
-
-# Databases & Vector Stores
-*.sqlite
-*.sqlite3
-*.db
-qdrant_storage/
-qdrant_data/
-
 # Logs
+logs/
 *.log
 
-# Streamlit
-.streamlit/secrets.toml
+# Benchmarks & Runtime Validation
+evaluation/reports/*
+!evaluation/reports/.gitkeep
+evaluation/e2e/reports/output/*
+!evaluation/e2e/reports/output/.gitkeep
 
-# Generated Evaluation Reports
-apps/backend/evaluation/reports/*.json
-apps/backend/evaluation/reports/*.md
-apps/backend/evaluation/reports/history/*.json
-apps/backend/evaluation/reports/history/*.md
+# Runtime Storage
+runtime/
+checkpoints/
+cache/
+
+# Secrets & Configuration
+.env
+.env.local
+.env.*
+!.env.example
+
+# Node (if frontend exists)
+node_modules/
+dist/
+build/

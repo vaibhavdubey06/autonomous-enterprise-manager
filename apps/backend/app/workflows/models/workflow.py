@@ -10,6 +10,19 @@ from app.core.database import Base
 
 
 class WorkflowStatus(str, enum.Enum):
+    PLANNING = "Planning"
+    EXECUTING = "Executing"
+    WAITING = "Waiting"
+    RECOVERING = "Recovering"
+    REPLANNING = "Replanning"
+    PAUSED = "Paused"
+    AWAITING_APPROVAL = "Awaiting Approval"
+    COMPLETED = "Completed"
+    FAILED = "Failed"
+    CANCELLED = "Cancelled"
+    CHECKPOINT_SAVED = "Checkpoint Saved"
+    CHECKPOINT_RESTORED = "Checkpoint Restored"
+    # Legacy fallbacks for backward compatibility
     DRAFT = "Draft"
     PLANNED = "Planned"
     READY = "Ready"
@@ -20,11 +33,7 @@ class WorkflowStatus(str, enum.Enum):
     REJECTED = "Rejected"
     BLOCKED = "Blocked"
     RESUMED = "Resumed"
-    PAUSED = "Paused"
     RETRYING = "Retrying"
-    COMPLETED = "Completed"
-    CANCELLED = "Cancelled"
-    FAILED = "Failed"
 
 
 class Workflow(Base):

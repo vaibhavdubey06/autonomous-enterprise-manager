@@ -3,7 +3,7 @@ from typing import List
 import json
 import logging
 from app.services.memory.models import ExtractedMemory, MemoryExtractionResult
-from app.services.llm.llm_service import LLMService
+from app.services.llm.gateway import LLMGateway
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ class MemoryExtractionStrategy(ABC):
 
 
 class GeminiMemoryExtractionStrategy(MemoryExtractionStrategy):
-    def __init__(self, llm_service: LLMService):
+    def __init__(self, llm_service: LLMGateway):
         self.llm_service = llm_service
         self.strategy_name = "GeminiMemoryExtractionStrategy"
         self.version = "1.0"

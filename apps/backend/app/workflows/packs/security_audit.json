@@ -1,0 +1,58 @@
+{
+  "goal": "Security Audit Workflow",
+  "autonomy_level": 1,
+  "metadata": {
+    "version": "1.1",
+    "author": "Enterprise Manager",
+    "tags": ["security", "compliance", "audit"],
+    "lifecycle_state": "active"
+  },
+  "milestones": [
+    "Scope Definition",
+    "Vulnerability Scanning",
+    "Penetration Testing",
+    "Risk Assessment",
+    "Remediation Plan"
+  ],
+  "tasks": [
+    {
+      "goal": "Vulnerability Scan",
+      "description": "Run automated SAST/DAST tools on codebase",
+      "priority": 3,
+      "assigned_agent": "CISO Agent",
+      "required_capabilities": ["security_scan"],
+      "execution_group": 0
+    },
+    {
+      "goal": "Risk Assessment",
+      "description": "Evaluate findings and score risks",
+      "priority": 3,
+      "assigned_agent": "CISO Agent",
+      "dependencies": ["Vulnerability Scan"],
+      "execution_group": 1
+    }
+  ],
+  "approval_gates": [
+    {
+      "description": "Approve final audit report before distribution",
+      "condition": "Before external side effects"
+    }
+  ],
+  "recovery_policies": [
+    "Retry scanner connection 3 times",
+    "Fail safe and alert if scanner unavailable"
+  ],
+  "success_criteria": [
+    "All repositories scanned successfully",
+    "Zero critical vulnerabilities unmitigated",
+    "Audit report approved"
+  ],
+  "evaluation_metrics": [
+    "Vulnerabilities Found",
+    "Scan Coverage",
+    "Audit Duration"
+  ],
+  "required_capabilities": [
+    "security_scan"
+  ]
+}

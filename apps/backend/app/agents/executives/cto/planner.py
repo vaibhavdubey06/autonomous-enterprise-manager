@@ -1,7 +1,7 @@
 import logging
 from typing import List
 from pydantic import BaseModel
-from app.services.llm.llm_service import LLMService
+from app.services.llm.gateway import LLMGateway
 from app.agents.executives.cto.prompts import CTO_PLANNER_PROMPT
 from app.agents.base.task import ExecutiveTask
 
@@ -20,7 +20,7 @@ class CTOPlanner:
     including which queries need to be run against the Knowledge Agent.
     """
 
-    def __init__(self, llm_service: LLMService):
+    def __init__(self, llm_service: LLMGateway):
         self.llm_service = llm_service
 
     def plan(self, task: ExecutiveTask) -> CTOExecutionPlan:

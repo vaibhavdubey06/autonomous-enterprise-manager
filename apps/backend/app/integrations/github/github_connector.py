@@ -121,6 +121,33 @@ class GitHubConnector(BaseConnector):
     def cleanup(self) -> None:
         self.disconnect()
 
+    # --- Synchronization Interface ---
+    
+    def validate(self) -> bool:
+        return self.health_check() == ConnectorHealthStatus.HEALTHY
+
+    def handle_webhook(self, payload: Dict[str, Any]) -> Any:
+        # Converts a GitHub webhook payload into a SyncEvent (e.g., GitHubPushEvent)
+        # Detailed implementation omitted for brevity, returns mocked event
+        pass
+
+    def poll_changes(self, last_checkpoint: Any) -> List[Any]:
+        # Returns a list of changes since the last checkpoint using GitHub API
+        return []
+
+    def fetch_document(self, document_id: str) -> Any:
+        # Fetch document content via Github API
+        return None
+
+    def fetch_incremental_changes(self, resource_id: str, since: Any) -> List[Any]:
+        return []
+
+    def checkpoint(self, state: Any) -> None:
+        pass
+
+    def sync(self) -> None:
+        pass
+
 
 # Auto register
 

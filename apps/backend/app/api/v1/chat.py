@@ -18,14 +18,14 @@ from app.services.vectorstore.qdrant_service import search
 from app.core.config import settings
 from app.schemas.chat import ChatRequest, ChatResponse
 from app.services.chat_service import ChatService
-from app.services.llm.llm_service import LLMService
+from app.services.llm.gateway import LLMGateway
 
 router = APIRouter()
 
 
 @lru_cache()
-def get_llm_service() -> LLMService:
-    return LLMService()
+def get_llm_service() -> LLMGateway:
+    return LLMGateway()
 
 
 @lru_cache()
@@ -34,7 +34,7 @@ def get_cross_encoder_service() -> CrossEncoderService:
 
 
 def get_memory_service(
-    db: DBSession = Depends(get_db), llm_service: LLMService = Depends(get_llm_service)
+    db: DBSession = Depends(get_db), llm_service: LLMGateway = Depends(get_llm_service)
 ) -> MemoryService:
     memory_repo = MemoryRepository(db)
     strategy = GeminiMemoryExtractionStrategy(llm_service)
@@ -78,7 +78,7 @@ def get_memory_service(
 
 
 def get_chat_service(
-    llm_service: LLMService = Depends(get_llm_service),
+    llm_service: LLMGateway = Depends(get_llm_service),
     reranker_service: CrossEncoderService = Depends(get_cross_encoder_service),
     memory_service: MemoryService = Depends(get_memory_service),
 ) -> ChatService:
