@@ -62,10 +62,10 @@ class SemanticCacheMiddleware(BaseMiddleware):
         # Post-Process: Store cache
         if context.response and not getattr(context.response, "cached", False):
             metadata = CacheMetadata(
-                token_usage=getattr(context.response, "token_usage", 0),
-                estimated_cost=getattr(context.response, "estimated_cost", 0.0),
-                model=getattr(context.response, "model_used", "unknown"),
-                provider=getattr(context.response, "provider", "unknown"),
+                token_usage=getattr(context.response, "token_usage", 0) or 0,
+                estimated_cost=getattr(context.response, "estimated_cost", 0.0) or 0.0,
+                model=getattr(context.response, "model_used", "unknown") or "unknown",
+                provider=getattr(context.response, "provider", "unknown") or "unknown",
                 tenant_id=key.tenant_id
             )
             self.cache_service.store_async(

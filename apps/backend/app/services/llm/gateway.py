@@ -42,10 +42,16 @@ class LLMGateway:
             from app.services.llm.router.registry import provider_registry
             from app.services.llm.router.provider_health import provider_health_service
             from app.services.llm.providers.gemini import GeminiProvider
+            from app.services.llm.providers.openrouter import OpenRouterProvider
+            from app.services.llm.providers.anthropic import AnthropicProvider
+            from app.services.llm.providers.bedrock import BedrockProvider
             
-            # Register Gemini provider by default for backward compatibility
+            # Register providers
             if not provider_registry.get_all():
                 provider_registry.register(GeminiProvider())
+                provider_registry.register(OpenRouterProvider())
+                provider_registry.register(AnthropicProvider())
+                provider_registry.register(BedrockProvider())
             
             router = RoutingEngine(provider_registry, provider_health_service)
             
@@ -97,7 +103,6 @@ class LLMGateway:
                 
             except (LLMRateLimitError, LLMTimeoutError, LLMProviderError) as e:
                 provider_name = provider.get_profile().provider_name
-                logger.warning(f"Provider '{provider_name}' failed (Attempt {attempt}/{max_retries}): {e}. Adding to exclude list.")
                 
                 ctx.metadata["fallback_count"] += 1
                 
@@ -107,13 +112,23 @@ class LLMGateway:
                 elif isinstance(e, LLMRateLimitError): error_type = "rate_limit"
                 
                 provider_health_service.record_failure(provider_name, error_type=error_type)
-                exclude_providers.add(provider_name)
+                
+                if error_type != "rate_limit":
+                    exclude_providers.add(provider_name)
+                    logger.warning(f"Provider '{provider_name}' failed (Attempt {attempt}/{max_retries}): {e}. Adding to exclude list.")
+                else:
+                    logger.warning(f"Provider '{provider_name}' hit rate limit (Attempt {attempt}/{max_retries}): {e}. Retrying after backoff.")
                 
                 if attempt == max_retries:
                     logger.error(f"LLM request failed after {max_retries} total fallback attempts.")
                     raise
                 
-                delay = base_delay * attempt
+                if error_type == "rate_limit":
+                    delay = 60.0  # Gemini free tier requires ~60s reset
+                else:
+                    delay = base_delay * attempt
+                    
+                logger.info(f"Sleeping for {delay}s before retry...")
                 time.sleep(delay)
                 
             except LLMError as e:

@@ -55,4 +55,19 @@ def render_sidebar():
             st.caption("No active conversation.")
 
         st.divider()
+
+        st.subheader("Integrations")
+        try:
+            integrations = api_client.get_integrations()
+            if integrations:
+                for integration in integrations:
+                    # e.g., github
+                    name = integration.get("name", "Unknown").capitalize()
+                    st.caption(f"✅ {name} connected")
+            else:
+                st.caption("No active integrations.")
+        except Exception:
+            st.caption("⚠️ Could not fetch integrations.")
+
+        st.divider()
         st.markdown("[View Source](https://github.com/)")

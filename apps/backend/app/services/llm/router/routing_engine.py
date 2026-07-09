@@ -65,6 +65,10 @@ class RoutingEngine:
         best_provider = None
         best_score = -1.0
         
+        # Read preferred provider from settings (can be overridden per-request in the future)
+        from app.core.config import settings
+        preferred_provider_name = getattr(settings, "PREFERRED_LLM_PROVIDER", "").lower().strip()
+        
         for p in filtered_candidates:
             profile = p.get_profile()
             health = self.health_service.get_health(profile.provider_name)
@@ -80,6 +84,10 @@ class RoutingEngine:
                 (quality_score * weights["quality"]) +
                 (health_score * weights["health"])
             )
+            
+            # Give a large bonus to the preferred provider so it is always chosen first
+            if preferred_provider_name and profile.provider_name.lower() == preferred_provider_name:
+                total_score += 10.0
             
             logger.debug(f"Provider {profile.provider_name} score: {total_score}")
             if total_score > best_score:

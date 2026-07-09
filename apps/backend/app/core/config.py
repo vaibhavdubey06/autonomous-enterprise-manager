@@ -29,6 +29,17 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-2.5-flash"
+    OPENROUTER_API_KEY: str = ""
+    OPENROUTER_MODEL: str = "openai/gpt-4o-mini"
+    ANTHROPIC_API_KEY: str = ""
+    ANTHROPIC_MODEL: str = "claude-3-opus-20240229"
+    AWS_BEARER_TOKEN_BEDROCK: str = ""
+    AWS_BEDROCK_MODEL: str = "anthropic.claude-3-haiku-20240307-v1:0"
+    AWS_REGION: str = "eu-north-1"
+
+    # Set this to a provider name (e.g. "bedrock", "anthropic", "openrouter", "gemini")
+    # to force that provider to be selected first by the routing engine.
+    PREFERRED_LLM_PROVIDER: str = ""
 
     QDRANT_TOP_K: int = 10
     RERANK_TOP_K: int = 5

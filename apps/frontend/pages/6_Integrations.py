@@ -27,6 +27,50 @@ with tab1:
                     st.write(f"**Description:** {c['description']}")
                     st.write(f"**Auth Types:** {', '.join(c['supported_auth_types'])}")
                     st.write(f"**Capabilities:** {', '.join(c['capabilities'])}")
+                    
+                    st.divider()
+                    st.markdown("#### Connection Status")
+                    
+                    connector_name = c['name'].lower()
+                    health_res = requests.get(f"{API_URL}/{connector_name}/health")
+                    
+                    is_connected = False
+                    status_str = "unknown"
+                    if health_res.status_code == 200:
+                        status_str = health_res.json().get("health", "unknown")
+                        if status_str != "disconnected":
+                            is_connected = True
+                            
+                    if is_connected:
+                        st.success(f"✅ {c['name']} is currently integrated (Status: {status_str}).")
+                        if st.button(f"Disconnect {c['name']}", key=f"disconnect_{connector_name}"):
+                            disconnect_url = f"{API_URL}/{connector_name}/disconnect"
+                            try:
+                                d_res = requests.post(disconnect_url)
+                                if d_res.status_code == 200:
+                                    st.success("Disconnected successfully!")
+                                    st.rerun()
+                                else:
+                                    st.error("Failed to disconnect.")
+                            except Exception as e:
+                                st.error(f"Error disconnecting: {e}")
+                    else:
+                        with st.form(key=f"form_{connector_name}"):
+                            auth_type = st.selectbox("Auth Type", c['supported_auth_types'])
+                            token = st.text_input("Access Token / API Key", type="password")
+                            submit = st.form_submit_button("Integrate")
+                            if submit:
+                                payload = {"auth_type": auth_type, "config_data": {"token": token}}
+                                connect_url = f"{API_URL}/{connector_name}/connect"
+                                try:
+                                    conn_res = requests.post(connect_url, json=payload)
+                                    if conn_res.status_code == 200:
+                                        st.success(f"Successfully integrated {c['name']}!")
+                                        st.rerun()
+                                    else:
+                                        st.error(f"Failed to integrate: {conn_res.text}")
+                                except Exception as e:
+                                    st.error(f"Error connecting: {e}")
         else:
             st.error("Failed to fetch connectors from API.")
     except Exception as e:

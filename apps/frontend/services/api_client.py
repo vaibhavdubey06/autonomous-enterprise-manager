@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class APIClient:
     def __init__(self):
         self.base_url = settings.BACKEND_URL.rstrip("/")
-        self.timeout = 60  # generous timeout for agent operations
+        self.timeout = 300  # 5 minute timeout for complex agent workflows and LLM rate limit backoffs
 
     def _handle_response(self, response: requests.Response) -> Dict[str, Any]:
         try:
@@ -99,6 +99,13 @@ class APIClient:
         response = requests.delete(
             f"{self.base_url}/api/v1/memory/conversation/{conversation_id}",
             timeout=self.timeout,
+        )
+        return self._handle_response(response)
+
+    def get_integrations(self) -> list:
+        response = requests.get(
+            f"{self.base_url}/api/v1/integrations",
+            timeout=5,
         )
         return self._handle_response(response)
 

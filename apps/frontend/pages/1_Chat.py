@@ -40,7 +40,16 @@ if prompt := st.chat_input("Ask the Enterprise Manager..."):
                     )
 
                 answer = response.get("answer", "")
-                st.markdown(answer)
+                
+                import time
+                def stream_data(text):
+                    # split by words, keeping spaces
+                    words = text.split(" ")
+                    for i, word in enumerate(words):
+                        yield word + (" " if i < len(words) - 1 else "")
+                        time.sleep(0.02)
+                        
+                st.write_stream(stream_data(answer))
 
                 st.session_state.chat_history.append(
                     {"role": "assistant", "content": answer}

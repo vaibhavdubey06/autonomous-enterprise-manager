@@ -40,12 +40,14 @@ class Planner:
         self, 
         llm_service: LLMGateway, 
         capability_service = None,
-        decision_engine = None
+        decision_engine = None,
+        agent_registry = None
     ):
         self.llm_service = llm_service
         self.capability_service = capability_service
         from app.services.decisions.engine import DecisionEngine
         self.decision_engine = decision_engine or DecisionEngine()
+        self.agent_registry = agent_registry
 
     def _strategic_planning_phase(self, goal: str, context: str) -> LLMStrategicPlan:
         """Determines the overarching strategy, autonomy level, and approvals needed."""
@@ -54,14 +56,24 @@ class Planner:
             "Analyze the following goal and context. Determine the required autonomy level (0-4),\n"
             "whether human approval is needed before execution (for high risk or side effects),\n"
             "and list 2-4 major milestones.\n"
-            "Autonomy Levels: 0=Assistant, 1=Suggest, 2=Auto Execute, 3=Auto Recover, 4=Continuous Optimization.\n\n"
+            "Autonomy Levels: 0=Assistant, 1=Suggest, 2=Auto Execute, 3=Auto Recover, 4=Continuous Optimization.\n"
+            "You MUST output ONLY a single raw JSON object (no markdown, no code blocks, no explanation) exactly matching this schema:\n"
+            "{\n"
+            '  "autonomy_level": 2,\n'
+            '  "requires_approval": false,\n'
+            '  "approval_reason": "",\n'
+            '  "milestones": ["milestone 1", "milestone 2"]\n'
+            "}\n\n"
             f"User Goal: {goal}\n"
         )
         if context:
             prompt += f"Context:\n{context}\n"
             
         try:
-            json_response = self.llm_service.generate_structured(prompt, LLMStrategicPlan)
+            import concurrent.futures
+            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                future = executor.submit(self.llm_service.generate_structured, prompt, LLMStrategicPlan)
+                json_response = future.result(timeout=60)
             cleaned = self._clean_json(json_response)
             data = json.loads(cleaned)
             return LLMStrategicPlan(**data)
@@ -71,31 +83,78 @@ class Planner:
 
     def _task_planning_phase(self, goal: str, context: str, strategy: LLMStrategicPlan) -> LLMExecutionPlan:
         """Breaks down the goal into granular tasks based on the strategic plan."""
+        agent_list = "- 'CTO Agent': Handles engineering and code\n- 'Knowledge Agent': Handles documents"
+        if self.agent_registry:
+            agents = self.agent_registry.list_agents()
+            if agents:
+                agent_list = "\n".join([f"- '{a.agent_name}': {a.description}" for a in agents])
+
         prompt = (
             "You are the Enterprise Supervisor (CEO) Agent in the Task Planning Phase.\n"
             "Your task is to generate a structured execution plan consisting of granular tasks.\n"
-            "Available Agents: 'CTO Agent', 'Knowledge Agent'.\n"
+            "You may delegate tasks to multiple different agents if the goal requires cross-domain expertise.\n"
+            f"Available Agents:\n{agent_list}\n\n"
             "Available Capabilities (tools): 'github_tool'.\n"
             f"Milestones to cover: {', '.join(strategy.milestones)}\n\n"
+            "CRITICAL: You MUST output ONLY a single raw JSON object at the TOP LEVEL with EXACTLY these two keys: \"goal\" and \"tasks\".\n"
+            "Do NOT wrap the output in any other key like \"execution_plan\" or \"plan\".\n"
+            "The JSON must look EXACTLY like this example:\n"
+            "{\n"
+            '  "goal": "the overall goal string",\n'
+            '  "tasks": [\n'
+            "    {\n"
+            '      "goal": "specific task goal",\n'
+            '      "description": "detailed description",\n'
+            '      "priority": 1,\n'
+            '      "assigned_agent": "agent name",\n'
+            '      "required_capabilities": [],\n'
+            '      "dependencies": []\n'
+            "    }\n"
+            "  ]\n"
+            "}\n\n"
             f"User Goal: {goal}\n"
         )
         if context:
             prompt += f"Context:\n{context}\n"
             
-        json_response = self.llm_service.generate_structured(prompt, LLMExecutionPlan)
+        import concurrent.futures
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(self.llm_service.generate_structured, prompt, LLMExecutionPlan)
+            json_response = future.result(timeout=60)
         cleaned = self._clean_json(json_response)
         data = json.loads(cleaned)
         return LLMExecutionPlan(**data)
 
     def _clean_json(self, response: str) -> str:
+        """Clean and extract valid JSON from LLM response, handling nested wrappers."""
         cleaned = response.strip()
+        # Strip markdown code fences
         if cleaned.startswith("```json"):
             cleaned = cleaned[7:]
-        if cleaned.startswith("```"):
+        elif cleaned.startswith("```"):
             cleaned = cleaned[3:]
         if cleaned.endswith("```"):
             cleaned = cleaned[:-3]
-        return cleaned.strip()
+        cleaned = cleaned.strip()
+        
+        # Try to detect if the top-level JSON wraps the real plan in a sub-key.
+        # E.g. {"execution_plan": {"goal": ..., "tasks": [...]}} or {"plan": {...}}
+        try:
+            parsed = json.loads(cleaned)
+            if isinstance(parsed, dict):
+                # If top-level lacks required keys, look one level deeper
+                if "goal" not in parsed or "tasks" not in parsed:
+                    for v in parsed.values():
+                        if isinstance(v, dict) and "goal" in v and "tasks" in v:
+                            return json.dumps(v)
+                        elif isinstance(v, dict) and "tasks" in v:
+                            # Inject a goal if missing
+                            v.setdefault("goal", "Extracted plan")
+                            return json.dumps(v)
+        except Exception:
+            pass  # Fall through to returning cleaned as-is
+        
+        return cleaned
 
     def plan(self, goal: str, context: str = "") -> ExecutionPlan:
         """Creates an ExecutionPlan for a given goal using internal stages and templates."""

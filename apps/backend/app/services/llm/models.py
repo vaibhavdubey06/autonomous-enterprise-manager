@@ -6,7 +6,7 @@ class LLMConfig(BaseModel):
     """Configuration for an LLM generation request."""
     temperature: float = 0.0
     top_p: float = 0.95
-    max_output_tokens: int = 1024
+    max_output_tokens: int = 2048
     model_name: Optional[str] = None
     timeout: int = 60
     retry_count: int = 3

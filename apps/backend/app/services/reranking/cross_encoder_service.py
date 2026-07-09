@@ -33,19 +33,38 @@ class CrossEncoderService:
 
         try:
             # Construct pairs of (query, chunk_text)
-            pairs = [(query, chunk.get("text", "")) for chunk in chunks]
+            pairs = []
+            for chunk in chunks:
+                if isinstance(chunk, dict):
+                    pairs.append((query, chunk.get("text", "")))
+                else:
+                    pairs.append((query, getattr(chunk, "text", "")))
 
             # Predict scores using the cross-encoder
             scores = self.model.predict(pairs)
 
             # Attach scores to the original chunks
+            reranked_chunks = []
             for idx, chunk in enumerate(chunks):
-                chunk["rerank_score"] = float(scores[idx])
+                if isinstance(chunk, dict):
+                    chunk_copy = chunk.copy()
+                    chunk_copy["rerank_score"] = float(scores[idx])
+                    reranked_chunks.append(chunk_copy)
+                else:
+                    # chunk is a RetrievedChunk (Pydantic model)
+                    if hasattr(chunk, "metadata") and isinstance(chunk.metadata, dict):
+                        chunk.metadata["rerank_score"] = float(scores[idx])
+                    reranked_chunks.append(chunk)
 
             # Sort descending by rerank_score
-            reranked_chunks = sorted(
-                chunks, key=lambda x: x["rerank_score"], reverse=True
-            )
+            def get_score(x):
+                if isinstance(x, dict):
+                    return x.get("rerank_score", 0.0)
+                if hasattr(x, "metadata") and isinstance(x.metadata, dict):
+                    return x.metadata.get("rerank_score", 0.0)
+                return 0.0
+
+            reranked_chunks.sort(key=get_score, reverse=True)
 
             # Select the top_k
             selected_chunks = reranked_chunks[:top_k]
@@ -58,8 +77,19 @@ class CrossEncoderService:
                 f"Original chunks: {len(chunks)} -> Selected chunks: {len(selected_chunks)}"
             )
             for idx, chunk in enumerate(selected_chunks):
+                if isinstance(chunk, dict):
+                    doc = chunk.get('document', 'Unknown')
+                    page = chunk.get('page', 1)
+                    c_id = chunk.get('chunk', 0)
+                    score = chunk.get('rerank_score', 0.0)
+                else:
+                    doc = getattr(chunk, 'path', '') or getattr(chunk, 'repository', 'Unknown')
+                    page = 1
+                    c_id = getattr(chunk, 'id', 0)
+                    score = chunk.metadata.get("rerank_score", 0.0) if hasattr(chunk, "metadata") else 0.0
+                
                 logger.info(
-                    f"Rank {idx+1}: Score={chunk['rerank_score']:.4f}, Document={chunk.get('document', 'Unknown')}, Page={chunk.get('page', 1)}, Chunk={chunk.get('chunk', 0)}"
+                    f"Rank {idx+1}: Score={score:.4f}, Document={doc}, Page={page}, Chunk={c_id}"
                 )
 
             return selected_chunks

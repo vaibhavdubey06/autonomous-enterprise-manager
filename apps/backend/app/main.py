@@ -12,6 +12,11 @@ from app.api.v1.governance import router as governance_router
 from app.api.v1.operations import router as operations_router
 from app.api.v1.security import router as security_router
 from app.api.v1.integrations import router as integrations_router
+
+# Trigger registration of connectors
+import app.integrations.github.github_connector
+import app.integrations.slack.slack_connector
+import app.integrations.jira.jira_connector
 from app.services.embeddings.embedding_service import embed_text
 from app.security.middleware.security_middleware import SecurityMiddleware
 from app.core.database import Base, engine

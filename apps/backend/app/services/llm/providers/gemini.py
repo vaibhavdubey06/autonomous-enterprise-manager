@@ -80,15 +80,23 @@ class GeminiProvider(AbstractLLMProvider):
         if request.system_instruction:
             prompt_text = f"{request.system_instruction}\n\n{prompt_text}"
 
+
+
         try:
-            response = model.generate_content(
-                prompt_text,
-                generation_config=genai.types.GenerationConfig(
-                    temperature=request.config.temperature,
-                    top_p=request.config.top_p,
-                    max_output_tokens=request.config.max_output_tokens,
-                ),
+            import asyncio
+            try:
+                asyncio.get_running_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                
+            gen_config = genai.types.GenerationConfig(
+                temperature=request.config.temperature,
+                top_p=request.config.top_p,
+                max_output_tokens=request.config.max_output_tokens,
             )
+            
+            response = model.generate_content(prompt_text, generation_config=gen_config)
             latency = (time.time() - start_time) * 1000
 
             if not response.text:
@@ -130,15 +138,24 @@ class GeminiProvider(AbstractLLMProvider):
             + f"\n\nIMPORTANT: You must return ONLY valid, raw JSON matching the following JSON Schema:\n{schema_json}\n\nDo not include markdown formatting or code blocks."
         )
 
+
+
         try:
-            response = model.generate_content(
-                json_prompt,
-                generation_config=genai.types.GenerationConfig(
-                    temperature=request.config.temperature,
-                    top_p=request.config.top_p,
-                    max_output_tokens=request.config.max_output_tokens,
-                ),
+            import asyncio
+            try:
+                asyncio.get_running_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                
+            gen_config = genai.types.GenerationConfig(
+                temperature=request.config.temperature,
+                top_p=request.config.top_p,
+                max_output_tokens=request.config.max_output_tokens,
+                response_mime_type="application/json"
             )
+            
+            response = model.generate_content(json_prompt, generation_config=gen_config)
             latency = (time.time() - start_time) * 1000
 
             if not response.text:

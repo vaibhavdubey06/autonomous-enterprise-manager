@@ -54,9 +54,18 @@ def get_llm_service() -> LLMGateway:
     return LLMGateway()
 
 
-@lru_cache()
+# Instantiate globally to prevent httpx client issues with FastAPI threadpools
+try:
+    _cross_encoder_service = CrossEncoderService()
+except Exception as e:
+    logger.error(f"Failed to instantiate CrossEncoderService at startup: {e}")
+    _cross_encoder_service = None
+
 def get_cross_encoder_service() -> CrossEncoderService:
-    return CrossEncoderService()
+    global _cross_encoder_service
+    if _cross_encoder_service is None:
+        _cross_encoder_service = CrossEncoderService()
+    return _cross_encoder_service
 
 
 # ── Per-request factories ───────────────────────────────
@@ -137,9 +146,6 @@ def get_supervisor_graph(
     capability_service: CapabilityInferenceService = Depends(get_capability_inference_service),
     knowledge_agent_graph: GraphRouter = Depends(get_graph_router),
 ) -> SupervisorGraph:
-    planner = Planner(llm_service, capability_service)
-    task_decomposer = TaskDecomposer()
-
     # Initialize Capability Framework
     cap_registry = CapabilityRegistry()
     cap_registry.register(GitHubCapability())
@@ -150,6 +156,9 @@ def get_supervisor_graph(
         capability_executor=cap_executor,
         knowledge_agent_graph=knowledge_agent_graph,
     )
+
+    planner = Planner(llm_service, capability_service, agent_registry=registry)
+    task_decomposer = TaskDecomposer()
 
     collaboration_manager = CollaborationService(db).manager
 

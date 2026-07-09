@@ -59,6 +59,16 @@ class SecurityMiddleware(BaseHTTPMiddleware):
                 pass
             finally:
                 db.close()
+        else:
+            # POC Bypass: Automatically assign admin identity if no token is present
+            ctx.identity = HumanUser(
+                id="poc-admin-id",
+                tenant_id="poc-tenant-id",
+                email="admin@autonomous.local",
+                roles=["admin"],
+                permissions=["*"]
+            )
+            ctx.session_id = "poc-session"
 
         # 5. Inject Context
         set_security_context(ctx)

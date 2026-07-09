@@ -36,9 +36,10 @@ def make_response_node(services: ServiceContainer):
             prompt = (
                 "You are an enterprise assistant.\n"
                 "Use the provided Conversation History and Context to answer the user's question.\n"
-                "Do not invent information. If the answer cannot be found, say so.\n"
-                "Always cite which retrieved chunks were used.\n\n"
-                f"{merged_context}\n\n"
+                "Do not invent information. If the user asks a factual question and the answer cannot be found in the context, politely state that you cannot find the information.\n"
+                "However, if the user is simply greeting you (e.g., 'hi', 'hello', 'hii') or making casual conversation, respond naturally and politely as a helpful assistant without requiring context.\n"
+                "Always cite which retrieved chunks were used when answering factual questions.\n\n"
+                f"Context:\n{merged_context}\n\n"
                 f"Question: {question}"
             )
 
@@ -67,10 +68,7 @@ def make_response_node(services: ServiceContainer):
 
             err_str = traceback.format_exc()
             logger.error(f"ResponseNode — error: {err_str}")
-            with open(
-                "C:/Users/dubey/autonomous-enterprise-manager/scratch_error.txt", "w"
-            ) as f:
-                f.write(err_str)
+
             answer = (
                 "I encountered an error while generating a response. Please try again."
             )

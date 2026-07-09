@@ -280,8 +280,11 @@ class SupervisorGraph:
             prompt = f"Goal: {goal}\n\n{aggregated_text}"
             try:
                 from app.services.llm.models import LLMRequest, LLMConfig
+                import concurrent.futures
                 request = LLMRequest(prompt=f"{system_prompt}\n\n{prompt}", config=LLMConfig())
-                resp = self.planner.llm_service.generate(request)
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(self.planner.llm_service.generate, request)
+                    resp = future.result(timeout=60)
                 final_response = resp.content
             except Exception as e:
                 logger.error(f"LLM synthesis failed: {e}")

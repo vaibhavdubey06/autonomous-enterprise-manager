@@ -108,20 +108,22 @@ class AgentRouter:
             )
             self.collaboration_manager.delegation.complete_task(delegated.task_id)
 
-            # The async complete_session should be awaited ideally, but we run sync here
+            # Fire and forget the async complete_session to avoid event loop conflicts
+            import threading
             import asyncio
 
-            try:
-                loop = asyncio.get_event_loop()
-                if loop.is_running():
-                    import nest_asyncio
+            def _complete_session_in_thread():
+                try:
+                    loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(loop)
+                    loop.run_until_complete(
+                        self.collaboration_manager.complete_session(session.session_id)
+                    )
+                    loop.close()
+                except Exception as e:
+                    logger.error(f"Failed to complete session: {e}")
 
-                    nest_asyncio.apply()
-                loop.run_until_complete(
-                    self.collaboration_manager.complete_session(session.session_id)
-                )
-            except Exception as e:
-                logger.error(f"Failed to complete session: {e}")
+            threading.Thread(target=_complete_session_in_thread, daemon=True).start()
 
             task.status = TaskStatus.COMPLETED
             return {
