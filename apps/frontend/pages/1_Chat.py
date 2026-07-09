@@ -13,64 +13,73 @@ st.title("Enterprise AI Chat")
 # Toggle between Agent (LangGraph) and Legacy
 chat_mode = st.radio("Chat Mode", ["LangGraph Agent", "Legacy Chat"], horizontal=True)
 
-# Render Chat History
-render_chat_history(st.session_state.chat_history)
+# Container for chat history
+chat_container = st.container()
 
-# Chat Input
-if prompt := st.chat_input("Ask the Enterprise Manager..."):
-    # Add user message to state
-    st.session_state.chat_history.append({"role": "user", "content": prompt})
-    render_chat_message("user", prompt)
-
-    with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-            try:
-                # Call appropriate endpoint
-                if chat_mode == "LangGraph Agent":
-                    response = api_client.agent_chat(
-                        question=prompt,
-                        session_id=st.session_state.session_id,
-                        conversation_id=st.session_state.conversation_id,
-                    )
-                else:
-                    response = api_client.chat(
-                        question=prompt,
-                        session_id=st.session_state.session_id,
-                        conversation_id=st.session_state.conversation_id,
-                    )
-
-                answer = response.get("answer", "")
-                
-                import time
-                def stream_data(text):
-                    # split by words, keeping spaces
-                    words = text.split(" ")
-                    for i, word in enumerate(words):
-                        yield word + (" " if i < len(words) - 1 else "")
-                        time.sleep(0.02)
-                        
-                st.write_stream(stream_data(answer))
-
-                st.session_state.chat_history.append(
-                    {"role": "assistant", "content": answer}
-                )
-
-                # Update Session IDs if returned
-                if response.get("conversation_id"):
-                    st.session_state.conversation_id = response.get("conversation_id")
-
-                # Update Trace, Metrics, Sources
-                st.session_state.trace = response.get("execution_trace", [])
-                st.session_state.metrics = response.get("metrics", {})
-                st.session_state.sources = response.get("sources", [])
-
-            except Exception as e:
-                st.error(f"Error: {str(e)}")
+with chat_container:
+    # Render Chat History
+    render_chat_history(st.session_state.chat_history)
 
 st.divider()
 
-# Observability Panel (always displayed)
-st.subheader("Observability & Debugging")
-render_trace(st.session_state.trace)
-render_metrics(st.session_state.metrics)
-render_sources(st.session_state.sources)
+# Observability Panel (always displayed above input)
+with st.expander("Observability & Debugging", expanded=False):
+    render_trace(st.session_state.trace)
+    render_metrics(st.session_state.metrics)
+    render_sources(st.session_state.sources)
+
+# Chat Input - MUST be at the bottom of the script
+if prompt := st.chat_input("Ask the Enterprise Manager..."):
+    # Add user message to state
+    st.session_state.chat_history.append({"role": "user", "content": prompt})
+    
+    with chat_container:
+        render_chat_message("user", prompt)
+
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                try:
+                    # Call appropriate endpoint
+                    if chat_mode == "LangGraph Agent":
+                        response = api_client.agent_chat(
+                            question=prompt,
+                            session_id=st.session_state.session_id,
+                            conversation_id=st.session_state.conversation_id,
+                        )
+                    else:
+                        response = api_client.chat(
+                            question=prompt,
+                            session_id=st.session_state.session_id,
+                            conversation_id=st.session_state.conversation_id,
+                        )
+
+                    answer = response.get("answer", "")
+                    
+                    import time
+                    def stream_data(text):
+                        # split by words, keeping spaces
+                        words = text.split(" ")
+                        for i, word in enumerate(words):
+                            yield word + (" " if i < len(words) - 1 else "")
+                            time.sleep(0.02)
+                            
+                    st.write_stream(stream_data(answer))
+
+                    st.session_state.chat_history.append(
+                        {"role": "assistant", "content": answer}
+                    )
+
+                    # Update Session IDs if returned
+                    if response.get("conversation_id"):
+                        st.session_state.conversation_id = response.get("conversation_id")
+
+                    # Update Trace, Metrics, Sources
+                    st.session_state.trace = response.get("execution_trace", [])
+                    st.session_state.metrics = response.get("metrics", {})
+                    st.session_state.sources = response.get("sources", [])
+
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
+                    
+    # Force a rerun to update the observability panel and stable layout
+    st.rerun()

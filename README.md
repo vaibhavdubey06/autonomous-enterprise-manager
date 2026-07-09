@@ -2,54 +2,79 @@
   <h1>Autonomous Enterprise Manager (AEM)</h1>
   <p><strong>The Production-Grade Enterprise AI Operating System</strong></p>
   <p>
-    <a href="#features">Features</a> •
+    <a href="#overview">Overview</a> •
+    <a href="#core-capabilities">Core Capabilities</a> •
     <a href="#architecture">Architecture</a> •
-    <a href="#installation">Installation</a> •
-    <a href="#quick-start">Quick Start</a> •
-    <a href="#documentation">Documentation</a>
+    <a href="#tech-stack">Tech Stack</a> •
+    <a href="#installation--quick-start">Installation</a>
   </p>
 </div>
 
 ---
 
-## 🚀 Project Overview
+## 🚀 Overview
 
-The Autonomous Enterprise Manager (AEM) is a state-of-the-art **Enterprise AI Operating System**. It moves beyond isolated AI scripts and chatbots, providing a resilient, scalable, and fully observable architecture designed to execute complex, long-running agentic workflows securely. 
+The **Autonomous Enterprise Manager (AEM)** is a resilient, scalable, and fully observable Enterprise AI Operating System. Moving beyond isolated chat scripts, AEM provides a highly concurrent multi-agent architecture designed to execute complex, long-running workflows securely.
 
-AEM orchestrates agents, manages memory, routes requests dynamically, caches semantic responses, and recovers from failures gracefully—all while providing full telemetry and enterprise integration out of the box.
-
----
-
-## ✨ Features
-
-- **Multi-Agent Runtime**: Concurrent execution of workflow sessions managed via LangGraph.
-- **Enterprise Runtime**: Lifecycle management with pause, resume, checkpoint, and cancellation logic.
-- **Decision Engine**: Dynamic task decomposition and goal-oriented planning.
-- **Reflection Engine**: Self-correcting logic that verifies agent outputs and replans on failure.
-- **Semantic Cache**: High-performance embedding cache avoiding redundant LLM computations.
-- **RAG (Retrieval-Augmented Generation)**: Vector-store integrations (Qdrant) for grounded enterprise context.
-- **Workflow Packs**: Reusable, standardized operating procedures for specific business domains.
-- **MCP (Model Context Protocol)**: Universal API integrations allowing LLMs to seamlessly consume enterprise resources.
-- **A2A (Agent-to-Agent) Platform**: Multi-agent communication and capability registry.
-- **Connectors**: Native integrations with GitHub, Slack, and other enterprise systems.
-- **Enterprise Benchmarking**: Built-in End-to-End simulation framework covering 300+ procedural scenarios.
-- **Telemetry & Observability**: Real-time distributed tracing via OpenTelemetry.
-- **Evaluation Framework**: Cryptographic proof of subsystem coverage and AI quality metrics.
+AEM orchestrates diverse AI agents, manages persistent memory, dynamically routes LLM requests based on cost/latency/quality metrics, caches semantic responses, and integrates natively with enterprise systems like GitHub—all while providing full telemetry and observability out of the box.
 
 ---
 
-## 🏗️ Architecture Diagram
+## ✨ Core Capabilities
+
+### 1. Multi-Agent Orchestration (LangGraph)
+AEM is built on a directed acyclic graph (DAG) architecture for multi-agent workflows. 
+- **Supervisor Agent:** Acts as the entry point, routing tasks dynamically.
+- **Planning Agent:** Decomposes complex user requests into executable sub-tasks.
+- **Knowledge Agent:** Handles document ingestion and RAG querying.
+- **Analytics Agent:** Processes data, code, and structured information.
+- **CEO Agent:** Synthesizes the final output from multiple agent sub-tasks.
+- **Reflection Engine:** Built-in self-correction logic that validates outputs and replans upon failure.
+
+### 2. Intelligent LLM Gateway & Routing
+A production-grade LLM router that dynamically selects the best provider for each task.
+- **Supported Providers:** AWS Bedrock, Anthropic, OpenRouter, Google Gemini, OpenAI.
+- **Dynamic Scoring:** Evaluates providers in real-time based on `latency`, `cost`, `quality`, and `health`.
+- **Failover & Resilience:** Automatic retry logic and seamless failover to backup models if a provider is rate-limited or offline.
+- **Provider Policies:** Force preferred providers (e.g., Bedrock) via `.env` overrides.
+
+### 3. Hybrid Retrieval-Augmented Generation (RAG)
+Advanced document ingestion and search capabilities powered by Qdrant.
+- **Hybrid Search:** Combines dense vector search (Semantic) with sparse vector search (BM25/Keyword) for maximum recall.
+- **Cross-Encoder Reranking:** Re-ranks initial search results using a cross-encoder model to surface the most contextually relevant chunks.
+- **Enterprise Scale:** Handles complex multi-page PDF ingestion and intelligent chunking.
+
+### 4. Semantic Caching
+Dramatically reduces LLM API costs and latency.
+- **Redis-Backed:** Stores previous queries and responses.
+- **Semantic Matching:** If a new query is semantically similar to a cached query (e.g., above a 0.95 similarity threshold), AEM returns the cached response instantly without invoking the LLM.
+
+### 5. Enterprise Connectors & Tooling
+AEM agents are empowered to take action across enterprise systems.
+- **GitHub Integration:** Natively connects to GitHub to index repositories, search code, and analyze issues/PRs.
+- **Extensible Architecture:** Designed to easily add Jira, Slack, and internal API connectors.
+
+### 6. Full Observability & UI
+A comprehensive Streamlit frontend provides total visibility into the system.
+- **Chat Interface:** Interact with the multi-agent system with real-time streaming.
+- **Execution Tracing:** View exact traces of which agents ran, how long they took, and what sub-tasks failed or succeeded.
+- **Integration Health:** Real-time dashboard showing the status of backend connections and third-party APIs.
+
+---
+
+## 🏗️ Architecture
 
 ```text
                         +---------------------------------------+
                         |        Streamlit User Interface       |
+                        |    (Chat, Observability, Dashboard)   |
                         +---------------------------------------+
                                            |
                                    [ REST API ]
                                            |
                         +---------------------------------------+
                         |          Enterprise Runtime           |
-                        |  (Session Lifecycle & Checkpointing)  |
+                        |   (FastAPI, Checkpointing, State)     |
                         +---------------------------------------+
                                            |
                         +---------------------------------------+
@@ -58,138 +83,93 @@ AEM orchestrates agents, manages memory, routes requests dynamically, caches sem
                         +---------------------------------------+
                           /                |                 \ 
       +--------------------+      +--------------------+      +--------------------+
-      |  Decision Engine   |      |  Agent Router      |      | Reflection Engine  |
-      | (Planner/Subtasks) |      | (LLM Gateway)      |      | (Validation/Eval)  |
+      |  Decision Engine   |      |  LLM Gateway       |      | Reflection Engine  |
+      | (Planner/Subtasks) |      | (Dynamic Router)   |      | (Validation/Eval)  |
       +--------------------+      +--------------------+      +--------------------+
                |                           |                           |
         +--------------+           +--------------+             +--------------+
-        |   Memory     |           |Semantic Cache|             |  Guardrails  |
+        |  PostgreSQL  |           |Semantic Cache|             |  Connectors  |
+        |  (Memory)    |           |   (Redis)    |             |   (GitHub)   |
         +--------------+           +--------------+             +--------------+
-               |                           |                           |
-        +--------------+           +--------------+             +--------------+
-        |     RAG      |           |  Connectors  |             |  A2A / MCP   |
-        +--------------+           +--------------+             +--------------+
+               |                           
+        +--------------+           
+        | Hybrid RAG   |           
+        |  (Qdrant)    |           
+        +--------------+           
 ```
 
 ---
 
-## 📂 Folder Structure
+## 🛠️ Tech Stack
+
+- **Backend:** Python 3.11, FastAPI, LangGraph, Pydantic, SQLAlchemy.
+- **Frontend:** Streamlit.
+- **Infrastructure:** Docker, Docker Compose.
+- **Databases:** 
+  - **PostgreSQL:** Transactional state, conversational memory, collaboration sessions.
+  - **Redis:** Semantic caching and message brokering.
+  - **Qdrant:** High-performance vector database for Hybrid RAG.
+- **AI/ML:** HuggingFace `sentence-transformers`, BGE Cross-Encoders, AWS Bedrock.
+
+---
+
+## 💻 Installation & Quick Start
+
+### Prerequisites
+- Docker & Docker Compose
+- Python 3.11+
+- API Keys (AWS Bedrock, Gemini, OpenRouter, etc.)
+
+### 1. Clone & Configure
+```bash
+git clone https://github.com/your-org/autonomous-enterprise-manager.git
+cd autonomous-enterprise-manager
+cp apps/backend/.env.example apps/backend/.env
+```
+*Edit `apps/backend/.env` with your API keys and preferred LLM provider.*
+
+### 2. Start Infrastructure
+Launch the necessary databases (Postgres, Redis, Qdrant):
+```bash
+docker compose up -d aem-postgres aem-redis aem-qdrant
+```
+
+### 3. Start Application Services
+Launch the FastAPI backend and Streamlit frontend:
+```bash
+docker compose up -d aem-backend aem-frontend
+```
+
+### 4. Access the Application
+- **Frontend UI:** [http://localhost:8501](http://localhost:8501)
+- **Backend API Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
+
+---
+
+## 📂 Repository Structure
 
 ```text
 autonomous-enterprise-manager/
-├── apps/                 # Core applications
-│   ├── backend/          # FastAPI backend, Agents, and LLM Gateway
-│   └── frontend/         # Streamlit User Interface
-├── docs/                 # Enterprise architecture documentation
-├── evaluation/           # E2E validation, benchmarking, and reports
-├── scripts/              # Utility and deployment scripts
-├── deployment/           # Helm charts and Kubernetes manifests
-├── docker/               # Dockerfiles and compose setups
-├── tests/                # Unit and Integration tests
-└── .github/              # GitHub Actions CI/CD workflows and issue templates
+├── apps/
+│   ├── backend/
+│   │   ├── app/
+│   │   │   ├── agents/      # LangGraph Agents (Supervisor, Planner, Knowledge, etc.)
+│   │   │   ├── core/        # Config, Dependencies
+│   │   │   ├── services/    # LLM Router, Semantic Cache, RAG, GitHub integration
+│   │   │   └── api/         # FastAPI Routers
+│   │   └── .env             # Backend Environment Variables
+│   └── frontend/
+│       ├── app.py           # Streamlit Entrypoint
+│       ├── components/      # UI Components (Sidebar, Chat, Upload)
+│       └── pages/           # Streamlit Pages (Integrations, GitHub, etc.)
+├── docker-compose.yml       # Full stack container orchestration
+└── README.md
 ```
-
----
-
-## 💻 Installation
-
-### Prerequisites
-- Python 3.11+
-- [uv](https://github.com/astral-sh/uv) (Extremely fast Python package installer)
-- Docker & Docker Compose (for infrastructure)
-
-### Linux / macOS
-```bash
-git clone https://github.com/your-org/autonomous-enterprise-manager.git
-cd autonomous-enterprise-manager
-cp .env.example .env
-make install
-```
-
-### Windows (PowerShell)
-```powershell
-git clone https://github.com/your-org/autonomous-enterprise-manager.git
-cd autonomous-enterprise-manager
-Copy-Item .env.example .env
-uv sync
-```
-
----
-
-## ⚡ Quick Start
-
-Start the infrastructure components (Database, Redis, Qdrant):
-```bash
-make docker
-```
-
-Start the Backend (FastAPI):
-```bash
-make backend
-```
-*API available at: http://localhost:8000*
-
-Start the Frontend (Streamlit):
-```bash
-make frontend
-```
-*UI available at: http://localhost:8501*
-
----
-
-## 📸 Screenshots
-
-*(Replace placeholders with actual UI screenshots)*
-
-| Chat Interface | Tracing Dashboard |
-|:---:|:---:|
-| ![Chat Interface](docs/images/chat-placeholder.png) | ![Tracing Dashboard](docs/images/trace-placeholder.png) |
-
----
-
-## 📊 Benchmark Results (Latest Run)
-
-The AEM validation framework runs highly concurrent E2E testing against 300+ procedural scenarios.
-
-- **Scenarios Executed:** 310
-- **Success Rate:** 97.4%
-- **Enterprise Readiness Score:** 93 / 100
-- **Semantic Cache Hit Rate:** 42% (Massive token savings)
-- **Infrastructure Reliability:** 100% (Simulated Chaos Resilience)
-- **Playwright Frontend Pass Rate:** 100%
-
-Full report available in `evaluation/e2e/reports/output/engineering_report.md`.
-
----
-
-## 📚 Documentation Links
-
-Deep dive into the architecture:
-
-- [Architecture Overview](docs/architecture.md)
-- [Enterprise Runtime](docs/runtime.md)
-- [Decision Engine](docs/decision_engine.md)
-- [Reflection Engine](docs/reflection_engine.md)
-- [Retrieval / RAG](docs/retrieval.md)
-- [Semantic Cache](docs/semantic_cache.md)
-- [Workflow Packs](docs/workflow_packs.md)
-- [Model Context Protocol (MCP)](docs/mcp.md)
-- [Agent-to-Agent Platform](docs/a2a.md)
-- [Connectors](docs/connectors.md)
-- [Benchmarking](docs/benchmarking.md)
-- [Deployment](docs/deployment.md)
-- [API Reference](docs/api.md)
 
 ---
 
 ## 🤝 Contributing
-
-We welcome contributions! Please review our [Contribution Guidelines](CONTRIBUTING.md) and [Code of Conduct](CODE_OF_CONDUCT.md).
-
-For major changes, please open an issue first to discuss what you would like to change.
-
----
+We welcome contributions! Please open an issue to discuss major architectural changes before submitting a Pull Request.
 
 ## 📜 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.

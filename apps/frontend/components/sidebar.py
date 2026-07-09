@@ -61,11 +61,25 @@ def render_sidebar():
             integrations = api_client.get_integrations()
             if integrations:
                 for integration in integrations:
-                    # e.g., github
-                    name = integration.get("name", "Unknown").capitalize()
-                    st.caption(f"✅ {name} connected")
+                    name = integration.get("name", "Unknown")
+                    display_name = name.capitalize()
+                    
+                    try:
+                        health = api_client.get_integration_health(name.lower())
+                        status = health.get("health", "unknown")
+                        
+                        if status == "healthy":
+                            st.caption(f"🟢 {display_name}: Connected")
+                        elif status == "disconnected":
+                            st.caption(f"⚪ {display_name}: Not Configured")
+                        elif status == "degraded":
+                            st.caption(f"🟡 {display_name}: Degraded")
+                        else:
+                            st.caption(f"🔴 {display_name}: Error")
+                    except Exception:
+                        st.caption(f"🔴 {display_name}: Status Unknown")
             else:
-                st.caption("No active integrations.")
+                st.caption("No integrations found.")
         except Exception:
             st.caption("⚠️ Could not fetch integrations.")
 

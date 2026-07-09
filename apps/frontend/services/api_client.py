@@ -108,6 +108,13 @@ class APIClient:
             timeout=5,
         )
         return self._handle_response(response)
+        
+    def get_integration_health(self, name: str) -> Dict[str, Any]:
+        response = requests.get(
+            f"{self.base_url}/api/v1/integrations/{name}/health",
+            timeout=5,
+        )
+        return self._handle_response(response)
 
 
 api_client = APIClient()
