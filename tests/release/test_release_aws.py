@@ -2,7 +2,8 @@ import pytest
 import json
 from pathlib import Path
 
-DEPLOYMENT_DIR = Path("../../deployment").resolve()
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent
+DEPLOYMENT_DIR = ROOT_DIR / "deployment"
 AWS_DIR = DEPLOYMENT_DIR / "aws"
 NGINX_DIR = DEPLOYMENT_DIR / "nginx"
 DOCKER_DIR = DEPLOYMENT_DIR / "docker"
@@ -55,7 +56,7 @@ def test_cloudwatch_alarms_exist():
 
 def test_dockerfile_production_readiness():
     """Verify backend Dockerfile uses production best practices."""
-    dockerfile = Path("../../apps/backend/Dockerfile").resolve()
+    dockerfile = (ROOT_DIR / "apps/backend/Dockerfile").resolve()
     assert dockerfile.exists(), "Backend Dockerfile is missing"
 
     with open(dockerfile, "r") as f:

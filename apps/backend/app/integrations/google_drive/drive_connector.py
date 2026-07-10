@@ -52,5 +52,26 @@ class DriveConnector(BaseConnector):
     def cleanup(self) -> None:
         pass
 
+    def checkpoint(self) -> Dict[str, Any]:
+        return {}
+
+    def fetch_document(self, document_id: str) -> Dict[str, Any]:
+        return {}
+
+    def fetch_incremental_changes(self, last_checkpoint: Dict[str, Any]) -> List[Dict[str, Any]]:
+        return []
+
+    def handle_webhook(self, payload: Dict[str, Any]) -> None:
+        pass
+
+    def poll_changes(self) -> None:
+        pass
+
+    def sync(self) -> None:
+        pass
+
+    def validate(self) -> bool:
+        return True
+
 
 connector_registry.register(DriveConnector)

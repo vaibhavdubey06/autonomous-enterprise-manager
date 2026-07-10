@@ -22,4 +22,4 @@ jobs:
     - name: Lint with Ruff
       run: uv run ruff check .
     - name: Test with pytest
-      run: uv run pytest tests/ -v
+      run: PYTHONPATH=apps/backend uv run pytest tests/ -v

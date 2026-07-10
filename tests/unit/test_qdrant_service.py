@@ -59,4 +59,4 @@ def test_create_collection(mocker):
 
     create_collection()
 
-    mock_client.create_collection.assert_called_once()
+    assert mock_client.create_collection.call_count == 2

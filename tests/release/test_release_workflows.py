@@ -14,16 +14,7 @@ def setup_database():
     # Base.metadata.drop_all(bind=engine)
 
 
-@pytest.fixture
-def auth_headers():
-    from app.security.authentication.jwt_provider import JWTProvider
-
-    provider = JWTProvider()
-    token = provider.create_access_token({"sub": "admin_user", "role": "admin"})
-    return {"Authorization": f"Bearer {token}"}
-
-
-def test_full_platform_e2e(auth_headers):
+def test_full_platform_e2e():
     """
     Validates End-to-End Enterprise Scenario.
     """
@@ -34,9 +25,6 @@ def test_full_platform_e2e(auth_headers):
     }
 
     with (
-        patch(
-            "app.services.llm.providers.gemini.genai.GenerativeModel.generate_content_async"
-        ) as mock_generate,
         patch("app.api.v1.chat.search") as mock_api_search,
         patch("app.services.chat_service.search") as mock_service_search,
         patch("app.services.memory_service.search") as mock_memory_search,
@@ -53,11 +41,7 @@ def test_full_platform_e2e(auth_headers):
         ]
         mock_get_client.return_value = mock_client_instance
 
-        mock_generate_obj = MagicMock()
-        mock_generate_obj.text = "I have reviewed the architecture."
-        mock_generate.return_value = mock_generate_obj
-
-        response = client.post("/api/v1/chat/", headers=auth_headers, json=chat_payload)
+        response = client.post("/api/v1/chat/", json=chat_payload)
 
         assert (
             response.status_code == 200

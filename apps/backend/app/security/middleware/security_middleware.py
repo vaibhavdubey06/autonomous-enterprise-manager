@@ -6,6 +6,7 @@ from app.security.authentication.auth_service import auth_service
 from app.security.identity.identity_context import SecurityContext, set_security_context
 from app.security.identity.identity_models import HumanUser
 from app.security.api.rate_limiter import global_rate_limiter
+import os
 import traceback
 
 
@@ -60,15 +61,16 @@ class SecurityMiddleware(BaseHTTPMiddleware):
             finally:
                 db.close()
         else:
-            # POC Bypass: Automatically assign admin identity if no token is present
-            ctx.identity = HumanUser(
-                id="poc-admin-id",
-                tenant_id="poc-tenant-id",
-                email="admin@autonomous.local",
-                roles=["admin"],
-                permissions=["*"]
-            )
-            ctx.session_id = "poc-session"
+            if os.environ.get("ENABLE_POC_BYPASS", "true").lower() == "true":
+                # POC Bypass: Automatically assign admin identity if no token is present
+                ctx.identity = HumanUser(
+                    id="poc-admin-id",
+                    tenant_id="poc-tenant-id",
+                    email="admin@autonomous.local",
+                    roles=["admin"],
+                    permissions=["*"]
+                )
+                ctx.session_id = "poc-session"
 
         # 5. Inject Context
         set_security_context(ctx)
@@ -101,8 +103,6 @@ class SecurityMiddleware(BaseHTTPMiddleware):
             and not request.url.path.startswith("/docs")
             and not request.url.path.startswith("/openapi.json")
         ):
-            import os
-
             if ctx.identity is None and os.environ.get("TESTING", "").lower() != "true":
                 return JSONResponse(status_code=401, content={"detail": "Unauthorized"})
 

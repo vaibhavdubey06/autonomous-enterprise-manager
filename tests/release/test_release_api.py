@@ -1,6 +1,12 @@
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
+import os
+
+@pytest.fixture(autouse=True)
+def disable_poc_bypass(monkeypatch):
+    monkeypatch.setenv("ENABLE_POC_BYPASS", "false")
+    monkeypatch.setenv("TESTING", "false")
 
 client = TestClient(app)
 

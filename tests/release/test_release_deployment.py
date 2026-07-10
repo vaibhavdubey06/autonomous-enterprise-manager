@@ -4,7 +4,8 @@ import yaml
 from pathlib import Path
 
 # Path relative to apps/backend where pytest is running
-DOCKER_COMPOSE_PATH = Path("../../docker-compose.production.yml").resolve()
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent
+DOCKER_COMPOSE_PATH = ROOT_DIR / "docker-compose.production.yml"
 
 
 def test_docker_compose_exists():

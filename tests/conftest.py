@@ -4,6 +4,11 @@ from fastapi.testclient import TestClient
 
 # Must set this before importing app to avoid loading actual models against prod db
 os.environ["USE_SQLITE"] = "true"
+os.environ["GITHUB_TOKEN"] = "mock_github_token"
+os.environ["OPENROUTER_API_KEY"] = "mock_openrouter_key"
+os.environ["ANTHROPIC_API_KEY"] = "mock_anthropic_key"
+os.environ["AWS_ACCESS_KEY_ID"] = "mock_aws_key"
+os.environ["PREFERRED_LLM_PROVIDER"] = "gemini"
 
 from app.main import app
 from app.core.database import Base, get_db, engine, SessionLocal
@@ -60,10 +65,19 @@ def mock_gemini(mocker):
     mock_genai = mocker.patch("app.services.llm.providers.gemini.genai")
 
     # Create a mock response
+    class DummyUsageMetadata:
+        prompt_token_count = 10
+        candidates_token_count = 20
+        total_token_count = 30
+
     class MockResponse:
         @property
         def text(self):
             return "This is a mocked LLM response."
+            
+        @property
+        def usage_metadata(self):
+            return DummyUsageMetadata()
 
     # Mock the GenerativeModel and its generate_content method
     mock_model = mocker.MagicMock()

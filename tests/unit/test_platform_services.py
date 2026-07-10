@@ -72,7 +72,10 @@ def test_domain_event_creation():
     assert d["event_type"] == "test.event"
 
 
-def test_in_memory_event_bus_publish_subscribe():
+import asyncio
+
+@pytest.mark.asyncio
+async def test_in_memory_event_bus_publish_subscribe():
     bus = InMemoryEventBus()
     received = []
 
@@ -82,23 +85,27 @@ def test_in_memory_event_bus_publish_subscribe():
     bus.subscribe("test.event", handler)
     event = DomainEvent(event_type="test.event", payload={}, source="test")
     bus.publish(event)
+    await asyncio.sleep(0.05)
 
     assert len(received) == 1
     assert received[0].event_type == "test.event"
 
 
-def test_event_bus_wildcard_subscriber():
+@pytest.mark.asyncio
+async def test_event_bus_wildcard_subscriber():
     bus = InMemoryEventBus()
     received = []
 
     bus.subscribe("*", lambda e: received.append(e))
     bus.publish(DomainEvent(event_type="a", payload={}, source="test"))
     bus.publish(DomainEvent(event_type="b", payload={}, source="test"))
+    await asyncio.sleep(0.05)
 
     assert len(received) == 2
 
 
-def test_event_bus_unsubscribe():
+@pytest.mark.asyncio
+async def test_event_bus_unsubscribe():
     bus = InMemoryEventBus()
     received = []
 
@@ -108,6 +115,7 @@ def test_event_bus_unsubscribe():
     bus.subscribe("test", handler)
     bus.unsubscribe("test", handler)
     bus.publish(DomainEvent(event_type="test", payload={}, source="test"))
+    await asyncio.sleep(0.05)
 
     assert len(received) == 0
 

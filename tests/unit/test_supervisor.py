@@ -55,7 +55,10 @@ def test_agent_router_knowledge_fallback():
 async def test_supervisor_graph_flow():
     mock_planner = MagicMock()
     mock_planner.llm_service = MagicMock()
-    mock_planner.llm_service.generate.return_value = "Final test answer from LLM"
+    class MockLLMResponse:
+        def __init__(self, content):
+            self.content = content
+    mock_planner.llm_service.generate.return_value = MockLLMResponse("Final test answer from LLM")
     mock_planner.plan.return_value = ExecutionPlan(
         goal="Test Goal",
         tasks=[Task(goal="T1", description="desc 1", assigned_agent="Knowledge Agent")],
@@ -106,6 +109,14 @@ async def test_supervisor_graph_flow():
 @pytest.mark.asyncio
 async def test_supervisor_graph_enables_collaboration_for_multi_task_plan():
     mock_planner = MagicMock()
+    mock_planner.llm_service = MagicMock()
+    
+    # Mock LLM response with serializable object
+    class MockLLMResponse:
+        def __init__(self, content):
+            self.content = content
+    mock_planner.llm_service.generate.return_value = MockLLMResponse("Final test answer from LLM")
+    
     mock_planner.plan.return_value = ExecutionPlan(
         goal="Multi-step goal",
         tasks=[
