@@ -60,7 +60,7 @@ evaluation/e2e/reports/output/*
 # Runtime Storage
 runtime/
 checkpoints/
-cache/
+/cache/
 
 # Secrets & Configuration
 .env
