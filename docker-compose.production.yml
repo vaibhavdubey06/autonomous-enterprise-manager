@@ -14,6 +14,9 @@ x-common-env: &common-env
   QDRANT_URL: http://qdrant:6333
   REDIS_URL: redis://redis:6379/0
   BACKEND_URL: http://backend:8000
+  OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+  GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+  GITHUB_TOKEN: ${GITHUB_TOKEN:-}
   JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-me-in-prod}
 
 services:
@@ -119,8 +122,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2.0'
-          memory: 2048M
+          cpus: '1.0'
+          memory: 1024M
 
   frontend:
     build:
@@ -150,7 +153,7 @@ services:
       resources:
         limits:
           cpus: '0.5'
-          memory: 1024M
+          memory: 512M
 
   nginx:
     image: nginx:1.27-alpine
