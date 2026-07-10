@@ -124,18 +124,28 @@ class AgentRouter:
             import threading
             import asyncio
 
-            def _complete_session_in_thread():
+            def _complete_session_in_thread(sid: str):
+                from app.core.database import SessionLocal
+                from app.collaboration.coordinator.collaboration_manager import CollaborationManager
+                db = SessionLocal()
                 try:
+                    manager = CollaborationManager(
+                        db,
+                        self.collaboration_manager.team_builder.registry,
+                        self.collaboration_manager.governance_pipeline
+                    )
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
                     loop.run_until_complete(
-                        self.collaboration_manager.complete_session(session.session_id)
+                        manager.complete_session(sid)
                     )
                     loop.close()
                 except Exception as e:
                     logger.error(f"Failed to complete session: {e}")
+                finally:
+                    db.close()
 
-            threading.Thread(target=_complete_session_in_thread, daemon=True).start()
+            threading.Thread(target=_complete_session_in_thread, args=(session.session_id,), daemon=True).start()
 
             task.status = TaskStatus.COMPLETED
             return {
