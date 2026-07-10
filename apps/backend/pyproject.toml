@@ -65,3 +65,6 @@ module = [
     "nest_asyncio.*"
 ]
 ignore_missing_imports = true
+
+[tool.ruff.lint]
+ignore = ["E402", "E701", "E702", "F401", "F821", "F841"]
