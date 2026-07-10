@@ -22,4 +22,12 @@ jobs:
     - name: Lint with Ruff
       run: uvx ruff check . --ignore E402,E701,E702,F401,F821,F841
     - name: Test with pytest
-      run: PYTHONPATH=apps/backend uv run pytest tests/ -v
+      env:
+        TESTING: "true"
+        GITHUB_TOKEN: "mock_github_token"
+        GEMINI_API_KEY: "mock_gemini_key"
+        OPENAI_API_KEY: "mock_openai_key"
+      run: |
+        cd apps/backend
+        uv sync
+        uv run pytest tests/ -v
