@@ -64,7 +64,7 @@ jobs:
         run: docker compose -f $COMPOSE_FILE build backend frontend nginx
 
       - name: Start production stack
-        run: docker compose -f $COMPOSE_FILE up -d
+        run: docker compose -f $COMPOSE_FILE up -d || { docker compose -f $COMPOSE_FILE logs backend; exit 1; }
 
       - name: Wait for health checks
         run: |
