@@ -23,7 +23,23 @@ async def index_github_repository(
     """
     Index a GitHub repository into the vector database.
     """
-    repository_name = request.repository
+    repository_name = request.repository.strip()
+    
+    # Strip URL prefixes if user pasted a full URL
+    if "github.com/" in repository_name:
+        repository_name = repository_name.split("github.com/")[-1]
+    
+    # Remove any trailing slashes or .git
+    repository_name = repository_name.rstrip("/")
+    if repository_name.endswith(".git"):
+        repository_name = repository_name[:-4]
+        
+    if "/" not in repository_name or len(repository_name.split("/")) != 2:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Invalid repository format. Expected 'owner/repo', got '{request.repository}'."
+        )
+
     logger.info(f"Starting to index GitHub repository: {repository_name}")
 
     create_collection()
