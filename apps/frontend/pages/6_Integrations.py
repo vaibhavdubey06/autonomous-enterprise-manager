@@ -95,28 +95,34 @@ with tab1:
 with tab2:
     st.header("Connector Health Status")
     st.markdown("Monitor real-time health and authentication status across tenants.")
-    st.table(
-        [
-            {
-                "Connector": "github",
-                "Tenant": "Default",
-                "Status": "Healthy",
-                "Latency": "120ms",
-            },
-            {
-                "Connector": "jira",
-                "Tenant": "Default",
-                "Status": "Healthy",
-                "Latency": "45ms",
-            },
-            {
-                "Connector": "slack",
-                "Tenant": "Default",
-                "Status": "Warning (Auth Expiring)",
-                "Latency": "N/A",
-            },
-        ]
-    )
+    
+    try:
+        from services.api_client import api_client
+        integrations = api_client.get_integrations()
+        
+        if integrations:
+            health_data = []
+            for integration in integrations:
+                name = integration.get("name", "Unknown")
+                try:
+                    health = api_client.get_integration_health(name.lower())
+                    status = health.get("health", "unknown").capitalize()
+                except Exception:
+                    status = "Unknown"
+                
+                health_data.append({
+                    "Connector": name.capitalize(),
+                    "Tenant": "Default",
+                    "Status": status,
+                    "Latency": "N/A"
+                })
+            
+            st.table(health_data)
+        else:
+            st.info("No connectors currently registered.")
+            
+    except Exception as e:
+        st.error(f"Failed to load integration status: {e}")
 
 with tab3:
     st.header("Activity & Telemetry")
