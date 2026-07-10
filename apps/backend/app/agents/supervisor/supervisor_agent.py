@@ -211,9 +211,11 @@ class SupervisorGraph:
                                     agent_name=t.assigned_agent or "Knowledge Agent",
                                     capabilities=capabilities_str,
                                     execution_stage=t.execution_group,
-                                    execution_mode="collaboration"
-                                    if use_collaboration
-                                    else "direct",
+                                    execution_mode=(
+                                        "collaboration"
+                                        if use_collaboration
+                                        else "direct"
+                                    ),
                                 ):
                                     res = self.agent_router.route_and_execute(
                                         t, dict(s), use_collaboration=use_collaboration

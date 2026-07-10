@@ -78,12 +78,16 @@ class AgentRouter:
                 trace_id=trace_id,
                 operation="agent_routing",
                 parent_span_id=telemetry_snap.get("span_id"),
-                expected_capability=",".join(str(c) for c in task.required_capabilities)
-                if task.required_capabilities
-                else "general",
-                detected_capability=",".join(str(c) for c in task.required_capabilities)
-                if task.required_capabilities
-                else "general",
+                expected_capability=(
+                    ",".join(str(c) for c in task.required_capabilities)
+                    if task.required_capabilities
+                    else "general"
+                ),
+                detected_capability=(
+                    ",".join(str(c) for c in task.required_capabilities)
+                    if task.required_capabilities
+                    else "general"
+                ),
                 selected_agent=agent_name,
             )
 

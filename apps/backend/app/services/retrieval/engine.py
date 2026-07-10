@@ -162,9 +162,9 @@ class RetrievalEngine:
                     metrics={
                         "raw_retrieved": len(raw_chunks),
                         "optimized_count": len(final_chunks),
-                        "compression_ratio": len(final_chunks) / len(raw_chunks)
-                        if raw_chunks
-                        else 0,
+                        "compression_ratio": (
+                            len(final_chunks) / len(raw_chunks) if raw_chunks else 0
+                        ),
                     },
                 )
             except Exception as e:

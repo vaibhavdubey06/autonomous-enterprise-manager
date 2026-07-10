@@ -86,9 +86,11 @@ class ExecutiveCouncil:
                 "Prepare budget allocation",
             ],
             participating_executives=participating_agents,
-            final_decision="Proceed with phased execution."
-            if strategy == DecisionStrategy.CEO_OVERRIDE
-            else "Approved by majority.",
+            final_decision=(
+                "Proceed with phased execution."
+                if strategy == DecisionStrategy.CEO_OVERRIDE
+                else "Approved by majority."
+            ),
         )
 
         # 3. Complete Session
