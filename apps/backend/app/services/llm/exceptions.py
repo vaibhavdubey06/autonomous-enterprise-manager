@@ -31,7 +31,7 @@ class LLMValidationError(LLMError):
 class GuardrailException(LLMError):
     """Exception raised when a guardrail blocks a request or response."""
 
-    def __init__(self, message: str, findings: list = None):
+    def __init__(self, message: str, findings: list | None = None):
         super().__init__(message)
         self.findings = findings or []
 

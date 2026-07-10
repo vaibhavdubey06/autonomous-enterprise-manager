@@ -32,7 +32,7 @@ class InMemoryEventBus(EventBus):
     def __init__(self) -> None:
         self._subscribers: Dict[str, List[Callable[[DomainEvent], None]]] = {}
         self._history: List[DomainEvent] = []
-        self._queue = queue.PriorityQueue()
+        self._queue: queue.PriorityQueue[PriorityEventWrapper] = queue.PriorityQueue()
         self._stop_event = threading.Event()
 
         # Start background worker
