@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 from typing import Dict, Optional, List
 import copy
-from app.agents.supervisor.schemas import ExecutionPlan, Task, AutonomyLevel
+from app.agents.supervisor.schemas import ExecutionPlan
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +13,7 @@ class TemplateRegistry:
     Registry for discoverable and extensible workflow templates.
     Instead of static files, templates are registered dynamically.
     """
-    
+
     _templates: Dict[str, ExecutionPlan] = {}
 
     @classmethod
@@ -55,7 +55,6 @@ class TemplateRegistry:
             return "Deployment"
         return None
 
-
     @classmethod
     def load_packs(cls):
         """Loads JSON workflow packs from app/workflows/packs/."""
@@ -63,20 +62,21 @@ class TemplateRegistry:
         if not packs_dir.exists():
             logger.warning(f"Workflow packs directory not found at {packs_dir}")
             return
-            
+
         for file_path in packs_dir.glob("*.json"):
             try:
                 with open(file_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    
+
                 # We dynamically map JSON dict -> ExecutionPlan
                 plan = ExecutionPlan(**data)
-                plan.workflow_template = plan.goal # Set template name to goal
-                
+                plan.workflow_template = plan.goal  # Set template name to goal
+
                 # Register using the JSON file name or the goal name
                 cls.register(plan.goal, plan)
             except Exception as e:
                 logger.error(f"Failed to load workflow pack {file_path}: {e}")
+
 
 # Automatically load packs when module is imported
 TemplateRegistry.load_packs()

@@ -47,9 +47,7 @@ class GraphRouter:
             "executive_decision": build_executive_decision_graph(
                 services, tool_registry
             ),
-            "incident_response": build_incident_response_graph(
-                services, tool_registry
-            ),
+            "incident_response": build_incident_response_graph(services, tool_registry),
         }
 
         logger.info(
@@ -62,8 +60,7 @@ class GraphRouter:
         if workflow_type in self._graphs:
             return workflow_type
         logger.warning(
-            "GraphRouter received unknown workflow_type='%s', "
-            "falling back to chat",
+            "GraphRouter received unknown workflow_type='%s', falling back to chat",
             workflow_type,
         )
         return "chat"

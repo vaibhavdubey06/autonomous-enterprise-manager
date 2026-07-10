@@ -42,7 +42,6 @@ def test_llm_service_failure_handling():
             patch("app.api.v1.chat.search") as mock_search,
             patch("app.services.vectorstore.qdrant_service.get_client"),
         ):
-
             mock_auth.return_value.id = "user_1"
             mock_auth.return_value.tenant_id = "tenant_1"
             mock_auth.return_value.email = "admin@example.com"

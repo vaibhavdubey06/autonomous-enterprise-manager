@@ -63,11 +63,11 @@ def render_sidebar():
                 for integration in integrations:
                     name = integration.get("name", "Unknown")
                     display_name = name.capitalize()
-                    
+
                     try:
                         health = api_client.get_integration_health(name.lower())
                         status = health.get("health", "unknown")
-                        
+
                         if status == "healthy":
                             st.caption(f"🟢 {display_name}: Connected")
                         elif status == "disconnected":

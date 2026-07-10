@@ -37,11 +37,11 @@ class SupervisorGraph:
         self.agent_router = agent_router
         self.memory_service = memory_service
         self.collaboration_manager = collaboration_manager
-        
+
         self.execution_monitor = ExecutionMonitor()
         self.recovery_engine = RecoveryEngine()
         self.optimizer = WorkflowOptimizer()
-        
+
         self.checkpointer = MemorySaver()
         self.graph = self._build_graph()
 
@@ -66,7 +66,7 @@ class SupervisorGraph:
         builder.add_edge("task_decomposition", "dependency_analysis")
         builder.add_edge("dependency_analysis", "route_and_execute")
         builder.add_edge("route_and_execute", "monitor_execution")
-        
+
         # Conditional Edge from monitor_execution
         builder.add_conditional_edges(
             "monitor_execution",
@@ -74,8 +74,8 @@ class SupervisorGraph:
             {
                 "continue": "merge_results",
                 "recover": "recover",
-                "abort": "merge_results"
-            }
+                "abort": "merge_results",
+            },
         )
 
         # Conditional Edge from recover
@@ -85,8 +85,8 @@ class SupervisorGraph:
             {
                 "retry": "route_and_execute",
                 "replan": "planning",
-                "escalate": "merge_results"
-            }
+                "escalate": "merge_results",
+            },
         )
 
         builder.add_edge("merge_results", "optimize")
@@ -118,21 +118,23 @@ class SupervisorGraph:
         start_time = time.time()
         goal = state.get("goal", "")
         conversation_id = state.get("conversation_id")
-        replan_count = state.get("replan_count", 0)
+        state.get("replan_count", 0)
 
         memory_context = ""
         if self.memory_service and conversation_id:
             memory_context = self.memory_service.build_memory_context(conversation_id)
-            
+
         # Inject heuristics from optimizer
         heuristics = self.optimizer.get_heuristics_for_planner()
         if heuristics:
             memory_context = f"{memory_context}\n\n{heuristics}"
 
         plan = self.planner.plan(goal=goal, context=memory_context)
-        use_collaboration = len(plan.tasks) > 1 or len(
-            {task.assigned_agent for task in plan.tasks if task.assigned_agent}
-        ) > 1
+        use_collaboration = (
+            len(plan.tasks) > 1
+            or len({task.assigned_agent for task in plan.tasks if task.assigned_agent})
+            > 1
+        )
 
         elapsed_ms = (time.time() - start_time) * 1000
         return {
@@ -141,7 +143,7 @@ class SupervisorGraph:
             "use_collaboration": use_collaboration,
             "execution_time_ms": state.get("execution_time_ms", 0.0) + elapsed_ms,
             "autonomy_level": plan.autonomy_level,
-            "workflow_state": "Planned"
+            "workflow_state": "Planned",
         }
 
     def task_decomposition(self, state: SupervisorState) -> dict:
@@ -150,7 +152,10 @@ class SupervisorGraph:
         if plan:
             self.task_decomposer.decompose(plan)
         elapsed_ms = (time.time() - start_time) * 1000
-        return {"execution_plan": plan, "execution_time_ms": state.get("execution_time_ms", 0.0) + elapsed_ms}
+        return {
+            "execution_plan": plan,
+            "execution_time_ms": state.get("execution_time_ms", 0.0) + elapsed_ms,
+        }
 
     def dependency_analysis(self, state: SupervisorState) -> dict:
         start_time = time.time()
@@ -158,7 +163,10 @@ class SupervisorGraph:
         if plan and plan.tasks:
             ExecutionScheduler.schedule(plan.tasks)
         elapsed_ms = (time.time() - start_time) * 1000
-        return {"execution_plan": plan, "execution_time_ms": state.get("execution_time_ms", 0.0) + elapsed_ms}
+        return {
+            "execution_plan": plan,
+            "execution_time_ms": state.get("execution_time_ms", 0.0) + elapsed_ms,
+        }
 
     async def route_and_execute(self, state: SupervisorState) -> dict:
         start_time = time.time()
@@ -173,7 +181,10 @@ class SupervisorGraph:
         if plan and plan.tasks:
             groups = {}
             for task in plan.tasks:
-                if task.task_id not in completed_tasks and task.task_id not in failed_tasks:
+                if (
+                    task.task_id not in completed_tasks
+                    and task.task_id not in failed_tasks
+                ):
                     grp = getattr(task, "execution_group", 0)
                     groups.setdefault(grp, []).append(task)
 
@@ -181,33 +192,48 @@ class SupervisorGraph:
 
             for grp_id in sorted(groups.keys()):
                 group_tasks = groups[grp_id]
-                
+
                 async with asyncio.TaskGroup() as tg:
                     tasks_to_await = []
                     for task in group_tasks:
+
                         async def run_task(t, s):
-                            capabilities_str = ",".join(str(c) for c in (t.required_capabilities or [])) or "None"
+                            capabilities_str = (
+                                ",".join(
+                                    str(c) for c in (t.required_capabilities or [])
+                                )
+                                or "None"
+                            )
                             try:
                                 with trace_manager.span(
-                                    trace_id=trace_id, 
+                                    trace_id=trace_id,
                                     operation=f"parallel_branch_{t.task_id}",
                                     agent_name=t.assigned_agent or "Knowledge Agent",
                                     capabilities=capabilities_str,
                                     execution_stage=t.execution_group,
-                                    execution_mode="collaboration" if use_collaboration else "direct"
+                                    execution_mode="collaboration"
+                                    if use_collaboration
+                                    else "direct",
                                 ):
-                                    res = self.agent_router.route_and_execute(t, dict(s), use_collaboration=use_collaboration)
+                                    res = self.agent_router.route_and_execute(
+                                        t, dict(s), use_collaboration=use_collaboration
+                                    )
                                     return res
                             except Exception as e:
-                                logger.error(f"Task {t.task_id} failed with exception: {e}")
+                                logger.error(
+                                    f"Task {t.task_id} failed with exception: {e}"
+                                )
                                 return {
                                     "task_id": t.task_id,
                                     "agent_used": t.assigned_agent or "Unknown",
                                     "result": f"Execution failed ({t.execution_policy}): {str(e)}",
                                     "sources": [],
                                     "metrics": {},
-                                    "policy": getattr(t, "execution_policy", "CONTINUE")
+                                    "policy": getattr(
+                                        t, "execution_policy", "CONTINUE"
+                                    ),
                                 }
+
                         tasks_to_await.append(tg.create_task(run_task(task, state)))
 
                 for t in tasks_to_await:
@@ -217,7 +243,7 @@ class SupervisorGraph:
                         selected_agents.append(agent)
                     task_id = res.get("task_id")
                     policy = res.get("policy", "CONTINUE")
-                    
+
                     if res.get("result", "").startswith("Execution failed"):
                         failed_tasks.append(task_id)
                         if policy == "ABORT":
@@ -227,7 +253,7 @@ class SupervisorGraph:
                                 "selected_agents": selected_agents,
                                 "failed_tasks": failed_tasks,
                                 "task_results": results + [res],
-                                "workflow_state": "Executing"
+                                "workflow_state": "Executing",
                             }
                     else:
                         completed_tasks.append(task_id)
@@ -240,19 +266,19 @@ class SupervisorGraph:
             "failed_tasks": failed_tasks,
             "execution_time_ms": state.get("execution_time_ms", 0.0) + elapsed_ms,
             "task_results": results,
-            "workflow_state": "Executing"
+            "workflow_state": "Executing",
         }
 
     def monitor_execution(self, state: SupervisorState) -> dict:
         health = self.execution_monitor.check_health(state)
-        
+
         if health["abort_workflow"]:
             return {"workflow_state": "FAILED"}
-            
+
         if health["needs_recovery"]:
             # Store the health diagnosis in state temporarily or infer from state later
             return {"workflow_state": "AWAITING_RECOVERY", "monitor_diagnosis": health}
-            
+
         return {"workflow_state": "COMPLETED"}
 
     def recover(self, state: SupervisorState) -> dict:
@@ -266,12 +292,12 @@ class SupervisorGraph:
         plan = state.get("execution_plan")
         tasks = plan.tasks if plan else []
         goal = state.get("goal", state.get("user_input", ""))
-        
+
         if executive_decision:
             aggregated_text = f"### Executive Council Recommendation\n**Strategy:** {executive_decision.get('decision_strategy')}\n"
         else:
             aggregated_text = ResultAggregator.aggregate(temp_results, tasks)
-        
+
         if state.get("workflow_state") == "FAILED":
             aggregated_text = f"WORKFLOW FAILED\n\n{aggregated_text}"
 
@@ -281,7 +307,10 @@ class SupervisorGraph:
             try:
                 from app.services.llm.models import LLMRequest, LLMConfig
                 import concurrent.futures
-                request = LLMRequest(prompt=f"{system_prompt}\n\n{prompt}", config=LLMConfig())
+
+                request = LLMRequest(
+                    prompt=f"{system_prompt}\n\n{prompt}", config=LLMConfig()
+                )
                 with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                     future = executor.submit(self.planner.llm_service.generate, request)
                     resp = future.result(timeout=60)
@@ -305,7 +334,14 @@ class SupervisorGraph:
 
     async def run(self, initial_state: SupervisorState) -> dict:
         logger.info("Starting Supervisor Graph execution...")
-        config = {"configurable": {"thread_id": initial_state.get("conversation_id", "default_thread")}}
+        config = {
+            "configurable": {
+                "thread_id": initial_state.get("conversation_id", "default_thread")
+            }
+        }
         final_state = await self.graph.ainvoke(initial_state, config=config)
-        logger.info("Supervisor Graph completed in %.2fms", final_state.get("execution_time_ms", 0))
+        logger.info(
+            "Supervisor Graph completed in %.2fms",
+            final_state.get("execution_time_ms", 0),
+        )
         return final_state

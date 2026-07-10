@@ -62,18 +62,23 @@ st.header("3. RAG Quality Metrics")
 rag = data.get("rag_quality", {})
 if rag:
     c1, c2, c3 = st.columns(3)
-    c1.metric("Grounded Answer Rate", f"{rag.get('grounded_answer_rate', 0)*100:.1f}%")
-    c2.metric("Hallucination Rate", f"{rag.get('hallucination_rate', 0)*100:.1f}%")
-    c3.metric("Citation Accuracy", f"{rag.get('citation_accuracy', 0)*100:.1f}%")
+    c1.metric(
+        "Grounded Answer Rate", f"{rag.get('grounded_answer_rate', 0) * 100:.1f}%"
+    )
+    c2.metric("Hallucination Rate", f"{rag.get('hallucination_rate', 0) * 100:.1f}%")
+    c3.metric("Citation Accuracy", f"{rag.get('citation_accuracy', 0) * 100:.1f}%")
 
 st.header("4. Cognitive Memory Metrics")
 mem = data.get("memory_quality", {})
 if mem:
     c1, c2 = st.columns(2)
     c1.metric(
-        "Deduplication Efficiency", f"{mem.get('deduplication_efficiency', 0)*100:.1f}%"
+        "Deduplication Efficiency",
+        f"{mem.get('deduplication_efficiency', 0) * 100:.1f}%",
     )
-    c2.metric("Token Reduction", f"{mem.get('token_reduction_percentage', 0)*100:.1f}%")
+    c2.metric(
+        "Token Reduction", f"{mem.get('token_reduction_percentage', 0) * 100:.1f}%"
+    )
 
 st.header("5. End-to-End Scenarios")
 scenarios = data.get("scenarios", {})

@@ -1,8 +1,9 @@
 import logging
-from typing import Dict, Any, Type
-from app.agents.supervisor.schemas import SupervisorState, TaskStatus, ExecutionPolicy
+from typing import Dict, Any
+from app.agents.supervisor.schemas import SupervisorState, TaskStatus
 
 logger = logging.getLogger(__name__)
+
 
 class RecoveryStrategy:
     def execute(self, state: SupervisorState) -> SupervisorState:
@@ -18,7 +19,7 @@ class RetryStrategy(RecoveryStrategy):
             for t in state["execution_plan"].tasks:
                 if t.task_id in failed_task_ids:
                     t.status = TaskStatus.PENDING
-        
+
         # Clear failed tasks so they can be retried
         state["failed_tasks"] = []
         state["recovery_cycles"] = state.get("recovery_cycles", 0) + 1
@@ -56,10 +57,10 @@ class SkipOptionalStrategy(RecoveryStrategy):
 
 class RecoveryEngine:
     """
-    Registry-based recovery engine. Selects a strategy to mutate state 
+    Registry-based recovery engine. Selects a strategy to mutate state
     to recover from execution monitor flags.
     """
-    
+
     def __init__(self, decision_engine=None):
         self.strategies = {
             "RETRY": RetryStrategy(),
@@ -68,44 +69,50 @@ class RecoveryEngine:
             "SKIP_OPTIONAL": SkipOptionalStrategy(),
         }
         from app.services.decisions.engine import DecisionEngine
+
         self.decision_engine = decision_engine or DecisionEngine()
 
-    def trigger_recovery(self, state: SupervisorState, diagnosis: Dict[str, Any]) -> SupervisorState:
+    def trigger_recovery(
+        self, state: SupervisorState, diagnosis: Dict[str, Any]
+    ) -> SupervisorState:
         reason = diagnosis.get("reason")
         failed_tasks = diagnosis.get("failed_tasks", [])
-        
+
         if failed_tasks:
             state["last_failed_task"] = failed_tasks[0]
-            
+
         logger.warning(f"[RecoveryEngine] Triggered for reason: {reason}")
-        
+
         # Determine strategy
-        # For simplicity, if Autonomy Level is high, we REPLAN. Otherwise RETRY. 
+        # For simplicity, if Autonomy Level is high, we REPLAN. Otherwise RETRY.
         # If it's a timeout, ESCALATE.
         autonomy_level = state.get("autonomy_level", 2)
-        
+
         strategy_name = "RETRY"
         if reason == "SLA_TIMEOUT":
             strategy_name = "ESCALATE"
-        elif reason == "TASK_FAILURE" and autonomy_level >= 3: # Auto Recover
+        elif reason == "TASK_FAILURE" and autonomy_level >= 3:  # Auto Recover
             # Check if we already retried this
             if state.get("last_recovery_strategy") == "RetryStrategy":
                 strategy_name = "REPLAN"
             else:
                 strategy_name = "RETRY"
         elif reason == "TASK_FAILURE" and autonomy_level < 3:
-            strategy_name = "ESCALATE" # Cannot auto-recover
-            
+            strategy_name = "ESCALATE"  # Cannot auto-recover
+
         strategy = self.strategies.get(strategy_name, EscalateStrategy())
-        
+
         from app.services.decisions.models import DecisionType
+
         self.decision_engine.record_decision(
             decision_type=DecisionType.RECOVERY,
             component="RecoveryEngine",
             selected_option=strategy_name,
-            context={"failure_reason": reason, "recovery_cycles": state.get("recovery_cycles", 0)},
-            trace_id=state.get("trace_id")
+            context={
+                "failure_reason": reason,
+                "recovery_cycles": state.get("recovery_cycles", 0),
+            },
+            trace_id=state.get("trace_id"),
         )
-        
-        return strategy.execute(state)
 
+        return strategy.execute(state)

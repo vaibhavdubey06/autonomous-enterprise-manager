@@ -1,12 +1,13 @@
 import pytest
 from fastapi.testclient import TestClient
 from app.main import app
-import os
+
 
 @pytest.fixture(autouse=True)
 def disable_poc_bypass(monkeypatch):
     monkeypatch.setenv("ENABLE_POC_BYPASS", "false")
     monkeypatch.setenv("TESTING", "false")
+
 
 client = TestClient(app)
 
@@ -77,4 +78,6 @@ def test_all_endpoints_exist_and_authorized(api_paths, monkeypatch):
                     403,
                     422,
                     405,
-                ], f"Protected endpoint {method.upper()} {path} returned {res.status_code} without auth"
+                ], (
+                    f"Protected endpoint {method.upper()} {path} returned {res.status_code} without auth"
+                )

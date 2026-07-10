@@ -61,9 +61,7 @@ def test_graph_router_defaults_to_chat(monkeypatch):
         lambda *args, **kwargs: incident_graph,
     )
 
-    router = GraphRouter(
-        services=_make_services(), tool_registry=ToolRegistry()
-    )
+    router = GraphRouter(services=_make_services(), tool_registry=ToolRegistry())
 
     result = router.run({"question": "hello"})
 
@@ -109,13 +107,9 @@ def test_graph_router_routes_by_workflow_type(monkeypatch):
         lambda *args, **kwargs: incident_graph,
     )
 
-    router = GraphRouter(
-        services=_make_services(), tool_registry=ToolRegistry()
-    )
+    router = GraphRouter(services=_make_services(), tool_registry=ToolRegistry())
 
-    result = router.run(
-        {"question": "need research", "workflow_type": "research"}
-    )
+    result = router.run({"question": "need research", "workflow_type": "research"})
 
     assert result["graph_used"] == "research"
     assert research_graph.invocations[0]["workflow_type"] == "research"

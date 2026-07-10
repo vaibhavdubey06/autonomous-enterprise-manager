@@ -1,6 +1,7 @@
 from typing import Dict, Any
 from app.services.decisions.models import DecisionType
 
+
 class ConfidenceEngine:
     """Calculates multi-signal confidence scores for decisions."""
 
@@ -34,8 +35,10 @@ class ConfidenceEngine:
         health = context.get("health_score", 0.5)
         hist = context.get("historical_success", 0.8)
         lat_class = context.get("latency_class", "medium")
-        lat_bonus = 0.1 if lat_class == "fast" else (-0.1 if lat_class == "slow" else 0.0)
-        
+        lat_bonus = (
+            0.1 if lat_class == "fast" else (-0.1 if lat_class == "slow" else 0.0)
+        )
+
         score = (health * 0.6) + (hist * 0.4) + lat_bonus
         return min(1.0, max(0.0, score))
 
@@ -62,6 +65,6 @@ class ConfidenceEngine:
         # Base LLM confidence
         llm_conf = context.get("llm_confidence", 0.5)
         hist = context.get("historical_success", 0.5)
-        
+
         score = (llm_conf * 0.7) + (hist * 0.3)
         return min(1.0, max(0.0, score))

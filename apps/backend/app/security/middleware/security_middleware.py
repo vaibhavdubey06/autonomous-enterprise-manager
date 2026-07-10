@@ -68,7 +68,7 @@ class SecurityMiddleware(BaseHTTPMiddleware):
                     tenant_id="poc-tenant-id",
                     email="admin@autonomous.local",
                     roles=["admin"],
-                    permissions=["*"]
+                    permissions=["*"],
                 )
                 ctx.session_id = "poc-session"
 

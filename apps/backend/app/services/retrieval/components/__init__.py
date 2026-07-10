@@ -9,5 +9,5 @@ __all__ = [
     "QueryRewriter",
     "ContextOptimizer",
     "CitationBuilder",
-    "compute_dynamic_k"
+    "compute_dynamic_k",
 ]

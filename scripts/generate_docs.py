@@ -178,12 +178,12 @@ Clients interact primarily via `/api/v1/agent/chat` which initiates a streaming 
 
 ## Extension Points
 Add new routers in `app/api/v1/` and register them in `app/main.py`.
-"""
+""",
 }
 
 for filename, content in docs.items():
     filepath = os.path.join(DOCS_DIR, filename)
     with open(filepath, "w", encoding="utf-8") as f:
         f.write(content)
-        
+
 print("Documentation generated successfully.")

@@ -1,24 +1,25 @@
 from typing import List, Dict, Any
 
+
 class SubsystemCoverageValidator:
     """
     Analyzes generated traces to cryptographically prove every major subsystem was executed
     (or intentionally bypassed based on cache hits).
     """
-    
+
     EXPECTED_SUBSYSTEMS = [
         "planner",
         "decision_engine",
         "memory_service",
         "llm_gateway",
         "router",
-        "semantic_cache"
+        "semantic_cache",
     ]
-    
+
     @classmethod
     def validate(cls, traces: List[Dict[str, Any]]) -> Dict[str, bool]:
         coverage = {sys: False for sys in cls.EXPECTED_SUBSYSTEMS}
-        
+
         for span in traces:
             op = span.get("operation", "").lower()
             if "plan" in op:
@@ -32,7 +33,7 @@ class SubsystemCoverageValidator:
                 coverage["llm_gateway"] = True
             if "cache" in op:
                 coverage["semantic_cache"] = True
-                
+
         return coverage
 
     @classmethod

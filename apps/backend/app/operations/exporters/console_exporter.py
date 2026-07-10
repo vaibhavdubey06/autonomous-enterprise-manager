@@ -4,7 +4,9 @@ from app.operations.telemetry.telemetry_models import TelemetryEvent
 
 
 import logging
+
 logger = logging.getLogger(__name__)
+
 
 class ConsoleExporter(BaseExporter):
     def export(self, events: List[TelemetryEvent]) -> None:

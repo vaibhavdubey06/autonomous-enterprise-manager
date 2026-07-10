@@ -112,7 +112,7 @@ jobs:
       run: uv run ruff check .
     - name: Test with pytest
       run: uv run pytest tests/ -v
-"""
+""",
 }
 
 for path, content in files.items():

@@ -55,7 +55,7 @@ class SlackConnector(BaseConnector):
         pass
 
     # --- Synchronization Interface ---
-    
+
     def validate(self) -> bool:
         return self.health_check() == ConnectorHealthStatus.HEALTHY
 

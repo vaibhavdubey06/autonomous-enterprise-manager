@@ -74,7 +74,7 @@ def mock_gemini(mocker):
         @property
         def text(self):
             return "This is a mocked LLM response."
-            
+
         @property
         def usage_metadata(self):
             return DummyUsageMetadata()

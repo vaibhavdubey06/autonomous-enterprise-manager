@@ -2,7 +2,12 @@ import pytest
 import sys
 import os
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "apps", "backend")))
+sys.path.insert(
+    0,
+    os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "..", "apps", "backend")
+    ),
+)
 from evaluation.utils.metrics import (
     calculate_precision,
     calculate_recall,

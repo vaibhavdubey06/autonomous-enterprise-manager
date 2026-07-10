@@ -4,7 +4,6 @@ from app.workflows.events.events import WorkflowEvent
 
 
 class BaseEventBus(ABC):
-
     @abstractmethod
     def publish(self, event: WorkflowEvent) -> None:
         """Publish an event to the bus."""

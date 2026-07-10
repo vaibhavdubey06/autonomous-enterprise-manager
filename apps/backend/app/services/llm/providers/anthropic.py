@@ -1,5 +1,4 @@
 import logging
-import json
 import time
 from typing import AsyncGenerator
 import requests
@@ -11,12 +10,21 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
+
 class AnthropicProvider(AbstractLLMProvider):
     def __init__(self):
-        self.api_key = settings.ANTHROPIC_API_KEY if hasattr(settings, "ANTHROPIC_API_KEY") else None
-        self.model_name = settings.ANTHROPIC_MODEL if hasattr(settings, "ANTHROPIC_MODEL") else "claude-3-opus-20240229"
+        self.api_key = (
+            settings.ANTHROPIC_API_KEY
+            if hasattr(settings, "ANTHROPIC_API_KEY")
+            else None
+        )
+        self.model_name = (
+            settings.ANTHROPIC_MODEL
+            if hasattr(settings, "ANTHROPIC_MODEL")
+            else "claude-3-opus-20240229"
+        )
         self.base_url = "https://api.anthropic.com/v1/messages"
-        
+
         if not self.api_key:
             logger.warning("ANTHROPIC_API_KEY is not set.")
 
@@ -37,17 +45,18 @@ class AnthropicProvider(AbstractLLMProvider):
 
     def generate(self, request: LLMRequest) -> LLMResponse:
         start_time = time.time()
-        
+
         if not self.api_key:
             from app.services.llm.exceptions import LLMProviderError
+
             raise LLMProviderError("Anthropic client not initialized (missing API key)")
-            
+
         headers = {
             "x-api-key": self.api_key,
             "anthropic-version": "2023-06-01",
-            "content-type": "application/json"
+            "content-type": "application/json",
         }
-        
+
         # Anthropic messages API
         payload = {
             "model": self.model_name,
@@ -56,23 +65,26 @@ class AnthropicProvider(AbstractLLMProvider):
             "temperature": request.config.temperature,
             "top_p": request.config.top_p,
         }
-        
-        response = requests.post(self.base_url, headers=headers, json=payload, timeout=request.config.timeout)
-        
+
+        response = requests.post(
+            self.base_url, headers=headers, json=payload, timeout=request.config.timeout
+        )
+
         if not response.ok:
             from app.services.llm.exceptions import LLMProviderError
+
             raise LLMProviderError(f"Anthropic API error: {response.text}")
-            
+
         data = response.json()
-        
+
         # Parse the response text
         content = ""
         for block in data.get("content", []):
             if block.get("type") == "text":
                 content += block.get("text", "")
-                
+
         usage = data.get("usage", {})
-        
+
         return LLMResponse(
             content=content,
             model_used=self.model_name,
@@ -87,46 +99,54 @@ class AnthropicProvider(AbstractLLMProvider):
         # Anthropic does not have a strict JSON mode flag in the same way OpenAI/OpenRouter do,
         # but we can force it by appending instructions and prefilling the assistant's message with '{'
         start_time = time.time()
-        
+
         if not self.api_key:
             from app.services.llm.exceptions import LLMProviderError
+
             raise LLMProviderError("Anthropic client not initialized (missing API key)")
-            
+
         headers = {
             "x-api-key": self.api_key,
             "anthropic-version": "2023-06-01",
-            "content-type": "application/json"
+            "content-type": "application/json",
         }
-        
+
         payload = {
             "model": self.model_name,
             "max_tokens": request.config.max_output_tokens,
             "messages": [
-                {"role": "user", "content": request.prompt + "\n\nPlease output ONLY valid JSON without any markdown formatting or extra text."},
-                {"role": "assistant", "content": "{"}
+                {
+                    "role": "user",
+                    "content": request.prompt
+                    + "\n\nPlease output ONLY valid JSON without any markdown formatting or extra text.",
+                },
+                {"role": "assistant", "content": "{"},
             ],
             "temperature": request.config.temperature,
             "top_p": request.config.top_p,
         }
-        
-        response = requests.post(self.base_url, headers=headers, json=payload, timeout=request.config.timeout)
-        
+
+        response = requests.post(
+            self.base_url, headers=headers, json=payload, timeout=request.config.timeout
+        )
+
         if not response.ok:
             from app.services.llm.exceptions import LLMProviderError
+
             raise LLMProviderError(f"Anthropic API error: {response.text}")
-            
+
         data = response.json()
-        
+
         content = ""
         for block in data.get("content", []):
             if block.get("type") == "text":
                 content += block.get("text", "")
-                
+
         # We prefilled '{', so we prepend it back to the response content
         content = "{" + content
-        
+
         usage = data.get("usage", {})
-        
+
         return LLMResponse(
             content=content,
             model_used=self.model_name,

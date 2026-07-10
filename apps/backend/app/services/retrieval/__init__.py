@@ -13,5 +13,5 @@ __all__ = [
     "RetrievedChunk",
     "RetrievalResult",
     "BaseRetrievalStrategy",
-    "strategy_registry"
+    "strategy_registry",
 ]

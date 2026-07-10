@@ -61,7 +61,7 @@ class BaseConnector(ABC):
         pass
 
     # --- Synchronization Interface ---
-    
+
     @abstractmethod
     def validate(self) -> bool:
         """Validate connection and permissions for synchronization."""
@@ -102,8 +102,7 @@ class BaseConnector(ABC):
     def metadata(self) -> ConnectorProfile:
         """Returns the full ConnectorProfile."""
         return ConnectorProfile(
-            metadata=self.get_metadata(),
-            health_status=self.health_check()
+            metadata=self.get_metadata(), health_status=self.health_check()
         )
 
     def webhook(self, payload: Dict[str, Any]) -> Any:
@@ -113,4 +112,3 @@ class BaseConnector(ABC):
     def poll(self, last_checkpoint: Any = None) -> List[Any]:
         """Formal alias for poll_changes."""
         return self.poll_changes(last_checkpoint)
-

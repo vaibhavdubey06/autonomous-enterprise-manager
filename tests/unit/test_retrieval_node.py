@@ -12,7 +12,7 @@ def test_retrieval_node(mocker):
     mock_chunk.source = "source1"
     mock_chunk.repository = "repo1"
     mock_chunk.citation = "cit1"
-    
+
     mock_result = mocker.MagicMock()
     mock_result.chunks = [mock_chunk]
     mock_result.strategy_used = "mock"

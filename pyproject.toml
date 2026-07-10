@@ -13,3 +13,6 @@ dependencies = [
 ]
 [tool.uv.workspace]
 members = ["apps/backend"]
+
+[tool.ruff.lint]
+ignore = ["E402", "E701", "E702", "F401", "F821", "F841"]

@@ -14,7 +14,7 @@ class ProductionReadinessAnalyzer:
 
         if availability < 0.999:
             score -= 20
-            issues.append(f"Availability below target: {availability*100:.2f}%")
+            issues.append(f"Availability below target: {availability * 100:.2f}%")
 
         if budget < 50.0:
             score -= 15

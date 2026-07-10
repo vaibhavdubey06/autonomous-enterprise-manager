@@ -10,7 +10,7 @@ class BaseDetector(ABC):
     Abstract interface for all Guardrail Detectors.
     Detectors analyze requests or responses and yield findings.
     """
-    
+
     @property
     @abstractmethod
     def name(self) -> str:
@@ -21,14 +21,19 @@ class BaseDetector(ABC):
     def applies_to_request(self) -> bool:
         """Whether this detector should run before the LLM is called."""
         return True
-        
+
     @property
     def applies_to_response(self) -> bool:
         """Whether this detector should run after the LLM has responded."""
         return False
 
     @abstractmethod
-    def analyze(self, request: LLMRequest, response: Optional[LLMResponse] = None, context: Optional[Dict[str, Any]] = None) -> List[GuardrailFinding]:
+    def analyze(
+        self,
+        request: LLMRequest,
+        response: Optional[LLMResponse] = None,
+        context: Optional[Dict[str, Any]] = None,
+    ) -> List[GuardrailFinding]:
         """
         Analyze the incoming request or outgoing response.
         If analyzing the request, `response` will be None.

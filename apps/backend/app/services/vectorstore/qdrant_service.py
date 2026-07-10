@@ -10,6 +10,7 @@ from app.core.config import settings
 @lru_cache()
 def get_client():
     import os
+
     if os.environ.get("USE_SQLITE") == "true":
         return QdrantClient(":memory:")
     return QdrantClient(url=settings.QDRANT_URL)
@@ -18,12 +19,12 @@ def get_client():
 COLLECTION_NAME = "documents"
 SEMANTIC_CACHE_COLLECTION = "semantic_cache"
 
+
 def create_collection():
 
     collections = [c.name for c in get_client().get_collections().collections]
 
     if COLLECTION_NAME not in collections:
-
         get_client().create_collection(
             collection_name=COLLECTION_NAME,
             vectors_config=VectorParams(
@@ -184,6 +185,7 @@ def search(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Search failed: {e}")
 
+
 def keyword_search(
     query: str,
     limit: int = 5,
@@ -195,22 +197,28 @@ def keyword_search(
     Note: Qdrant scroll API does not natively score by BM25 unless configured with a sparse vector index.
     We return pseudo-scores or rely on RRF downstream.
     """
-    from fastapi import HTTPException
     from qdrant_client.models import Filter, FieldCondition, MatchText, MatchValue
-    
+
     if not query or not query.strip():
         return []
-        
+
     must_conditions = [FieldCondition(key="text", match=MatchText(text=query))]
     if source_filter:
-        must_conditions.append(FieldCondition(key="source", match=MatchValue(value=source_filter)))
-        
+        must_conditions.append(
+            FieldCondition(key="source", match=MatchValue(value=source_filter))
+        )
+
     must_not_conditions = []
     if exclude_source:
-        must_not_conditions.append(FieldCondition(key="source", match=MatchValue(value=exclude_source)))
-        
-    query_filter = Filter(must=must_conditions, must_not=must_not_conditions if must_not_conditions else None)
-    
+        must_not_conditions.append(
+            FieldCondition(key="source", match=MatchValue(value=exclude_source))
+        )
+
+    query_filter = Filter(
+        must=must_conditions,
+        must_not=must_not_conditions if must_not_conditions else None,
+    )
+
     try:
         # Use scroll to get points matching the text filter
         results, _ = get_client().scroll(
@@ -218,9 +226,9 @@ def keyword_search(
             scroll_filter=query_filter,
             limit=limit,
             with_payload=True,
-            with_vectors=False
+            with_vectors=False,
         )
-        
+
         # We assign a pseudo-score of 1.0 since scroll doesn't score. RRF will rank by position.
         return [
             {
@@ -243,5 +251,6 @@ def keyword_search(
         ]
     except Exception as e:
         import logging
+
         logging.error(f"Keyword search failed: {e}")
         return []

@@ -33,11 +33,11 @@ class TaskStatus(str, Enum):
 
 
 class AutonomyLevel(int, Enum):
-    LEVEL_0 = 0 # Assistant
-    LEVEL_1 = 1 # Suggest Plan
-    LEVEL_2 = 2 # Auto Execute
-    LEVEL_3 = 3 # Auto Recover
-    LEVEL_4 = 4 # Continuous Optimization
+    LEVEL_0 = 0  # Assistant
+    LEVEL_1 = 1  # Suggest Plan
+    LEVEL_2 = 2  # Auto Execute
+    LEVEL_3 = 3  # Auto Recover
+    LEVEL_4 = 4  # Continuous Optimization
 
 
 class ApprovalGate(BaseModel):
@@ -63,9 +63,15 @@ class Task(BaseModel):
     reasoning: str = ""
     dependencies: List[str] = Field(default_factory=list)
     dependents: List[str] = Field(default_factory=list)
-    execution_group: int = Field(default=0, description="Topological parallel execution group")
-    complexity: float = Field(default=1.0, description="Estimated task complexity (1-10)")
-    execution_policy: ExecutionPolicy = Field(default=ExecutionPolicy.CONTINUE, description="Failure handling policy")
+    execution_group: int = Field(
+        default=0, description="Topological parallel execution group"
+    )
+    complexity: float = Field(
+        default=1.0, description="Estimated task complexity (1-10)"
+    )
+    execution_policy: ExecutionPolicy = Field(
+        default=ExecutionPolicy.CONTINUE, description="Failure handling policy"
+    )
     context: Dict[str, Any] = Field(default_factory=dict)
     artifacts: List[str] = Field(
         default_factory=list, description="Output artifact paths"
@@ -92,7 +98,7 @@ class ExecutionPlan(BaseModel):
     approval_gates: List[ApprovalGate] = Field(default_factory=list)
     workflow_template: Optional[str] = None
     milestones: List[str] = Field(default_factory=list)
-    
+
     # New Declarative Workflow Pack fields
     metadata: WorkflowMetadata = Field(default_factory=WorkflowMetadata)
     recovery_policies: List[str] = Field(default_factory=list)
@@ -121,7 +127,7 @@ class SupervisorState(TypedDict, total=False):
     completed_tasks: List[str]
     failed_tasks: List[str]
     task_results: List[Dict[str, Any]]
-    
+
     # Advanced state tracking
     replan_count: int
     recovery_cycles: int
@@ -134,6 +140,6 @@ class SupervisorState(TypedDict, total=False):
     # Metrics
     execution_time_ms: float
     use_collaboration: bool
-    
+
     # Executive Council
     executive_decision: Dict[str, Any]

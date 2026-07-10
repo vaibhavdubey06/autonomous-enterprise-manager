@@ -56,12 +56,22 @@ class CTOAgent(BaseExecutiveAgent):
             ],
             required_tools=[],
             supported_sources=["GitHub", "Architecture Docs", "Technical Memory"],
-            responsibilities=["Technical direction", "Architecture validation", "Engineering practices"],
-            decision_authority=["Engineering standards", "Architecture patterns", "Technology stack"],
+            responsibilities=[
+                "Technical direction",
+                "Architecture validation",
+                "Engineering practices",
+            ],
+            decision_authority=[
+                "Engineering standards",
+                "Architecture patterns",
+                "Technology stack",
+            ],
             inputs=["Technical proposals", "Codebase context", "System diagrams"],
             outputs=["Architecture review", "Technical plan", "Refactoring guide"],
             memory_requirements=["Technical memory", "Architecture decisions"],
-            approval_requirements=["Requires CFO approval for major infrastructure spend"],
+            approval_requirements=[
+                "Requires CFO approval for major infrastructure spend"
+            ],
             escalation_rules=["Escalate to CEO for major platform shifts"],
             decision_boundaries=["Does not approve budgets"],
         )

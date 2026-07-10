@@ -1,35 +1,44 @@
 import os
-import json
-import csv
 from typing import Dict, Any
+
 
 class E2EReportGenerator:
     """
     Generates the final Multi-Dimensional Readiness Assessment, Release Gate, and Browser Reports.
     """
-    
+
     def __init__(self, output_dir: str):
         self.output_dir = output_dir
         os.makedirs(self.output_dir, exist_ok=True)
-        
-    def generate_engineering_report(self, total_scenarios: int, success_count: int, metrics: Dict[str, Any], browser_metrics: Dict[str, Any], load_metrics: Dict[str, Any], coverage: Dict[str, bool]) -> str:
+
+    def generate_engineering_report(
+        self,
+        total_scenarios: int,
+        success_count: int,
+        metrics: Dict[str, Any],
+        browser_metrics: Dict[str, Any],
+        load_metrics: Dict[str, Any],
+        coverage: Dict[str, bool],
+    ) -> str:
         """
         Generates the comprehensive Enterprise Engineering Report.
         """
-        success_rate = (success_count / total_scenarios * 100) if total_scenarios else 0.0
+        success_rate = (
+            (success_count / total_scenarios * 100) if total_scenarios else 0.0
+        )
         ai_quality = success_rate * 0.95
         infrastructure = 100 if not load_metrics.get("error_count", 0) else 85.0
         reliability = browser_metrics.get("pass_rate", 1.0) * 100
-        
+
         ent_readiness = (ai_quality + infrastructure + reliability) / 3
         os_readiness = ent_readiness - 2.0
-        
+
         gate_status = "FAIL"
         if ent_readiness > 90:
             gate_status = "PASS"
         elif ent_readiness > 70:
             gate_status = "PASS WITH WARNINGS"
-            
+
         md_content = f"""# Enterprise End-to-End Validation Dashboard
 
 ## 10. Release Gate
@@ -147,7 +156,7 @@ class E2EReportGenerator:
 ---
 
 ## 8. Browser Report
-- Playwright Pass Rate: {browser_metrics.get('pass_rate', 1.0) * 100}%
+- Playwright Pass Rate: {browser_metrics.get("pass_rate", 1.0) * 100}%
 - Screenshots Captured: 0
 - Console Errors: 0
 - Network Errors: 0
@@ -161,9 +170,9 @@ class E2EReportGenerator:
 - **Reliability**: Stable
 - **Cost**: Improved (Semantic Cache integration reduced token usage by 42%)
 """
-        
+
         md_path = os.path.join(self.output_dir, "engineering_report.md")
         with open(md_path, "w", encoding="utf-8") as f:
             f.write(md_content)
-            
+
         return md_path

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Callable, Any
+from typing import Callable
 from app.services.llm.models import PipelineContext
 
 
@@ -11,7 +11,11 @@ class BaseMiddleware(ABC):
     """
 
     @abstractmethod
-    def process(self, context: PipelineContext, next_middleware: Callable[[PipelineContext], None]) -> None:
+    def process(
+        self,
+        context: PipelineContext,
+        next_middleware: Callable[[PipelineContext], None],
+    ) -> None:
         """
         Process the request/response.
         Must call `next_middleware(context)` to continue the chain.

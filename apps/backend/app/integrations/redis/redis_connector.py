@@ -1,5 +1,5 @@
 from app.integrations.base.connector_registry import connector_registry
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from app.integrations.base.base_connector import BaseConnector
 from app.integrations.schemas.connector_models import (
     ConnectorHealthStatus,
@@ -8,6 +8,7 @@ from app.integrations.schemas.connector_models import (
     ExecutionResponse,
     AuthType,
 )
+
 
 class RedisConnector(BaseConnector):
     @classmethod
@@ -36,7 +37,9 @@ class RedisConnector(BaseConnector):
         return capability in self.discover_capabilities()
 
     def execute(self, request: ExecutionRequest) -> ExecutionResponse:
-        return ExecutionResponse(success=True, data={"message": f"Executed {request.operation} on redis"})
+        return ExecutionResponse(
+            success=True, data={"message": f"Executed {request.operation} on redis"}
+        )
 
     def disconnect(self) -> None:
         pass
@@ -64,5 +67,6 @@ class RedisConnector(BaseConnector):
 
     def sync(self) -> None:
         pass
+
 
 connector_registry.register(RedisConnector)

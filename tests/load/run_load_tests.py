@@ -20,8 +20,8 @@ async def run_load_test(concurrent_users: int):
 
     successes = sum(1 for r in results if r is True)
     print(f"Completed in {duration:.2f}s")
-    print(f"Throughput: {concurrent_users/duration:.2f} req/s")
-    print(f"Success Rate: {successes/concurrent_users*100:.2f}%")
+    print(f"Throughput: {concurrent_users / duration:.2f} req/s")
+    print(f"Success Rate: {successes / concurrent_users * 100:.2f}%")
 
 
 if __name__ == "__main__":

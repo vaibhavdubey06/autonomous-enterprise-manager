@@ -1,7 +1,7 @@
 import logging
 import re
 import time
-from typing import Any, AsyncGenerator, Dict, List, Optional, Callable
+from typing import AsyncGenerator, List, Optional, Callable
 from pydantic import BaseModel
 
 from app.services.llm.exceptions import (
@@ -11,8 +11,6 @@ from app.services.llm.exceptions import (
     LLMProviderError,
 )
 from app.services.llm.models import LLMConfig, LLMRequest, LLMResponse, PipelineContext
-from app.services.llm.providers.base import AbstractLLMProvider
-from app.services.llm.providers.gemini import GeminiProvider
 from app.services.llm.pipeline.base import BaseMiddleware
 from app.services.llm.pipeline.middlewares import (
     ContextBuilderMiddleware,
@@ -20,7 +18,7 @@ from app.services.llm.pipeline.middlewares import (
     GuardrailMiddleware,
     SchemaValidatorMiddleware,
     TelemetryMiddleware,
-    SemanticCacheMiddleware
+    SemanticCacheMiddleware,
 )
 
 logger = logging.getLogger(__name__)
@@ -30,6 +28,7 @@ from app.services.llm.router.routing_engine import RoutingEngine
 from app.services.llm.router.routing_policy import RoutingPolicy
 from app.services.llm.router.provider_health import provider_health_service
 
+
 class LLMGateway:
     """
     Enterprise LLM Gateway.
@@ -37,7 +36,11 @@ class LLMGateway:
     Implements middleware pipeline and dynamic provider failover.
     """
 
-    def __init__(self, router: Optional[RoutingEngine] = None, middlewares: Optional[List[BaseMiddleware]] = None):
+    def __init__(
+        self,
+        router: Optional[RoutingEngine] = None,
+        middlewares: Optional[List[BaseMiddleware]] = None,
+    ):
         if router is None:
             from app.services.llm.router.registry import provider_registry
             from app.services.llm.router.provider_health import provider_health_service
@@ -45,96 +48,120 @@ class LLMGateway:
             from app.services.llm.providers.openrouter import OpenRouterProvider
             from app.services.llm.providers.anthropic import AnthropicProvider
             from app.services.llm.providers.bedrock import BedrockProvider
-            
+
             # Register providers
             if not provider_registry.get_all():
                 provider_registry.register(GeminiProvider())
                 provider_registry.register(OpenRouterProvider())
                 provider_registry.register(AnthropicProvider())
                 provider_registry.register(BedrockProvider())
-            
+
             router = RoutingEngine(provider_registry, provider_health_service)
-            
+
         self.router = router
-        
+
         # Default middleware pipeline if not provided
-        self.middlewares = middlewares if middlewares is not None else [
-            TelemetryMiddleware(),
-            ContextBuilderMiddleware(),
-            SemanticCacheMiddleware(),
-            PromptCompilerMiddleware(),
-            GuardrailMiddleware(),
-            SchemaValidatorMiddleware()
-        ]
-        
-    def _execute_with_fallback(self, func_name: str, ctx: PipelineContext, *args, **kwargs) -> LLMResponse:
+        self.middlewares = (
+            middlewares
+            if middlewares is not None
+            else [
+                TelemetryMiddleware(),
+                ContextBuilderMiddleware(),
+                SemanticCacheMiddleware(),
+                PromptCompilerMiddleware(),
+                GuardrailMiddleware(),
+                SchemaValidatorMiddleware(),
+            ]
+        )
+
+    def _execute_with_fallback(
+        self, func_name: str, ctx: PipelineContext, *args, **kwargs
+    ) -> LLMResponse:
         """Dynamic fallback engine that selects alternative providers upon failure."""
         request = ctx.request
         max_retries = request.config.retry_count
         base_delay = 1.0
         exclude_providers = set()
-        
+
         ctx.metadata["fallback_count"] = 0
         ctx.metadata["candidate_count"] = len(self.router.registry.get_all())
-        
+
         # Loop over possible fallback candidates
         # We try up to max_retries different providers if they fail completely
         for attempt in range(1, max_retries + 1):
             try:
                 # Select best provider dynamically, excluding failed ones
-                policy = RoutingPolicy.BALANCED # default for now, could be dynamic
-                provider = self.router.select_provider(request, policy=policy, exclude_providers=exclude_providers)
+                policy = RoutingPolicy.BALANCED  # default for now, could be dynamic
+                provider = self.router.select_provider(
+                    request, policy=policy, exclude_providers=exclude_providers
+                )
                 func = getattr(provider, func_name)
-                
+
                 ctx.metadata["selected_provider"] = provider.get_profile().provider_name
                 ctx.metadata["routing_policy"] = policy.value
-                ctx.metadata["provider_health"] = self.router.health_service.get_health(provider.get_profile().provider_name).health_score
+                ctx.metadata["provider_health"] = self.router.health_service.get_health(
+                    provider.get_profile().provider_name
+                ).health_score
             except ValueError as e:
                 # No more candidates available
                 logger.error(f"Routing engine exhausted providers: {e}")
                 raise LLMProviderError(f"No available providers: {e}")
-                
+
             try:
                 start_time = time.time()
                 response = func(request, *args, **kwargs)
                 latency = (time.time() - start_time) * 1000
-                provider_health_service.record_success(provider.get_profile().provider_name, latency)
+                provider_health_service.record_success(
+                    provider.get_profile().provider_name, latency
+                )
                 return response
-                
+
             except (LLMRateLimitError, LLMTimeoutError, LLMProviderError) as e:
                 provider_name = provider.get_profile().provider_name
-                
+
                 ctx.metadata["fallback_count"] += 1
-                
+
                 # Record failure stats
                 error_type = "general"
-                if isinstance(e, LLMTimeoutError): error_type = "timeout"
-                elif isinstance(e, LLMRateLimitError): error_type = "rate_limit"
-                
-                provider_health_service.record_failure(provider_name, error_type=error_type)
-                
+                if isinstance(e, LLMTimeoutError):
+                    error_type = "timeout"
+                elif isinstance(e, LLMRateLimitError):
+                    error_type = "rate_limit"
+
+                provider_health_service.record_failure(
+                    provider_name, error_type=error_type
+                )
+
                 if error_type != "rate_limit":
                     exclude_providers.add(provider_name)
-                    logger.warning(f"Provider '{provider_name}' failed (Attempt {attempt}/{max_retries}): {e}. Adding to exclude list.")
+                    logger.warning(
+                        f"Provider '{provider_name}' failed (Attempt {attempt}/{max_retries}): {e}. Adding to exclude list."
+                    )
                 else:
-                    logger.warning(f"Provider '{provider_name}' hit rate limit (Attempt {attempt}/{max_retries}): {e}. Retrying after backoff.")
-                
+                    logger.warning(
+                        f"Provider '{provider_name}' hit rate limit (Attempt {attempt}/{max_retries}): {e}. Retrying after backoff."
+                    )
+
                 if attempt == max_retries:
-                    logger.error(f"LLM request failed after {max_retries} total fallback attempts.")
+                    logger.error(
+                        f"LLM request failed after {max_retries} total fallback attempts."
+                    )
                     raise
-                
+
                 if error_type == "rate_limit":
                     delay = 60.0  # Gemini free tier requires ~60s reset
                 else:
                     delay = base_delay * attempt
-                    
+
                 logger.info(f"Sleeping for {delay}s before retry...")
                 time.sleep(delay)
-                
-            except LLMError as e:
+
+            except LLMError:
                 # Non-retryable errors
                 provider_name = provider.get_profile().provider_name
-                provider_health_service.record_failure(provider_name, error_type="general")
+                provider_health_service.record_failure(
+                    provider_name, error_type="general"
+                )
                 raise
             except Exception as e:
                 logger.error(f"Unexpected error during LLM generation: {e}")
@@ -143,63 +170,61 @@ class LLMGateway:
     def generate(self, request: LLMRequest) -> LLMResponse:
         """Gateway interface for generating text."""
         context = PipelineContext(request=request)
-        
+
         def _invoke_provider(ctx: PipelineContext) -> None:
             response = self._execute_with_fallback("generate", ctx)
             ctx.response = response
-            
+
         def _build_chain(index: int) -> Callable[[PipelineContext], None]:
             if index == len(self.middlewares):
                 return _invoke_provider
-            
+
             middleware = self.middlewares[index]
             next_func = _build_chain(index + 1)
-            
+
             def _execute_middleware(ctx: PipelineContext) -> None:
                 middleware.process(ctx, next_func)
-                
+
             return _execute_middleware
 
         # Execute the pipeline
         pipeline = _build_chain(0)
         pipeline(context)
-        
+
         return context.response
 
-    def generate_structured(self, prompt: str, schema: type[BaseModel], **kwargs) -> str:
+    def generate_structured(
+        self, prompt: str, schema: type[BaseModel], **kwargs
+    ) -> str:
         """
         Legacy signature mapping for backward compatibility.
         """
-        request = LLMRequest(
-            prompt=prompt,
-            schema=schema,
-            config=LLMConfig(**kwargs)
-        )
-        
+        request = LLMRequest(prompt=prompt, schema=schema, config=LLMConfig(**kwargs))
+
         context = PipelineContext(request=request)
-        
+
         def _invoke_provider(ctx: PipelineContext) -> None:
             response = self._execute_with_fallback("generate_structured", ctx)
             ctx.response = response
-            
+
         def _build_chain(index: int) -> Callable[[PipelineContext], None]:
             if index == len(self.middlewares):
                 return _invoke_provider
-            
+
             middleware = self.middlewares[index]
             next_func = _build_chain(index + 1)
-            
+
             def _execute_middleware(ctx: PipelineContext) -> None:
                 middleware.process(ctx, next_func)
-                
+
             return _execute_middleware
 
         # Execute the pipeline
         pipeline = _build_chain(0)
         pipeline(context)
-        
+
         return context.response.content
-        
+
     def _build_legacy_rag_prompt(self, actual_question: str, context: List[str]) -> str:
         """Constructs the strict RAG prompt according to legacy requirements."""
         system_instruction = (
@@ -233,14 +258,11 @@ class LLMGateway:
         # chat_service.py passes a pre-built prompt as the `question` argument.
         match = re.search(r"Question:\s*(.*?)\s*\n\nContext:", question, re.DOTALL)
         actual_question = match.group(1) if match else question
-        
+
         prompt = self._build_legacy_rag_prompt(actual_question, context)
-        
-        request = LLMRequest(
-            prompt=prompt,
-            config=LLMConfig(**kwargs)
-        )
-        
+
+        request = LLMRequest(prompt=prompt, config=LLMConfig(**kwargs))
+
         response = self.generate(request)
         return response.content
 

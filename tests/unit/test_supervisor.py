@@ -55,10 +55,14 @@ def test_agent_router_knowledge_fallback():
 async def test_supervisor_graph_flow():
     mock_planner = MagicMock()
     mock_planner.llm_service = MagicMock()
+
     class MockLLMResponse:
         def __init__(self, content):
             self.content = content
-    mock_planner.llm_service.generate.return_value = MockLLMResponse("Final test answer from LLM")
+
+    mock_planner.llm_service.generate.return_value = MockLLMResponse(
+        "Final test answer from LLM"
+    )
     mock_planner.plan.return_value = ExecutionPlan(
         goal="Test Goal",
         tasks=[Task(goal="T1", description="desc 1", assigned_agent="Knowledge Agent")],
@@ -110,13 +114,16 @@ async def test_supervisor_graph_flow():
 async def test_supervisor_graph_enables_collaboration_for_multi_task_plan():
     mock_planner = MagicMock()
     mock_planner.llm_service = MagicMock()
-    
+
     # Mock LLM response with serializable object
     class MockLLMResponse:
         def __init__(self, content):
             self.content = content
-    mock_planner.llm_service.generate.return_value = MockLLMResponse("Final test answer from LLM")
-    
+
+    mock_planner.llm_service.generate.return_value = MockLLMResponse(
+        "Final test answer from LLM"
+    )
+
     mock_planner.plan.return_value = ExecutionPlan(
         goal="Multi-step goal",
         tasks=[
@@ -183,8 +190,12 @@ def test_agent_router_uses_collaboration_runtime():
     mock_collaboration_manager.create_session.return_value = mock_session
     mock_collaboration_manager.form_team.return_value = mock_session
     mock_collaboration_manager.execute.return_value = None
-    mock_collaboration_manager.delegation.delegate_task.return_value = mock_delegated_task
-    mock_collaboration_manager.delegation.complete_task.return_value = mock_delegated_task
+    mock_collaboration_manager.delegation.delegate_task.return_value = (
+        mock_delegated_task
+    )
+    mock_collaboration_manager.delegation.complete_task.return_value = (
+        mock_delegated_task
+    )
     mock_collaboration_manager.complete_session = AsyncMock(return_value=None)
 
     router = AgentRouter(

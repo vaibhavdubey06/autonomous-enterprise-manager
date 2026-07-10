@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Optional
 
+
 class RetrievedChunk(BaseModel):
     id: str
     text: str
@@ -12,6 +13,7 @@ class RetrievedChunk(BaseModel):
     metadata: Dict[str, Any] = Field(default_factory=dict)
     citation: Optional[str] = None
 
+
 class QueryContext(BaseModel):
     raw_query: str
     rewritten_queries: List[str] = Field(default_factory=list)
@@ -20,6 +22,7 @@ class QueryContext(BaseModel):
     filters: Dict[str, Any] = Field(default_factory=dict)
     dynamic_top_k: int = 5
     is_complex: bool = False
+
 
 class RetrievalResult(BaseModel):
     chunks: List[RetrievedChunk] = Field(default_factory=list)

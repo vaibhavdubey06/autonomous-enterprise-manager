@@ -1,12 +1,13 @@
 from typing import List, Dict
 from evaluation.models import EvaluationResult
 
+
 class InfrastructureEvaluator:
     def evaluate(self, results: List[EvaluationResult]) -> Dict[str, float]:
         total = len(results)
         if total == 0:
             return {}
-            
+
         successful = 0
         failed = 0
         skipped = 0
@@ -15,7 +16,7 @@ class InfrastructureEvaluator:
         timeout_failures = 0
         routing_failures = 0
         total_retries = 0
-        
+
         for r in results:
             if r.execution_status == "SUCCESS":
                 successful += 1
@@ -32,12 +33,14 @@ class InfrastructureEvaluator:
                     routing_failures += 1
                 elif cat.startswith("PROVIDER"):
                     provider_failures += 1
-                    
+
             total_retries += r.retry_count
-            
+
         availability = successful / total if total > 0 else 1.0
-        provider_availability = (total - (provider_failures + quota_failures + timeout_failures)) / total
-        
+        provider_availability = (
+            total - (provider_failures + quota_failures + timeout_failures)
+        ) / total
+
         return {
             "availability": availability,
             "provider_availability": provider_availability,
@@ -49,5 +52,5 @@ class InfrastructureEvaluator:
             "infrastructure_completion": (successful + skipped) / total,
             "successful_requests": successful,
             "skipped_requests": skipped,
-            "failed_requests": failed
+            "failed_requests": failed,
         }

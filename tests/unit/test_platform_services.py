@@ -74,6 +74,7 @@ def test_domain_event_creation():
 
 import asyncio
 
+
 @pytest.mark.asyncio
 async def test_in_memory_event_bus_publish_subscribe():
     bus = InMemoryEventBus()

@@ -1,5 +1,4 @@
 import logging
-import json
 import time
 from typing import AsyncGenerator
 import requests
@@ -20,19 +19,32 @@ def _is_anthropic_model(model_name: str) -> bool:
 
 class BedrockProvider(AbstractLLMProvider):
     def __init__(self):
-        self.bearer_token = settings.AWS_BEARER_TOKEN_BEDROCK if hasattr(settings, "AWS_BEARER_TOKEN_BEDROCK") else None
-        self.model_name = settings.AWS_BEDROCK_MODEL if hasattr(settings, "AWS_BEDROCK_MODEL") else "eu.anthropic.claude-3-haiku-20240307-v1:0"
-        self.region = settings.AWS_REGION if hasattr(settings, "AWS_REGION") else "eu-north-1"
+        self.bearer_token = (
+            settings.AWS_BEARER_TOKEN_BEDROCK
+            if hasattr(settings, "AWS_BEARER_TOKEN_BEDROCK")
+            else None
+        )
+        self.model_name = (
+            settings.AWS_BEDROCK_MODEL
+            if hasattr(settings, "AWS_BEDROCK_MODEL")
+            else "eu.anthropic.claude-3-haiku-20240307-v1:0"
+        )
+        self.region = (
+            settings.AWS_REGION if hasattr(settings, "AWS_REGION") else "eu-north-1"
+        )
 
         # URL-encode the model ID. Cross-region profile IDs contain colons and slashes.
         from urllib.parse import quote
+
         encoded_model = quote(self.model_name, safe="")
         self.base_url = f"https://bedrock-runtime.{self.region}.amazonaws.com/model/{encoded_model}/invoke"
 
         # Qwen and other non-Anthropic models use the converse/invoke-with-response-stream
         # endpoint with an OpenAI-compatible payload format.
         self._is_anthropic = _is_anthropic_model(self.model_name)
-        logger.info(f"BedrockProvider: model={self.model_name}, region={self.region}, anthropic={self._is_anthropic}")
+        logger.info(
+            f"BedrockProvider: model={self.model_name}, region={self.region}, anthropic={self._is_anthropic}"
+        )
 
         if not self.bearer_token:
             logger.warning("AWS_BEARER_TOKEN_BEDROCK is not set.")
@@ -52,7 +64,9 @@ class BedrockProvider(AbstractLLMProvider):
             requests_per_minute=50,
         )
 
-    def _build_anthropic_payload(self, prompt: str, max_tokens: int, temperature: float, top_p: float) -> dict:
+    def _build_anthropic_payload(
+        self, prompt: str, max_tokens: int, temperature: float, top_p: float
+    ) -> dict:
         return {
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": max_tokens,
@@ -61,7 +75,9 @@ class BedrockProvider(AbstractLLMProvider):
             "top_p": top_p,
         }
 
-    def _build_qwen_payload(self, prompt: str, max_tokens: int, temperature: float, top_p: float) -> dict:
+    def _build_qwen_payload(
+        self, prompt: str, max_tokens: int, temperature: float, top_p: float
+    ) -> dict:
         """OpenAI-compatible payload format used by Qwen and other third-party models on Bedrock."""
         return {
             "messages": [{"role": "user", "content": prompt}],
@@ -97,16 +113,22 @@ class BedrockProvider(AbstractLLMProvider):
     def _post(self, payload: dict, timeout: int) -> dict:
         if not self.bearer_token:
             from app.services.llm.exceptions import LLMProviderError
-            raise LLMProviderError("Bedrock client not initialized (missing bearer token)")
+
+            raise LLMProviderError(
+                "Bedrock client not initialized (missing bearer token)"
+            )
 
         headers = {
             "Authorization": f"Bearer {self.bearer_token}",
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
-        response = requests.post(self.base_url, headers=headers, json=payload, timeout=timeout)
+        response = requests.post(
+            self.base_url, headers=headers, json=payload, timeout=timeout
+        )
         if not response.ok:
             from app.services.llm.exceptions import LLMProviderError
+
             raise LLMProviderError(f"Bedrock API error: {response.text}")
         return response.json()
 
@@ -142,7 +164,10 @@ class BedrockProvider(AbstractLLMProvider):
 
     def generate_structured(self, request: LLMRequest) -> LLMResponse:
         start_time = time.time()
-        json_prompt = request.prompt + "\n\nPlease output ONLY valid JSON without any markdown formatting or extra text."
+        json_prompt = (
+            request.prompt
+            + "\n\nPlease output ONLY valid JSON without any markdown formatting or extra text."
+        )
 
         if self._is_anthropic:
             payload = {

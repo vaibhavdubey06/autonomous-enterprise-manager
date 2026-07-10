@@ -71,8 +71,7 @@ class DomainExecutiveAgent(BaseExecutiveAgent):
             }
             result_state = self.knowledge_agent.run(sub_state)
             summary = result_state.get("answer") or (
-                f"{self.get_profile().title} synthesized evidence "
-                f"for {task.goal}."
+                f"{self.get_profile().title} synthesized evidence for {task.goal}."
             )
             reasoning = (
                 f"{self.get_profile().agent_name} used the knowledge graph "
@@ -155,12 +154,11 @@ class CEOAgent(DomainExecutiveAgent):
         "supervisor_interaction": "Top-level synthesis role.",
         "governance_interaction": "Requests approval gates.",
         "workflow_engine_interaction": "Approves or blocks workflows.",
-    
-        "decision_authority": ['Final executive arbitration and veto'],
-        "inputs": ['Council recommendations', 'Strategic objectives'],
-        "memory_requirements": ['Strategic memory', 'Governance history'],
-        "approval_requirements": ['Board of Directors for major shifts'],
-        "escalation_rules": ['Board of Directors'],
+        "decision_authority": ["Final executive arbitration and veto"],
+        "inputs": ["Council recommendations", "Strategic objectives"],
+        "memory_requirements": ["Strategic memory", "Governance history"],
+        "approval_requirements": ["Board of Directors for major shifts"],
+        "escalation_rules": ["Board of Directors"],
     }
     default_recommendations = [
         "Align stakeholders on the decision.",
@@ -197,19 +195,16 @@ class COOAgent(DomainExecutiveAgent):
         ],
         "memory_usage": "Operational memory and incidents.",
         "prompt_strategy": "Operational and reliability-focused.",
-        "delegation_strategy": (
-            "Delegates to workflow and incident specialists"
-        ),
+        "delegation_strategy": ("Delegates to workflow and incident specialists"),
         "outputs": ["Operating directive", "execution summary", "blockers"],
         "supervisor_interaction": "Provides status aggregation.",
         "governance_interaction": "Flags actions needing risk review.",
         "workflow_engine_interaction": "Coordinates workflow execution.",
-    
-        "decision_authority": ['Operational procedures', 'Execution sequencing'],
-        "inputs": ['Throughput metrics', 'Operational plans'],
-        "memory_requirements": ['Operational memory', 'Incident history'],
-        "approval_requirements": ['CEO approval for company-wide process changes'],
-        "escalation_rules": ['Escalate to CEO for execution blockers'],
+        "decision_authority": ["Operational procedures", "Execution sequencing"],
+        "inputs": ["Throughput metrics", "Operational plans"],
+        "memory_requirements": ["Operational memory", "Incident history"],
+        "approval_requirements": ["CEO approval for company-wide process changes"],
+        "escalation_rules": ["Escalate to CEO for execution blockers"],
     }
     default_recommendations = [
         "Sequence the next operational steps.",
@@ -250,12 +245,11 @@ class CFOAgent(DomainExecutiveAgent):
         "supervisor_interaction": "Finance gate in executive decisions.",
         "governance_interaction": "Required approver for finance commitments.",
         "workflow_engine_interaction": "Blocks or approves finance workflows.",
-    
-        "decision_authority": ['Budget allocation', 'Financial forecasting'],
-        "inputs": ['Cost estimates', 'Financial models'],
-        "memory_requirements": ['Financial memory', 'Forecast context'],
-        "approval_requirements": ['CEO approval for budget overrides'],
-        "escalation_rules": ['Escalate to CEO for budget violations'],
+        "decision_authority": ["Budget allocation", "Financial forecasting"],
+        "inputs": ["Cost estimates", "Financial models"],
+        "memory_requirements": ["Financial memory", "Forecast context"],
+        "approval_requirements": ["CEO approval for budget overrides"],
+        "escalation_rules": ["Escalate to CEO for budget violations"],
     }
     default_recommendations = [
         "Validate budget impact before proceeding.",
@@ -298,12 +292,11 @@ class CMOAgent(DomainExecutiveAgent):
         "supervisor_interaction": "Provides marketing direction.",
         "governance_interaction": "Flags consent-sensitive actions.",
         "workflow_engine_interaction": "Coordinates campaign workflows.",
-    
-        "decision_authority": ['Brand strategy', 'Campaign execution'],
-        "inputs": ['Market research', 'Campaign performance'],
-        "memory_requirements": ['Marketing memory', 'Customer context'],
-        "approval_requirements": ['CLO approval for privacy-sensitive campaigns'],
-        "escalation_rules": ['Escalate to CEO for brand risks'],
+        "decision_authority": ["Brand strategy", "Campaign execution"],
+        "inputs": ["Market research", "Campaign performance"],
+        "memory_requirements": ["Marketing memory", "Customer context"],
+        "approval_requirements": ["CLO approval for privacy-sensitive campaigns"],
+        "escalation_rules": ["Escalate to CEO for brand risks"],
     }
     default_recommendations = [
         "Validate segmentation and channel assumptions.",
@@ -340,19 +333,16 @@ class CHROAgent(DomainExecutiveAgent):
         ],
         "memory_usage": "HR memory and org context.",
         "prompt_strategy": "Fairness- and policy-aware.",
-        "delegation_strategy": (
-            "Delegates analysis to planning and analytics roles"
-        ),
+        "delegation_strategy": ("Delegates analysis to planning and analytics roles"),
         "outputs": ["Hiring rec", "staffing plan", "policy note"],
         "supervisor_interaction": "Reports human-capital impacts.",
         "governance_interaction": "Engages governance for privacy rules.",
         "workflow_engine_interaction": "Coordinates hiring workflows.",
-    
-        "decision_authority": ['People policies', 'Workforce planning'],
-        "inputs": ['Staffing requirements', 'Policy drafts'],
-        "memory_requirements": ['HR memory', 'Org context'],
-        "approval_requirements": ['CLO approval for compliance-related policies'],
-        "escalation_rules": ['Escalate to CEO for critical talent loss'],
+        "decision_authority": ["People policies", "Workforce planning"],
+        "inputs": ["Staffing requirements", "Policy drafts"],
+        "memory_requirements": ["HR memory", "Org context"],
+        "approval_requirements": ["CLO approval for compliance-related policies"],
+        "escalation_rules": ["Escalate to CEO for critical talent loss"],
     }
     default_recommendations = [
         "Confirm role scope and hiring criteria.",
@@ -389,19 +379,16 @@ class CLOAgent(DomainExecutiveAgent):
         ],
         "memory_usage": "Legal memory and clause history.",
         "prompt_strategy": "Precedent-driven and risk-focused.",
-        "delegation_strategy": (
-            "Delegates fact finding to research and planning"
-        ),
+        "delegation_strategy": ("Delegates fact finding to research and planning"),
         "outputs": ["Legal opinion", "redline summary", "approval note"],
         "supervisor_interaction": "Provides legal escalation.",
         "governance_interaction": "Primary legal approver.",
         "workflow_engine_interaction": "Approves legal-sensitive workflows.",
-    
-        "decision_authority": ['Legal compliance', 'Risk mitigation'],
-        "inputs": ['Contracts', 'Policy documents'],
-        "memory_requirements": ['Legal memory', 'Clause history'],
-        "approval_requirements": ['None (Ultimate legal authority)'],
-        "escalation_rules": ['Escalate to CEO for high legal risk'],
+        "decision_authority": ["Legal compliance", "Risk mitigation"],
+        "inputs": ["Contracts", "Policy documents"],
+        "memory_requirements": ["Legal memory", "Clause history"],
+        "approval_requirements": ["None (Ultimate legal authority)"],
+        "escalation_rules": ["Escalate to CEO for high legal risk"],
     }
     default_recommendations = [
         "Verify contractual exposure before proceeding.",
@@ -437,19 +424,16 @@ class CISOAgent(DomainExecutiveAgent):
         ],
         "memory_usage": "Security memory and control history.",
         "prompt_strategy": "Threat-model oriented.",
-        "delegation_strategy": (
-            "Delegates triage to incident response and analytics"
-        ),
+        "delegation_strategy": ("Delegates triage to incident response and analytics"),
         "outputs": ["Security finding", "mitigation plan", "approval note"],
         "supervisor_interaction": "Provides security approval or escalation.",
         "governance_interaction": "Mandatory approver for high-risk actions.",
         "workflow_engine_interaction": "Controls security workflows.",
-    
-        "decision_authority": ['Security controls', 'Access governance'],
-        "inputs": ['Threat reports', 'System architectures'],
-        "memory_requirements": ['Security memory', 'Control history'],
-        "approval_requirements": ['None (Can veto on security grounds)'],
-        "escalation_rules": ['Escalate to CEO for critical vulnerabilities'],
+        "decision_authority": ["Security controls", "Access governance"],
+        "inputs": ["Threat reports", "System architectures"],
+        "memory_requirements": ["Security memory", "Control history"],
+        "approval_requirements": ["None (Can veto on security grounds)"],
+        "escalation_rules": ["Escalate to CEO for critical vulnerabilities"],
     }
     default_recommendations = [
         "Apply the least-privilege path.",
@@ -488,12 +472,11 @@ class CIOAgent(DomainExecutiveAgent):
         "supervisor_interaction": "Provides systems context.",
         "governance_interaction": "Engages governance for change control.",
         "workflow_engine_interaction": "Coordinates systems workflows.",
-    
-        "decision_authority": ['Enterprise systems', 'IT integrations'],
-        "inputs": ['System requirements', 'Integration requests'],
-        "memory_requirements": ['Systems memory', 'Architecture history'],
-        "approval_requirements": ['CFO approval for IT spend'],
-        "escalation_rules": ['Escalate to CEO for system outages'],
+        "decision_authority": ["Enterprise systems", "IT integrations"],
+        "inputs": ["System requirements", "Integration requests"],
+        "memory_requirements": ["Systems memory", "Architecture history"],
+        "approval_requirements": ["CFO approval for IT spend"],
+        "escalation_rules": ["Escalate to CEO for system outages"],
     }
     default_recommendations = [
         "Validate systems impact before implementation.",
@@ -536,12 +519,11 @@ class CSOAgent(DomainExecutiveAgent):
         "supervisor_interaction": "Provides strategic framing.",
         "governance_interaction": "Requests review for high-impact changes.",
         "workflow_engine_interaction": "Supports strategy planning workflows.",
-    
-        "decision_authority": ['Long-term strategy', 'Market positioning'],
-        "inputs": ['Market trends', 'Scenario analyses'],
-        "memory_requirements": ['Strategic memory', 'Scenario history'],
-        "approval_requirements": ['CEO approval for strategic pivots'],
-        "escalation_rules": ['Escalate to CEO for strategic misalignment'],
+        "decision_authority": ["Long-term strategy", "Market positioning"],
+        "inputs": ["Market trends", "Scenario analyses"],
+        "memory_requirements": ["Strategic memory", "Scenario history"],
+        "approval_requirements": ["CEO approval for strategic pivots"],
+        "escalation_rules": ["Escalate to CEO for strategic misalignment"],
     }
     default_recommendations = [
         "Compare strategic options and tradeoffs.",
@@ -582,16 +564,13 @@ class CPOAgent(DomainExecutiveAgent):
         ),
         "outputs": ["Product brief", "roadmap rec", "priority list"],
         "supervisor_interaction": "Provides product tradeoff analysis.",
-        "governance_interaction": (
-            "Flags sensitive data and compliance actions"
-        ),
+        "governance_interaction": ("Flags sensitive data and compliance actions"),
         "workflow_engine_interaction": "Coordinates product workflows.",
-    
-        "decision_authority": ['Product roadmap', 'Feature prioritization'],
-        "inputs": ['Customer feedback', 'Product analytics'],
-        "memory_requirements": ['Product memory', 'Customer feedback'],
-        "approval_requirements": ['CTO alignment for technical feasibility'],
-        "escalation_rules": ['Escalate to CEO for roadmap conflicts'],
+        "decision_authority": ["Product roadmap", "Feature prioritization"],
+        "inputs": ["Customer feedback", "Product analytics"],
+        "memory_requirements": ["Product memory", "Customer feedback"],
+        "approval_requirements": ["CTO alignment for technical feasibility"],
+        "escalation_rules": ["Escalate to CEO for roadmap conflicts"],
     }
     default_recommendations = [
         "Clarify customer impact and priority order.",

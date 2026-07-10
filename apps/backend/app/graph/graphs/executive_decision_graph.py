@@ -64,9 +64,7 @@ def _build_node(node_name: str, summary_key: str, answer_prefix: str):
     return _node
 
 
-def build_executive_decision_graph(
-    _services: ServiceContainer, _tool_registry
-):
+def build_executive_decision_graph(_services: ServiceContainer, _tool_registry):
     graph = StateGraph(GraphState)
     graph.add_node(
         "context",

@@ -78,6 +78,6 @@ def test_secret_leakage():
                 if pattern.search(content):
                     findings.append(str(py_file.name))
 
-    assert (
-        len(findings) == 0
-    ), f"Potential hardcoded secrets found in: {', '.join(findings)}"
+    assert len(findings) == 0, (
+        f"Potential hardcoded secrets found in: {', '.join(findings)}"
+    )

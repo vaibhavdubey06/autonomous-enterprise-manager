@@ -9,11 +9,15 @@ import logging
 import time
 from datetime import datetime, timezone
 
-from app.core.config import settings
 from app.graph.state import GraphState
 from app.graph.dependencies import ServiceContainer
 from app.services.retrieval import RetrievalEngine
-from app.services.retrieval.components import QueryAnalyzer, QueryRewriter, ContextOptimizer, CitationBuilder
+from app.services.retrieval.components import (
+    QueryAnalyzer,
+    QueryRewriter,
+    ContextOptimizer,
+    CitationBuilder,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -24,8 +28,9 @@ engine = RetrievalEngine(
     rewriter=QueryRewriter(),
     compressor=ContextOptimizer(),
     citation_builder=CitationBuilder(),
-    reranker_service=None # Will be injected below
+    reranker_service=None,  # Will be injected below
 )
+
 
 def make_retrieval_node(services: ServiceContainer):
     """Factory that closes over the ServiceContainer."""
@@ -48,11 +53,11 @@ def make_retrieval_node(services: ServiceContainer):
         else:
             try:
                 question = state.get("question", "")
-                
+
                 # Use RetrievalEngine to fetch optimized and cited chunks
                 filters = {"exclude_source": "conversation"}
                 retrieval_result = engine.retrieve(query=question, filters=filters)
-                
+
                 # Convert back to standard dict list for backwards compatibility
                 enterprise_context = [
                     {
@@ -65,11 +70,11 @@ def make_retrieval_node(services: ServiceContainer):
                         "repository": c.repository,
                         "path": c.metadata.get("path", ""),
                         "url": c.metadata.get("url", ""),
-                        "citation": c.citation
+                        "citation": c.citation,
                     }
                     for c in retrieval_result.chunks
                 ]
-                
+
                 logger.info(
                     f"RetrievalNode — engine retrieved {len(enterprise_context)} chunks using {retrieval_result.strategy_used}"
                 )
@@ -100,10 +105,9 @@ def make_retrieval_node(services: ServiceContainer):
             **state,
             "enterprise_context": enterprise_context,
             "retrieved_chunks": enterprise_context,
-            "reranked_chunks": enterprise_context, # Now identical since Engine handles reranking
+            "reranked_chunks": enterprise_context,  # Now identical since Engine handles reranking
             "execution_trace": trace,
             "metrics": metrics,
         }
 
     return retrieval_node
-

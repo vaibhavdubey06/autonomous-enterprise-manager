@@ -1,5 +1,5 @@
 from app.integrations.base.connector_registry import connector_registry
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from app.integrations.base.base_connector import BaseConnector
 from app.integrations.schemas.connector_models import (
     ConnectorHealthStatus,
@@ -9,6 +9,7 @@ from app.integrations.schemas.connector_models import (
     AuthType,
 )
 
+
 class BigQueryConnector(BaseConnector):
     @classmethod
     def get_metadata(cls) -> ConnectorMetadata:
@@ -17,7 +18,12 @@ class BigQueryConnector(BaseConnector):
             version="1.0.0",
             description="Integration for BigQuery",
             supported_auth_types=[AuthType.OAUTH2, AuthType.API_KEY],
-            capabilities=["bigquery.read", "bigquery.write", "bigquery.search", "bigquery.execute"],
+            capabilities=[
+                "bigquery.read",
+                "bigquery.write",
+                "bigquery.search",
+                "bigquery.execute",
+            ],
         )
 
     def connect(self) -> None:
@@ -36,7 +42,9 @@ class BigQueryConnector(BaseConnector):
         return capability in self.discover_capabilities()
 
     def execute(self, request: ExecutionRequest) -> ExecutionResponse:
-        return ExecutionResponse(success=True, data={"message": f"Executed {request.operation} on bigquery"})
+        return ExecutionResponse(
+            success=True, data={"message": f"Executed {request.operation} on bigquery"}
+        )
 
     def disconnect(self) -> None:
         pass
@@ -64,5 +72,6 @@ class BigQueryConnector(BaseConnector):
 
     def sync(self) -> None:
         pass
+
 
 connector_registry.register(BigQueryConnector)

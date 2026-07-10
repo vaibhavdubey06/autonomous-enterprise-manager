@@ -63,14 +63,14 @@ class AgentRouter:
         """
         from app.operations.tracing.trace_manager import TraceManager
         from app.operations.telemetry.telemetry_context import TelemetryContext
-        
+
         agent_name = self._resolve_agent_name(task)
         logger.info(f"Routing task {task.task_id} to {agent_name}")
-        
+
         telemetry_snap = TelemetryContext.get_snapshot()
         trace_id = telemetry_snap.get("trace_id")
         trace_manager = TraceManager()
-        
+
         if not trace_id:
             span = trace_manager.start_trace("agent_routing")
         else:
@@ -78,13 +78,19 @@ class AgentRouter:
                 trace_id=trace_id,
                 operation="agent_routing",
                 parent_span_id=telemetry_snap.get("span_id"),
-                expected_capability=",".join(str(c) for c in task.required_capabilities) if task.required_capabilities else "general",
-                detected_capability=",".join(str(c) for c in task.required_capabilities) if task.required_capabilities else "general",
-                selected_agent=agent_name
+                expected_capability=",".join(str(c) for c in task.required_capabilities)
+                if task.required_capabilities
+                else "general",
+                detected_capability=",".join(str(c) for c in task.required_capabilities)
+                if task.required_capabilities
+                else "general",
+                selected_agent=agent_name,
             )
 
         try:
-            result = self._execute_routed_task(task, state, agent_name, use_collaboration)
+            result = self._execute_routed_task(
+                task, state, agent_name, use_collaboration
+            )
             trace_manager.end_span(span, "OK")
             return result
         except Exception as e:
@@ -92,7 +98,9 @@ class AgentRouter:
             trace_manager.end_span(span, "ERROR")
             raise
 
-    def _execute_routed_task(self, task: Task, state: dict, agent_name: str, use_collaboration: bool) -> dict:
+    def _execute_routed_task(
+        self, task: Task, state: dict, agent_name: str, use_collaboration: bool
+    ) -> dict:
         # Branch for Collaboration Runtime
         if use_collaboration and self.collaboration_manager:
             logger.info(f"Executing task {task.task_id} via Collaboration Runtime")

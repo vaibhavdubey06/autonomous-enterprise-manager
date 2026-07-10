@@ -30,7 +30,6 @@ def test_full_platform_e2e():
         patch("app.services.memory_service.search") as mock_memory_search,
         patch("app.services.vectorstore.qdrant_service.get_client") as mock_get_client,
     ):
-
         mock_api_search.return_value = []
         mock_service_search.return_value = []
         mock_memory_search.return_value = []
@@ -43,9 +42,9 @@ def test_full_platform_e2e():
 
         response = client.post("/api/v1/chat/", json=chat_payload)
 
-        assert (
-            response.status_code == 200
-        ), f"Expected 200, got {response.status_code}. Detail: {response.text}"
+        assert response.status_code == 200, (
+            f"Expected 200, got {response.status_code}. Detail: {response.text}"
+        )
         data = response.json()
         assert "answer" in data
 

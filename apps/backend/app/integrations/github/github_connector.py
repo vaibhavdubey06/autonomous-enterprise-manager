@@ -122,7 +122,7 @@ class GitHubConnector(BaseConnector):
         self.disconnect()
 
     # --- Synchronization Interface ---
-    
+
     def validate(self) -> bool:
         return self.health_check() == ConnectorHealthStatus.HEALTHY
 

@@ -1,5 +1,5 @@
 from app.integrations.base.connector_registry import connector_registry
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from app.integrations.base.base_connector import BaseConnector
 from app.integrations.schemas.connector_models import (
     ConnectorHealthStatus,
@@ -9,6 +9,7 @@ from app.integrations.schemas.connector_models import (
     AuthType,
 )
 
+
 class QdrantConnector(BaseConnector):
     @classmethod
     def get_metadata(cls) -> ConnectorMetadata:
@@ -17,7 +18,12 @@ class QdrantConnector(BaseConnector):
             version="1.0.0",
             description="Integration for Qdrant",
             supported_auth_types=[AuthType.OAUTH2, AuthType.API_KEY],
-            capabilities=["qdrant.read", "qdrant.write", "qdrant.search", "qdrant.execute"],
+            capabilities=[
+                "qdrant.read",
+                "qdrant.write",
+                "qdrant.search",
+                "qdrant.execute",
+            ],
         )
 
     def connect(self) -> None:
@@ -36,7 +42,9 @@ class QdrantConnector(BaseConnector):
         return capability in self.discover_capabilities()
 
     def execute(self, request: ExecutionRequest) -> ExecutionResponse:
-        return ExecutionResponse(success=True, data={"message": f"Executed {request.operation} on qdrant"})
+        return ExecutionResponse(
+            success=True, data={"message": f"Executed {request.operation} on qdrant"}
+        )
 
     def disconnect(self) -> None:
         pass
@@ -64,5 +72,6 @@ class QdrantConnector(BaseConnector):
 
     def sync(self) -> None:
         pass
+
 
 connector_registry.register(QdrantConnector)

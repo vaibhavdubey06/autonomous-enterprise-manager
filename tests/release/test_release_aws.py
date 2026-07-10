@@ -37,9 +37,9 @@ def test_iam_policies_exist():
         with open(policy_file, "r") as f:
             try:
                 policy = json.load(f)
-                assert (
-                    "Statement" in policy
-                ), f"Invalid IAM Policy in {policy_file.name}"
+                assert "Statement" in policy, (
+                    f"Invalid IAM Policy in {policy_file.name}"
+                )
             except json.JSONDecodeError:
                 pytest.fail(f"IAM policy {policy_file.name} is not valid JSON")
 

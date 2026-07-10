@@ -37,9 +37,9 @@ async def test_concurrent_workload_performance():
     latencies = [r[1] for r in results]
 
     # All requests must succeed
-    assert all(
-        code == 200 for code in status_codes
-    ), "Some requests failed during concurrent load"
+    assert all(code == 200 for code in status_codes), (
+        "Some requests failed during concurrent load"
+    )
 
     # Check latencies
     latencies.sort()

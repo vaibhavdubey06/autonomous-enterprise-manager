@@ -26,7 +26,6 @@ from app.services.memory.deduplicator import MemoryDeduplicator
 from app.services.vectorstore.qdrant_service import search
 from app.core.config import settings
 from app.agents.supervisor.supervisor_agent import SupervisorGraph
-from app.agents.supervisor.schemas import SupervisorState
 from app.agents.supervisor.planner import Planner
 from app.agents.supervisor.task_decomposer import TaskDecomposer
 from app.agents.supervisor.router import AgentRouter
@@ -60,6 +59,7 @@ try:
 except Exception as e:
     logger.error(f"Failed to instantiate CrossEncoderService at startup: {e}")
     _cross_encoder_service = None
+
 
 def get_cross_encoder_service() -> CrossEncoderService:
     global _cross_encoder_service
@@ -139,11 +139,14 @@ def get_graph_router(
 def get_capability_inference_service() -> CapabilityInferenceService:
     return CapabilityInferenceService()
 
+
 def get_supervisor_graph(
     db: DBSession = Depends(get_db),
     memory_service: MemoryService = Depends(get_memory_service),
     llm_service: LLMGateway = Depends(get_llm_service),
-    capability_service: CapabilityInferenceService = Depends(get_capability_inference_service),
+    capability_service: CapabilityInferenceService = Depends(
+        get_capability_inference_service
+    ),
     knowledge_agent_graph: GraphRouter = Depends(get_graph_router),
 ) -> SupervisorGraph:
     # Initialize Capability Framework
@@ -201,12 +204,12 @@ async def agent_chat(
     runtime = runtime_manager.create_session(
         user_session_id=session_id,
         conversation_id=conversation_id,
-        supervisor_graph=supervisor_graph
+        supervisor_graph=supervisor_graph,
     )
-    
+
     # Run via Runtime
     final_state = await runtime.start(request.question)
-    
+
     # Cleanup session
     runtime_manager.cleanup_session(runtime.session.session_id)
 

@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 
 class LLMConfig(BaseModel):
     """Configuration for an LLM generation request."""
+
     temperature: float = 0.0
     top_p: float = 0.95
     max_output_tokens: int = 2048
@@ -14,6 +15,7 @@ class LLMConfig(BaseModel):
 
 class LLMRequest(BaseModel):
     """Provider-agnostic request model."""
+
     prompt: str
     context: Optional[List[str]] = None
     system_instruction: Optional[str] = None
@@ -24,6 +26,7 @@ class LLMRequest(BaseModel):
 
 class LLMResponse(BaseModel):
     """Provider-agnostic response model."""
+
     content: str
     prompt_tokens: Optional[int] = None
     completion_tokens: Optional[int] = None
@@ -34,9 +37,10 @@ class LLMResponse(BaseModel):
     latency_ms: float
     cached: bool = False
 
+
 class PipelineContext(BaseModel):
     """Context object passed through the middleware pipeline."""
+
     request: LLMRequest
     response: Optional[LLMResponse] = None
     metadata: Dict[str, Any] = Field(default_factory=dict)
-

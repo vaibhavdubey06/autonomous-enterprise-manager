@@ -8,17 +8,17 @@ from app.operations.tracing.exporter import TraceExporter
 
 class TraceManager:
     """Creates and manages distributed traces (trees of Spans)."""
-    
+
     _exporters: List[TraceExporter] = []
 
     def __init__(self):
         self._traces: Dict[str, List[Span]] = {}
-        
+
     @classmethod
     def register_exporter(cls, exporter: TraceExporter):
         if exporter not in cls._exporters:
             cls._exporters.append(exporter)
-            
+
     @classmethod
     def clear_exporters(cls):
         cls._exporters.clear()
@@ -55,13 +55,13 @@ class TraceManager:
         for exporter in self._exporters:
             if hasattr(exporter, "export_span"):
                 exporter.export_span(span)
-                
+
         if not span.parent_span_id:
             # Root span finished, backwards compat full trace export
             trace_id = span.trace_id
             spans = self._traces.get(trace_id, [])
             for exporter in self._exporters:
-                # export is kept for backwards compatibility 
+                # export is kept for backwards compatibility
                 exporter.export(trace_id, spans)
 
     @contextmanager

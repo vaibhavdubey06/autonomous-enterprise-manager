@@ -41,7 +41,9 @@ with tabs[1]:
                     color = (
                         "🟢"
                         if status == "Healthy"
-                        else "🟡" if status in ["Warning", "Busy"] else "🔴"
+                        else "🟡"
+                        if status in ["Warning", "Busy"]
+                        else "🔴"
                     )
                     st.markdown(f"{color} **{subsystem}**: {status}")
         except Exception as e:

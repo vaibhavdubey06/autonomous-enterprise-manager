@@ -5,13 +5,15 @@ from app.services.llm.exceptions import (
     LLMRateLimitError,
     LLMProviderError,
     LLMTimeoutError,
-    LLMError
+    LLMError,
 )
 from google.api_core import exceptions as google_exceptions
 
 
 def test_llm_service_gemini(mocker):
-    mocker.patch("app.services.llm.providers.gemini.settings.GEMINI_API_KEY", "test_key")
+    mocker.patch(
+        "app.services.llm.providers.gemini.settings.GEMINI_API_KEY", "test_key"
+    )
 
     mock_genai = mocker.patch("app.services.llm.providers.gemini.genai.GenerativeModel")
     mock_instance = mocker.MagicMock()
@@ -28,7 +30,9 @@ def test_llm_service_gemini(mocker):
 
 
 def test_llm_service_exceptions(mocker):
-    mocker.patch("app.services.llm.providers.gemini.settings.GEMINI_API_KEY", "test_key")
+    mocker.patch(
+        "app.services.llm.providers.gemini.settings.GEMINI_API_KEY", "test_key"
+    )
     mock_genai = mocker.patch("app.services.llm.providers.gemini.genai.GenerativeModel")
     mock_instance = mocker.MagicMock()
     mock_genai.return_value = mock_instance
@@ -36,7 +40,7 @@ def test_llm_service_exceptions(mocker):
     service = LLMGateway()
 
     # Avoid waiting for retries by setting retry_count to 1
-    
+
     mock_instance.generate_content.side_effect = google_exceptions.PermissionDenied(
         "test"
     )
@@ -72,7 +76,9 @@ def test_llm_service_exceptions(mocker):
 
 
 def test_llm_service_empty_response(mocker):
-    mocker.patch("app.services.llm.providers.gemini.settings.GEMINI_API_KEY", "test_key")
+    mocker.patch(
+        "app.services.llm.providers.gemini.settings.GEMINI_API_KEY", "test_key"
+    )
     mock_genai = mocker.patch("app.services.llm.providers.gemini.genai.GenerativeModel")
     mock_instance = mocker.MagicMock()
     mock_genai.return_value = mock_instance
@@ -95,4 +101,3 @@ def test_llm_service_no_api_key(mocker):
 
     with pytest.raises(LLMProviderError):
         service.generate_answer("test question", [], retry_count=1)
-

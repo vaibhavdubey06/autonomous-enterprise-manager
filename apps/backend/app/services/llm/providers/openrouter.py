@@ -1,7 +1,6 @@
 import logging
 from typing import AsyncGenerator
 import requests
-from pydantic import BaseModel
 
 from app.services.llm.providers.base import AbstractLLMProvider
 from app.services.llm.models import LLMRequest, LLMResponse
@@ -10,12 +9,21 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
+
 class OpenRouterProvider(AbstractLLMProvider):
     def __init__(self):
-        self.api_key = settings.OPENROUTER_API_KEY if hasattr(settings, "OPENROUTER_API_KEY") else None
-        self.model_name = settings.OPENROUTER_MODEL if hasattr(settings, "OPENROUTER_MODEL") else "google/gemini-2.0-flash-exp:free"
+        self.api_key = (
+            settings.OPENROUTER_API_KEY
+            if hasattr(settings, "OPENROUTER_API_KEY")
+            else None
+        )
+        self.model_name = (
+            settings.OPENROUTER_MODEL
+            if hasattr(settings, "OPENROUTER_MODEL")
+            else "google/gemini-2.0-flash-exp:free"
+        )
         self.base_url = "https://openrouter.ai/api/v1/chat/completions"
-        
+
         if not self.api_key:
             logger.warning("OPENROUTER_API_KEY is not set.")
 
@@ -36,19 +44,23 @@ class OpenRouterProvider(AbstractLLMProvider):
 
     def generate(self, request: LLMRequest) -> LLMResponse:
         import time
+
         start_time = time.time()
-        
+
         if not self.api_key:
             from app.services.llm.exceptions import LLMProviderError
-            raise LLMProviderError("OpenRouter client not initialized (missing API key)")
-            
+
+            raise LLMProviderError(
+                "OpenRouter client not initialized (missing API key)"
+            )
+
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "HTTP-Referer": "http://localhost:8000",
             "X-Title": "AEM",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
-        
+
         payload = {
             "model": self.model_name,
             "messages": [{"role": "user", "content": request.prompt}],
@@ -56,17 +68,20 @@ class OpenRouterProvider(AbstractLLMProvider):
             "top_p": request.config.top_p,
             "max_tokens": request.config.max_output_tokens,
         }
-        
-        response = requests.post(self.base_url, headers=headers, json=payload, timeout=request.config.timeout)
-        
+
+        response = requests.post(
+            self.base_url, headers=headers, json=payload, timeout=request.config.timeout
+        )
+
         if not response.ok:
             from app.services.llm.exceptions import LLMProviderError
+
             raise LLMProviderError(f"OpenRouter API error: {response.text}")
-            
+
         data = response.json()
         content = data["choices"][0]["message"]["content"]
         usage = data.get("usage", {})
-        
+
         return LLMResponse(
             content=content,
             model_used=self.model_name,
@@ -79,38 +94,45 @@ class OpenRouterProvider(AbstractLLMProvider):
 
     def generate_structured(self, request: LLMRequest) -> LLMResponse:
         import time
+
         start_time = time.time()
-        
+
         if not self.api_key:
             from app.services.llm.exceptions import LLMProviderError
-            raise LLMProviderError("OpenRouter client not initialized (missing API key)")
-            
+
+            raise LLMProviderError(
+                "OpenRouter client not initialized (missing API key)"
+            )
+
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "HTTP-Referer": "http://localhost:8000",
             "X-Title": "AEM",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
         }
-        
+
         payload = {
             "model": self.model_name,
             "messages": [{"role": "user", "content": request.prompt}],
             "temperature": request.config.temperature,
             "top_p": request.config.top_p,
             "max_tokens": request.config.max_output_tokens,
-            "response_format": {"type": "json_object"}
+            "response_format": {"type": "json_object"},
         }
-        
-        response = requests.post(self.base_url, headers=headers, json=payload, timeout=request.config.timeout)
-        
+
+        response = requests.post(
+            self.base_url, headers=headers, json=payload, timeout=request.config.timeout
+        )
+
         if not response.ok:
             from app.services.llm.exceptions import LLMProviderError
+
             raise LLMProviderError(f"OpenRouter API error: {response.text}")
-            
+
         data = response.json()
         content = data["choices"][0]["message"]["content"]
         usage = data.get("usage", {})
-        
+
         return LLMResponse(
             content=content,
             model_used=self.model_name,

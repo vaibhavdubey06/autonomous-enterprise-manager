@@ -58,7 +58,9 @@ class DriveConnector(BaseConnector):
     def fetch_document(self, document_id: str) -> Dict[str, Any]:
         return {}
 
-    def fetch_incremental_changes(self, last_checkpoint: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def fetch_incremental_changes(
+        self, last_checkpoint: Dict[str, Any]
+    ) -> List[Dict[str, Any]]:
         return []
 
     def handle_webhook(self, payload: Dict[str, Any]) -> None:

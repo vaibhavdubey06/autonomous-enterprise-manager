@@ -24,7 +24,7 @@ class AgentProfile(BaseModel):
     approval_requirements: List[str] = Field(default_factory=list)
     delegation_strategy: str = ""
     escalation_rules: List[str] = Field(default_factory=list)
-    
+
     # Legacy fields mapping
     decision_boundaries: List[str] = Field(default_factory=list)
     memory_usage: str = ""

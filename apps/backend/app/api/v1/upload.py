@@ -25,7 +25,6 @@ async def upload_document(file: UploadFile = File(...)):
     suffix = Path(filename).suffix
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as temp_file:
-
         content = await file.read()
 
         temp_file.write(content)

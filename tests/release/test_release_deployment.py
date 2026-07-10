@@ -47,9 +47,9 @@ def test_production_services_configuration():
     # Verify Restart Policies
     for svc, config in services.items():
         if svc != "migrate":  # migrate is a one-off job
-            assert (
-                config.get("restart") == "unless-stopped"
-            ), f"Service {svc} is missing 'restart: unless-stopped'"
+            assert config.get("restart") == "unless-stopped", (
+                f"Service {svc} is missing 'restart: unless-stopped'"
+            )
 
     # Verify Logging limits to prevent disk exhaustion
     for svc, config in services.items():
@@ -69,9 +69,9 @@ def test_production_services_configuration():
 
     # Ensure healthchecks are defined
     for svc in ["postgres", "redis", "qdrant", "backend", "frontend"]:
-        assert (
-            "healthcheck" in services[svc]
-        ), f"Service {svc} is missing a healthcheck block"
+        assert "healthcheck" in services[svc], (
+            f"Service {svc} is missing a healthcheck block"
+        )
 
 
 def test_production_volumes():

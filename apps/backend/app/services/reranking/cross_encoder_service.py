@@ -78,18 +78,24 @@ class CrossEncoderService:
             )
             for idx, chunk in enumerate(selected_chunks):
                 if isinstance(chunk, dict):
-                    doc = chunk.get('document', 'Unknown')
-                    page = chunk.get('page', 1)
-                    c_id = chunk.get('chunk', 0)
-                    score = chunk.get('rerank_score', 0.0)
+                    doc = chunk.get("document", "Unknown")
+                    page = chunk.get("page", 1)
+                    c_id = chunk.get("chunk", 0)
+                    score = chunk.get("rerank_score", 0.0)
                 else:
-                    doc = getattr(chunk, 'path', '') or getattr(chunk, 'repository', 'Unknown')
+                    doc = getattr(chunk, "path", "") or getattr(
+                        chunk, "repository", "Unknown"
+                    )
                     page = 1
-                    c_id = getattr(chunk, 'id', 0)
-                    score = chunk.metadata.get("rerank_score", 0.0) if hasattr(chunk, "metadata") else 0.0
-                
+                    c_id = getattr(chunk, "id", 0)
+                    score = (
+                        chunk.metadata.get("rerank_score", 0.0)
+                        if hasattr(chunk, "metadata")
+                        else 0.0
+                    )
+
                 logger.info(
-                    f"Rank {idx+1}: Score={score:.4f}, Document={doc}, Page={page}, Chunk={c_id}"
+                    f"Rank {idx + 1}: Score={score:.4f}, Document={doc}, Page={page}, Chunk={c_id}"
                 )
 
             return selected_chunks

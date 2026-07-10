@@ -1,8 +1,10 @@
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
+
 class PromptAsset(BaseModel):
     """A first-class prompt asset."""
+
     id: str
     version: str = "1.0.0"
     description: str
@@ -13,6 +15,7 @@ class PromptAsset(BaseModel):
 
 class CompiledPrompt(BaseModel):
     """Result of the Prompt Compiler."""
+
     text: str
     asset_id: Optional[str] = None
     variables_injected: Dict[str, Any] = Field(default_factory=dict)
