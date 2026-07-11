@@ -1,4 +1,5 @@
 import uuid
+import logging
 from typing import Optional
 from sqlalchemy.orm import Session
 from app.collaboration.session.session_repository import SessionRepository
@@ -18,11 +19,17 @@ from app.collaboration.coordinator.consensus_manager import (
 from app.collaboration.coordinator.conflict_manager import ConflictManager
 from app.collaboration.memory.collaboration_memory import CollaborationMemory
 
+logger = logging.getLogger(__name__)
+
 
 class CollaborationManager:
     """
     Central orchestration class for the Collaboration Runtime.
     Supervisor interacts exclusively with this class.
+
+    Every public method owns its own transaction: commit on success,
+    rollback on failure, so that a failure in one operation never poisons
+    the SQLAlchemy session for subsequent operations.
     """
 
     def __init__(
@@ -42,47 +49,63 @@ class CollaborationManager:
     def create_session(
         self, objective: str, workflow_id: Optional[str] = None
     ) -> CollaborationSession:
-        sid = str(uuid.uuid4())
-        session = self.session_repo.create_session(sid, objective, workflow_id)
-        return session
+        try:
+            sid = str(uuid.uuid4())
+            session = self.session_repo.create_session(sid, objective, workflow_id)
+            return session
+        except Exception:
+            self.db.rollback()
+            raise
 
     def form_team(self, session_id: str) -> CollaborationSession:
-        session = self.session_repo.get_session(session_id)
-        if not session:
-            raise ValueError("Session not found")
+        try:
+            session = self.session_repo.get_session(session_id)
+            if not session:
+                raise ValueError("Session not found")
 
-        self.session_repo.update_phase(session_id, SessionPhase.TEAM_FORMATION)
+            self.session_repo.update_phase(session_id, SessionPhase.TEAM_FORMATION)
 
-        team = self.team_builder.build_team(session.objective or "")
-        participants = [a.agent_id for a in team]
-        leader = next(
-            (a.agent_id for a in team if getattr(a, "assigned_role", None) == "Leader"),
-            None,
-        )
+            team = self.team_builder.build_team(session.objective or "")
+            participants = [a.agent_id for a in team]
+            leader = next(
+                (a.agent_id for a in team if getattr(a, "assigned_role", None) == "Leader"),
+                None,
+            )
 
-        updated = self.session_repo.update_session(
-            session_id, {"participants": participants, "leader": leader}
-        )
+            updated = self.session_repo.update_session(
+                session_id, {"participants": participants, "leader": leader}
+            )
 
-        self.session_repo.update_phase(session_id, SessionPhase.PLANNING)
-        return updated
+            self.session_repo.update_phase(session_id, SessionPhase.PLANNING)
+            return updated
+        except Exception:
+            self.db.rollback()
+            raise
 
     def execute(self, session_id: str) -> None:
-        self.session_repo.update_phase(session_id, SessionPhase.EXECUTION)
+        try:
+            self.session_repo.update_phase(session_id, SessionPhase.EXECUTION)
+        except Exception:
+            self.db.rollback()
+            raise
 
     async def complete_session(self, session_id: str) -> None:
-        self.session_repo.update_phase(session_id, SessionPhase.COMPLETED)
-        session = self.session_repo.get_session(session_id)
+        try:
+            self.session_repo.update_phase(session_id, SessionPhase.COMPLETED)
+            session = self.session_repo.get_session(session_id)
 
-        if self.governance_pipeline and session:
-            from app.governance.context.governance_context import GovernanceContext
+            if self.governance_pipeline and session:
+                from app.governance.context.governance_context import GovernanceContext
 
-            gov_context = GovernanceContext(
-                workflow_id=session.workflow_id or f"collab_{session_id}",
-                workflow_goal=session.objective,
-                collaboration_session_id=session_id,
-            )
-            self.governance_pipeline.evaluate(gov_context)
-            # We don't block the session itself, but the audit records and metrics are updated.
+                gov_context = GovernanceContext(
+                    workflow_id=session.workflow_id or f"collab_{session_id}",
+                    workflow_goal=session.objective,
+                    collaboration_session_id=session_id,
+                )
+                self.governance_pipeline.evaluate(gov_context)
+                # We don't block the session itself, but the audit records and metrics are updated.
 
-        await self.memory.extract_session_memory(session_id)
+            await self.memory.extract_session_memory(session_id)
+        except Exception:
+            self.db.rollback()
+            raise

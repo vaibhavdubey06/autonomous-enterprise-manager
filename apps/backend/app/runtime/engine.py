@@ -3,6 +3,7 @@ import time
 import asyncio
 from typing import Dict, Any, Optional
 from app.runtime.models import RuntimeState, RuntimeSession
+from app.runtime.pre_execution import PreExecutionPipeline
 from app.agents.supervisor.supervisor_agent import SupervisorGraph
 from app.agents.supervisor.schemas import SupervisorState
 from app.operations.tracing.trace_manager import TraceManager
@@ -15,11 +16,22 @@ class EnterpriseRuntime:
     Manages a single RuntimeSession. Encapsulates SupervisorGraph to
     handle start, pause, resume, cancel, checkpoint, restore workflows.
     Emits deep telemetry.
+
+    All requests pass through the PreExecutionPipeline before the
+    SupervisorGraph runs, guaranteeing consistent validation across
+    every entry point (FastAPI, Streamlit, MCP, A2A, CLI, scheduled
+    workflows, future SDKs).
     """
 
-    def __init__(self, session: RuntimeSession, supervisor_graph: SupervisorGraph):
+    def __init__(
+        self,
+        session: RuntimeSession,
+        supervisor_graph: SupervisorGraph,
+        pre_execution_pipeline: Optional[PreExecutionPipeline] = None,
+    ):
         self.session = session
         self.supervisor_graph = supervisor_graph
+        self.pre_execution_pipeline = pre_execution_pipeline or PreExecutionPipeline()
         self.trace_manager = TraceManager()
         self._pause_requested = False
 
@@ -46,6 +58,37 @@ class EnterpriseRuntime:
     async def start(self, user_input: str) -> Dict[str, Any]:
         self._update_state(RuntimeState.INITIALIZED)
 
+        # ── PreExecution Pipeline ────────────────────────────────────
+        # Run domain validation, policy checks, etc. BEFORE the
+        # SupervisorGraph starts. This protects against out-of-domain
+        # queries, enforces enterprise policies, and prevents unnecessary
+        # LLM calls, DB writes, and collaboration session creation.
+        pre_exec_result = self.pre_execution_pipeline.execute(
+            user_input=user_input,
+            context={
+                "session_id": self.session.user_session_id,
+                "conversation_id": self.session.conversation_id,
+            },
+        )
+
+        if not pre_exec_result.allowed:
+            self._update_state(RuntimeState.REJECTED)
+            logger.info(
+                "Request rejected by pre-execution pipeline (%s): %s",
+                pre_exec_result.rejected_by,
+                pre_exec_result.rejection_message[:100],
+            )
+            return {
+                "final_response": pre_exec_result.rejection_message,
+                "workflow_state": "REJECTED",
+                "rejected_by": pre_exec_result.rejected_by,
+                "execution_time_ms": 0.0,
+                "selected_agents": [],
+                "completed_tasks": [],
+                "failed_tasks": [],
+            }
+
+        # ── SupervisorGraph Execution ────────────────────────────────
         initial_state: SupervisorState = {
             "user_input": user_input,
             "session_id": self.session.user_session_id,

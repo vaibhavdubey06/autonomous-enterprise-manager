@@ -17,6 +17,7 @@ class RuntimeState(str, Enum):
     COMPLETED = "COMPLETED"
     FAILED = "FAILED"
     CANCELLED = "CANCELLED"
+    REJECTED = "REJECTED"
     PAUSED = "PAUSED"
 
 

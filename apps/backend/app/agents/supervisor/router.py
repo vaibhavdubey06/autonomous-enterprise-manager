@@ -108,44 +108,68 @@ class AgentRouter:
         # Branch for Collaboration Runtime
         if use_collaboration and self.collaboration_manager:
             logger.info(f"Executing task {task.task_id} via Collaboration Runtime")
-            session = self.collaboration_manager.create_session(
-                objective=task.description
-            )
-            self.collaboration_manager.form_team(session.session_id)
-            self.collaboration_manager.execute(session.session_id)
+            
+            from app.core.database import SessionLocal
+            from app.collaboration.coordinator.collaboration_manager import CollaborationManager
+            
+            db = SessionLocal()
+            try:
+                local_manager = CollaborationManager(
+                    db,
+                    self.collaboration_manager.team_builder.registry,
+                    self.collaboration_manager.governance_pipeline
+                )
+                
+                session = local_manager.create_session(
+                    objective=task.description
+                )
+                local_manager.form_team(session.session_id)
+                local_manager.execute(session.session_id)
 
-            # Simulate work for POC by just delegating the main task
-            delegated = self.collaboration_manager.delegation.delegate_task(
-                task.description, agent_name
-            )
-            self.collaboration_manager.delegation.complete_task(delegated.task_id)
+                # Simulate work for POC by just delegating the main task
+                delegated = local_manager.delegation.delegate_task(
+                    task.description, agent_name
+                )
+                local_manager.delegation.complete_task(delegated.task_id)
+                
+                # We must capture the session ID to pass to the thread
+                sid = session.session_id
+            except Exception:
+                db.rollback()
+                raise
+            finally:
+                db.close()
 
             # Fire and forget the async complete_session to avoid event loop conflicts
             import threading
             import asyncio
 
-            def _complete_session_in_thread(sid: str):
+            def _complete_session_in_thread(sid_param: str):
                 from app.core.database import SessionLocal
                 from app.collaboration.coordinator.collaboration_manager import CollaborationManager
-                db = SessionLocal()
+                db2 = SessionLocal()
                 try:
-                    manager = CollaborationManager(
-                        db,
+                    manager2 = CollaborationManager(
+                        db2,
                         self.collaboration_manager.team_builder.registry,
                         self.collaboration_manager.governance_pipeline
                     )
                     loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(loop)
                     loop.run_until_complete(
-                        manager.complete_session(sid)
+                        manager2.complete_session(sid_param)
                     )
                     loop.close()
                 except Exception as e:
                     logger.error(f"Failed to complete session: {e}")
+                    try:
+                        db2.rollback()
+                    except Exception:
+                        pass
                 finally:
-                    db.close()
+                    db2.close()
 
-            threading.Thread(target=_complete_session_in_thread, args=(session.session_id,), daemon=True).start()
+            threading.Thread(target=_complete_session_in_thread, args=(sid,), daemon=True).start()
 
             task.status = TaskStatus.COMPLETED
             return {

@@ -192,6 +192,7 @@ async def agent_chat(
 ):
     """
     Execute the full LangGraph pipeline via the Supervisor orchestrator.
+    The API layer remains thin — all validation happens inside EnterpriseRuntime.
     """
     logger.info(f"Agent chat request: {request.question[:80]}")
     session_id = memory_service.get_or_create_session(request.session_id)
@@ -207,26 +208,32 @@ async def agent_chat(
         supervisor_graph=supervisor_graph,
     )
 
-    # Run via Runtime
+    # Run via Runtime (includes PreExecution pipeline)
     final_state = await runtime.start(request.question)
 
     # Cleanup session
     runtime_manager.cleanup_session(runtime.session.session_id)
 
-    # Optionally trigger async summary and memory extraction
+    # Save assistant response
+    final_response = final_state.get("final_response") or ""
+    memory_service.save_message(conversation_id, "assistant", final_response)
+
+    # ── Background tasks with isolated DB sessions ──────────────
+    # Each background task creates its own SessionLocal + MemoryService
+    # so a poisoned request-scoped session never cascades.
     final_conversation_id = str(
         final_state.get("conversation_id") or request.conversation_id or conversation_id
     )
     if final_conversation_id:
         background_tasks.add_task(
-            memory_service.generate_summary, final_conversation_id
+            _background_generate_summary, final_conversation_id
         )
         background_tasks.add_task(
-            memory_service.extract_and_store_memories,
+            _background_extract_memories,
             conversation_id=final_conversation_id,
             user_id=request.session_id or "default_user",
             user_message=request.question,
-            assistant_response=final_state.get("final_response") or "",
+            assistant_response=final_response,
         )
 
     # Gather metrics
@@ -240,8 +247,122 @@ async def agent_chat(
     return AgentChatResponse(
         session_id=request.session_id or "",
         conversation_id=conversation_id or "",
-        answer=final_state.get("final_response") or "",
+        answer=final_response,
         sources=[],  # Sources could be extracted from tasks in the future
         execution_trace=[],
         metrics=metrics,
     )
+
+
+# ── Isolated background task helpers ────────────────────────────
+
+
+def _build_isolated_memory_service():
+    """Create a MemoryService with its own DB session, fully independent of the request."""
+    from app.core.database import SessionLocal
+
+    db = SessionLocal()
+    llm_service = get_llm_service()
+
+    memory_repo = MemoryRepository(db)
+    strategy = GeminiMemoryExtractionStrategy(llm_service)
+    normalizer = MemoryNormalizer()
+    scorer = ImportanceScorer()
+    deduplicator = MemoryDeduplicator(memory_repo)
+
+    def qdrant_store_callback(text, payload):
+        from app.services.embeddings.embedding_service import embed_text
+        import uuid
+        from qdrant_client.models import PointStruct
+        from app.services.vectorstore.qdrant_service import get_client, COLLECTION_NAME
+
+        embedding = embed_text(text)
+        point_id = str(uuid.uuid4())
+        get_client().upsert(
+            collection_name=COLLECTION_NAME,
+            points=[PointStruct(id=point_id, vector=embedding, payload=payload)],
+        )
+
+    extractor = MemoryExtractor(
+        strategy=strategy,
+        normalizer=normalizer,
+        scorer=scorer,
+        deduplicator=deduplicator,
+        repository=memory_repo,
+        qdrant_search_callback=search,
+        qdrant_store_callback=qdrant_store_callback,
+        importance_threshold=settings.MEMORY_IMPORTANCE_THRESHOLD,
+    )
+
+    svc = MemoryService(
+        session_repo=SessionRepository(db),
+        conversation_repo=ConversationRepository(db),
+        message_repo=MessageRepository(db),
+        summary_repo=SummaryRepository(db),
+        memory_repo=memory_repo,
+        llm_service=llm_service,
+        extractor=extractor,
+    )
+    return svc, db
+
+
+def _background_generate_summary(conversation_id: str):
+    """Background task: generate rolling summary with an isolated DB session."""
+    from app.operations.tracing.trace_manager import TraceManager
+
+    trace_manager = TraceManager()
+    span = trace_manager.start_span(
+        trace_id=conversation_id,
+        operation="background_summary",
+    )
+
+    svc, db = _build_isolated_memory_service()
+    try:
+        svc.generate_summary(conversation_id)
+        trace_manager.end_span(span, "OK")
+    except Exception as e:
+        logger.error(f"Background summary failed (isolated): {e}")
+        span.attributes["error"] = str(e)
+        trace_manager.end_span(span, "ERROR")
+        try:
+            db.rollback()
+        except Exception:
+            pass
+    finally:
+        db.close()
+
+
+async def _background_extract_memories(
+    conversation_id: str,
+    user_id: str,
+    user_message: str,
+    assistant_response: str,
+):
+    """Background task: extract and store memories with an isolated DB session."""
+    from app.operations.tracing.trace_manager import TraceManager
+
+    trace_manager = TraceManager()
+    span = trace_manager.start_span(
+        trace_id=conversation_id,
+        operation="background_memory",
+    )
+
+    svc, db = _build_isolated_memory_service()
+    try:
+        await svc.extract_and_store_memories(
+            conversation_id=conversation_id,
+            user_id=user_id,
+            user_message=user_message,
+            assistant_response=assistant_response,
+        )
+        trace_manager.end_span(span, "OK")
+    except Exception as e:
+        logger.error(f"Background memory extraction failed (isolated): {e}")
+        span.attributes["error"] = str(e)
+        trace_manager.end_span(span, "ERROR")
+        try:
+            db.rollback()
+        except Exception:
+            pass
+    finally:
+        db.close()

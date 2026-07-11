@@ -31,6 +31,27 @@ except ImportError:
 
 app = FastAPI(title="Autonomous Enterprise Manager", version="0.1.0")
 
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from app.services.llm.exceptions import GuardrailException
+
+@app.exception_handler(GuardrailException)
+async def guardrail_exception_handler(request: Request, exc: GuardrailException):
+    # Format a user-friendly message combining the general error and specific findings
+    findings_str = "; ".join([f"{f.message}" for f in exc.findings])
+    friendly_message = f"Your request was blocked by our security guardrails. {findings_str}"
+    if not exc.findings:
+        friendly_message = "Your request was blocked by our security guardrails."
+        
+    return JSONResponse(
+        status_code=400, # 400 Bad Request is appropriate for guardrail violations
+        content={
+            "detail": friendly_message,
+            "error": "Guardrail Violation",
+            "findings": [f.dict() for f in exc.findings] if exc.findings else []
+        }
+    )
+
 app.add_middleware(SecurityMiddleware)
 
 
