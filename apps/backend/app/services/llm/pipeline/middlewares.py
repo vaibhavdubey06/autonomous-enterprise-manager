@@ -180,12 +180,15 @@ from app.services.llm.guardrails.detectors.hallucination import HallucinationVal
 from app.services.llm.exceptions import GuardrailException
 
 
+from app.services.llm.guardrails.detectors.domain import OutOfDomainDetector
+
 class GuardrailMiddleware(BaseMiddleware):
     """Executes Enterprise Guardrails on incoming requests and outgoing responses."""
 
     def __init__(self):
         self.engine = GuardrailEngine(
             detectors=[
+                OutOfDomainDetector(),
                 PromptInjectionDetector(),
                 JailbreakDetector(),
                 SecretDetector(),

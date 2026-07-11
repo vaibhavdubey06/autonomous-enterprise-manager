@@ -14,6 +14,7 @@ class GuardrailPolicy:
         default_action: PolicyAction = PolicyAction.ALLOW,
     ):
         self.rules = rules or {
+            "out_of_domain": PolicyAction.BLOCK,
             "prompt_injection": PolicyAction.BLOCK,
             "jailbreak": PolicyAction.BLOCK,
             "secrets": PolicyAction.BLOCK,
