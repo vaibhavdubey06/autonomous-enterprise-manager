@@ -336,9 +336,11 @@ class SupervisorGraph:
 
     async def run(self, initial_state: SupervisorState) -> dict:
         logger.info("Starting Supervisor Graph execution...")
+        import uuid
+        thread_id = f"{initial_state.get('conversation_id', 'default_thread')}_{uuid.uuid4()}"
         config = {
             "configurable": {
-                "thread_id": initial_state.get("conversation_id", "default_thread")
+                "thread_id": thread_id
             }
         }
         final_state = await self.graph.ainvoke(initial_state, config=config)
