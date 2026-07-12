@@ -118,13 +118,51 @@ class RetrievalEngine:
                     )
                     latencies["rerank"] = (time.perf_counter() - t0) * 1000
 
+                # 5.5 Neighbor Expansion
+                with self.trace_manager.span(
+                    trace_id, "neighbor_expansion", main_span.span_id
+                ) as span:
+                    t0 = time.perf_counter()
+                    expanded_chunks = []
+                    seen_ids = set()
+                    expansion_ids = []
+                    
+                    # Identify chunks with high confidence that deserve expansion
+                    for chunk in reranked_chunks:
+                        seen_ids.add(chunk.get("id"))
+                        expanded_chunks.append(chunk)
+                        
+                        # Only expand if it's a high confidence match (top 3)
+                        # We use a simple index bound for now to simulate high confidence
+                        if len(expansion_ids) < 6:
+                            prev_id = chunk.get("previous_chunk")
+                            next_id = chunk.get("next_chunk")
+                            if prev_id and prev_id not in seen_ids:
+                                expansion_ids.append(prev_id)
+                                seen_ids.add(prev_id)
+                            if next_id and next_id not in seen_ids:
+                                expansion_ids.append(next_id)
+                                seen_ids.add(next_id)
+                    
+                    if expansion_ids:
+                        from app.services.vectorstore.qdrant_service import get_chunks_by_ids
+                        neighbors = get_chunks_by_ids(expansion_ids)
+                        
+                        # We prepend or append them as needed, or just append and let compressor handle it.
+                        # For now, just extend the reranked list with neighbors.
+                        for neighbor in neighbors:
+                            neighbor["is_neighbor"] = True
+                            expanded_chunks.append(neighbor)
+                            
+                    latencies["neighbor_expansion"] = (time.perf_counter() - t0) * 1000
+
                 # 6. Compress
                 with self.trace_manager.span(
                     trace_id, "compression", main_span.span_id
                 ) as span:
                     t0 = time.perf_counter()
                     optimized_chunks = self.compressor.compress(
-                        reranked_chunks, context
+                        expanded_chunks, context
                     )
                     latencies["compression"] = (time.perf_counter() - t0) * 1000
                     span.attributes.update(

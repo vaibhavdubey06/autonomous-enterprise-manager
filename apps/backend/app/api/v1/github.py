@@ -48,26 +48,39 @@ async def index_github_repository(
     total_docs = 0
 
     try:
+        from app.services.chunking.pipeline import ChunkingPipeline
+        from app.services.chunking.models import ChunkMetadata
+        
+        chunking_pipeline = ChunkingPipeline()
+        
         for doc in connector.fetch_documents(repository_name):
-            # Wrap text in the format expected by chunk_text
-            pages_data = [{"page": 1, "text": doc["text"]}]
+            # Parse file extension for the cost model router
+            ext = "txt"
+            if "." in doc["path"]:
+                ext = doc["path"].split(".")[-1]
 
-            # Chunk the document
-            doc_chunks = chunk_text(pages_data)
+            base_metadata = ChunkMetadata(
+                document_id=doc["url"],
+                document_name=doc["path"],
+                repository=doc["repository"],
+                branch=doc["branch"],
+                file_path=doc["path"],
+                source_url=doc["url"],
+                source=doc["source"]
+            )
 
-            # Inject GitHub metadata into each chunk
-            for c in doc_chunks:
-                c["source"] = doc["source"]
-                c["repository"] = doc["repository"]
-                c["branch"] = doc["branch"]
-                c["path"] = doc["path"]
-                c["url"] = doc["url"]
+            # Chunk the document through the intelligent pipeline
+            doc_chunks = chunking_pipeline.process_document(
+                document_text=doc["text"],
+                base_metadata=base_metadata,
+                file_extension=ext
+            )
 
             if not doc_chunks:
                 continue
 
             # Generate embeddings
-            chunk_texts = [c["text"] for c in doc_chunks]
+            chunk_texts = [c.text for c in doc_chunks]
             embeddings = embed_batch(chunk_texts)
 
             # Store in Qdrant

@@ -37,14 +37,28 @@ async def upload_document(file: UploadFile = File(...)):
     pages_data = result["pages_data"]
     total_pages = result["total_pages"]
 
-    # Chunk text
-    chunks = chunk_text(pages_data)
+    from app.services.chunking.pipeline import ChunkingPipeline
+    from app.services.chunking.models import ChunkMetadata
+    
+    chunking_pipeline = ChunkingPipeline()
+    base_metadata = ChunkMetadata(
+        document_id=filename,
+        document_name=filename,
+        source="pdf"
+    )
+
+    # Chunk text in parallel
+    chunks = chunking_pipeline.process_pages_parallel(
+        pages=pages_data,
+        base_metadata=base_metadata,
+        file_extension="pdf"
+    )
 
     # Ensure vector store collection exists
     create_collection()
 
-    # Generate embeddings (we only need the text part)
-    chunk_texts = [c["text"] for c in chunks]
+    # Generate embeddings
+    chunk_texts = [c.text for c in chunks]
     embeddings = embed_batch(chunk_texts)
 
     # Store vectors
