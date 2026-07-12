@@ -63,15 +63,23 @@ def make_response_node(services: ServiceContainer):
                     conversation_id, "assistant", answer
                 )
 
-        except Exception:
+        except Exception as e:
             import traceback
+            from app.services.llm.exceptions import GuardrailException
 
             err_str = traceback.format_exc()
             logger.error(f"ResponseNode — error: {err_str}")
 
-            answer = (
-                "I encountered an error while generating a response. Please try again."
-            )
+            if isinstance(e, GuardrailException):
+                findings_str = "; ".join([f"{f.message}" for f in e.findings])
+                friendly_message = f"Your request was blocked by our security guardrails. {findings_str}"
+                if not e.findings:
+                    friendly_message = "Your request was blocked by our security guardrails."
+                answer = friendly_message
+            else:
+                answer = (
+                    "I encountered an error while generating a response. Please try again."
+                )
             status = "error"
 
         duration_ms = (time.perf_counter() - start) * 1000

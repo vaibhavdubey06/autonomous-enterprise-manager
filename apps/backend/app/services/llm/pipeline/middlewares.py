@@ -49,23 +49,24 @@ class SemanticCacheMiddleware(BaseMiddleware):
         )
 
         # Cache Lookup
-        entry = self.cache_service.lookup(key, trace_id=trace_id)
-        if entry:
-            context.response = LLMResponse(
-                content=entry.response_content,
-                provider="cache",
-                model_used="cache",
-                latency_ms=0.0,
-                cached=True,
-                estimated_cost=0.0,
-            )
-            return  # Short-circuit pipeline
+        if context.request.config.cache_enabled:
+            entry = self.cache_service.lookup(key, trace_id=trace_id)
+            if entry:
+                context.response = LLMResponse(
+                    content=entry.response_content,
+                    provider="cache",
+                    model_used="cache",
+                    latency_ms=0.0,
+                    cached=True,
+                    estimated_cost=0.0,
+                )
+                return  # Short-circuit pipeline
 
         # Cache Miss
         next_middleware(context)
 
         # Post-Process: Store cache
-        if context.response and not getattr(context.response, "cached", False):
+        if context.request.config.cache_enabled and context.response and not getattr(context.response, "cached", False):
             metadata = CacheMetadata(
                 token_usage=getattr(context.response, "token_usage", 0) or 0,
                 estimated_cost=getattr(context.response, "estimated_cost", 0.0) or 0.0,

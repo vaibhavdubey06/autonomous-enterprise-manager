@@ -11,6 +11,7 @@ class LLMConfig(BaseModel):
     model_name: Optional[str] = None
     timeout: int = 60
     retry_count: int = 3
+    cache_enabled: bool = True
 
 
 class LLMRequest(BaseModel):

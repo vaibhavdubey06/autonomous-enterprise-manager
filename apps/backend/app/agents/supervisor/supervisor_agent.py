@@ -311,7 +311,8 @@ class SupervisorGraph:
                 import concurrent.futures
 
                 request = LLMRequest(
-                    prompt=f"{system_prompt}\n\n{prompt}", config=LLMConfig()
+                    prompt=f"{system_prompt}\n\n{prompt}", 
+                    config=LLMConfig(cache_enabled=(state.get("workflow_state") != "FAILED"))
                 )
                 with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                     future = executor.submit(self.planner.llm_service.generate, request)

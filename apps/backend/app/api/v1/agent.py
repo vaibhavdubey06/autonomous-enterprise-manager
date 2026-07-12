@@ -209,7 +209,28 @@ async def agent_chat(
     )
 
     # Run via Runtime (includes PreExecution pipeline)
-    final_state = await runtime.start(request.question)
+    try:
+        final_state = await runtime.start(request.question)
+    except Exception as e:
+        from app.services.llm.exceptions import GuardrailException
+        if isinstance(e, GuardrailException):
+            logger.warning(f"Guardrail violation during chat: {e}")
+            findings_str = "; ".join([f"{f.message}" for f in e.findings])
+            friendly_message = f"Your request was blocked by our security guardrails. {findings_str}"
+            if not e.findings:
+                friendly_message = "Your request was blocked by our security guardrails."
+            
+            # Form a state indicating rejection so we return it nicely to the UI
+            final_state = {
+                "final_response": friendly_message,
+                "workflow_state": "REJECTED",
+                "execution_time_ms": 0.0,
+                "selected_agents": [],
+                "completed_tasks": [],
+                "failed_tasks": []
+            }
+        else:
+            raise
 
     # Cleanup session
     runtime_manager.cleanup_session(runtime.session.session_id)
